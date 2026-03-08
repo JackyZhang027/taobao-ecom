@@ -1,0 +1,8 @@
+{
+    "Core": true,
+    "Catalog": true,
+    "Currency": true,
+    "Ordering": true,
+    "Payment": true,
+    "Admin": true
+}

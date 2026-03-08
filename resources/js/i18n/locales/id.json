@@ -1,0 +1,79 @@
+{
+    "nav": {
+        "home": "Beranda",
+        "shop": "Toko",
+        "cart": "Keranjang",
+        "orders": "Pesanan",
+        "login": "Masuk",
+        "logout": "Keluar",
+        "account": "Akun"
+    },
+    "product": {
+        "add_to_cart": "Tambah ke Keranjang",
+        "out_of_stock": "Stok Habis",
+        "price": "Harga",
+        "compare_price": "Harga Asli",
+        "shipping": "Ongkir",
+        "description": "Deskripsi",
+        "variants": "Pilihan",
+        "select_option": "Pilih opsi"
+    },
+    "cart": {
+        "title": "Keranjang Belanja",
+        "empty": "Keranjang Anda kosong",
+        "subtotal": "Subtotal",
+        "shipping": "Ongkir",
+        "total": "Total",
+        "checkout": "Lanjut ke Pembayaran",
+        "continue_shopping": "Lanjut Belanja",
+        "quantity": "Qty",
+        "remove": "Hapus",
+        "added": "Ditambahkan ke keranjang"
+    },
+    "checkout": {
+        "title": "Pembayaran",
+        "recipient_name": "Nama Penerima",
+        "recipient_phone": "Nomor Telepon",
+        "shipping_address": "Alamat Pengiriman",
+        "notes": "Catatan Pesanan",
+        "place_order": "Buat Pesanan",
+        "order_summary": "Ringkasan Pesanan"
+    },
+    "orders": {
+        "title": "Pesanan Saya",
+        "order_number": "Pesanan #",
+        "status": "Status",
+        "date": "Tanggal",
+        "total": "Total",
+        "view": "Lihat Detail",
+        "status_pending": "Menunggu",
+        "status_confirmed": "Dikonfirmasi",
+        "status_processing": "Diproses",
+        "status_shipped": "Dikirim",
+        "status_delivered": "Diterima",
+        "status_cancelled": "Dibatalkan"
+    },
+    "admin": {
+        "dashboard": "Dashboard",
+        "products": "Produk",
+        "orders": "Pesanan",
+        "exchange_rates": "Kurs Mata Uang",
+        "attributes": "Atribut",
+        "total_revenue": "Total Pendapatan",
+        "new_customers": "Pelanggan Baru (30h)",
+        "set_rate": "Atur Kurs Baru",
+        "rate": "Kurs (1 RMB = X IDR)"
+    },
+    "common": {
+        "save": "Simpan",
+        "cancel": "Batal",
+        "delete": "Hapus",
+        "edit": "Edit",
+        "create": "Buat",
+        "search": "Cari",
+        "loading": "Memuat...",
+        "confirm_delete": "Apakah Anda yakin ingin menghapus ini?",
+        "yes": "Ya",
+        "no": "Tidak"
+    }
+}

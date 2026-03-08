@@ -1,0 +1,48 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(composer config allow-plugins.wikimedia/composer-merge-plugin true)",
+      "Bash(composer require nwidart/laravel-modules:\"^11.0\" spatie/laravel-permission:\"^6.0\" midtrans/midtrans-php)",
+      "Bash(npm install react-i18next i18next i18next-browser-languagedetector)",
+      "Bash(composer show nwidart/laravel-modules spatie/laravel-permission midtrans/midtrans-php)",
+      "Bash(composer show)",
+      "Bash(php artisan vendor:publish --provider=\"Nwidart\\\\Modules\\\\LaravelModulesServiceProvider\")",
+      "Bash(php artisan vendor:publish --provider=\"Nwidart\\\\Modules\\\\LaravelModulesServiceProvider\" --tag=config)",
+      "Bash(php artisan vendor:publish --provider=\"Spatie\\\\Permission\\\\PermissionServiceProvider\")",
+      "Bash(composer dump-autoload)",
+      "Bash(php artisan db:create)",
+      "Bash(mysql -u root -e \"CREATE DATABASE IF NOT EXISTS taobao CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\")",
+      "Bash(php artisan migrate:fresh)",
+      "Bash(php -r \":*)",
+      "Bash(php artisan db:seed --class=RoleSeeder)",
+      "Bash(php artisan module:make Core Catalog Currency Ordering Payment Admin)",
+      "Bash(php artisan migrate)",
+      "Bash(php artisan route:list)",
+      "Bash(php artisan wayfinder:generate)",
+      "Bash(npm run types:check)",
+      "Bash(php artisan route:list --compact)",
+      "Bash(npm install datatables.net-react datatables.net-dt datatables.net jquery)",
+      "Read(//c/Users/user/AppData/Local/Temp/claude/c--Users-user-Herd-taobao/tasks/**)",
+      "Bash(php -r \"require ''vendor/autoload.php''; echo class_exists\\(''Yajra\\\\DataTables\\\\DataTables''\\) ? ''OK'' : ''NOT FOUND'';\")",
+      "Bash(npx tsc --noEmit)",
+      "Bash(node -e \"const dt = require\\(''datatables.net-react''\\); console.log\\(Object.keys\\(dt\\)\\)\")",
+      "Bash(php artisan route:list --path=admin)",
+      "Bash(npm run build)",
+      "Read(//c/Users/user/.claude/projects/c--Users-user-Herd-taobao/memory/**)",
+      "Bash(xargs grep -l \"class.*Role.*Middleware\")",
+      "Bash(php artisan db:statement \"SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = ''cart_items'' AND TABLE_SCHEMA = DATABASE\\(\\) AND REFERENCED_TABLE_NAME IS NOT NULL\")",
+      "Bash(mysql -u root taobao -e \"SELECT CONSTRAINT_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = ''cart_items'' AND TABLE_SCHEMA = ''taobao'' AND REFERENCED_TABLE_NAME IS NOT NULL;\")",
+      "Bash(php artisan tinker --execute=\"DB::select\\(\"\"SELECT CONSTRAINT_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = ''cart_items'' AND TABLE_SCHEMA = DATABASE\\(\\) AND REFERENCED_TABLE_NAME IS NOT NULL\"\"\\);\")",
+      "Bash(php artisan tinker --execute=\"print_r\\(DB::select\\(\"\"SELECT CONSTRAINT_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = ''cart_items'' AND TABLE_SCHEMA = DATABASE\\(\\) AND REFERENCED_TABLE_NAME IS NOT NULL\"\"\\)\\);\")",
+      "Bash(php artisan tinker --execute=\"print_r\\(DB::select\\(\"\"SHOW COLUMNS FROM cart_items\"\"\\)\\);\")",
+      "Bash(php artisan tinker --execute=\"print_r\\(DB::select\\(''SHOW INDEX FROM cart_items''\\)\\);\")",
+      "Bash(php artisan tinker --execute=\"print_r\\(DB::select\\(\"\"SELECT CONSTRAINT_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = ''cart_items'' AND TABLE_SCHEMA = DATABASE\\(\\)\"\"\\)\\);\")",
+      "Bash(php artisan tinker --execute=\"print_r\\(DB::select\\(\"\"SELECT TABLE_NAME, CONSTRAINT_NAME, COLUMN_NAME, REFERENCED_TABLE_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = DATABASE\\(\\) AND REFERENCED_TABLE_NAME IS NOT NULL AND \\(TABLE_NAME = ''cart_items'' OR REFERENCED_TABLE_NAME = ''cart_items''\\)\"\"\\)\\);\")",
+      "Bash(grep -l \"class Order\" /c/Users/user/Herd/taobao/Modules/*/app/Models/*.php)",
+      "Read(//c/Users/user/.claude/plans/**)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\user\\.claude\\plans"
+    ]
+  }
+}

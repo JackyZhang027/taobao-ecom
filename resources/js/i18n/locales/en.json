@@ -1,0 +1,79 @@
+{
+    "nav": {
+        "home": "Home",
+        "shop": "Shop",
+        "cart": "Cart",
+        "orders": "Orders",
+        "login": "Login",
+        "logout": "Logout",
+        "account": "Account"
+    },
+    "product": {
+        "add_to_cart": "Add to Cart",
+        "out_of_stock": "Out of Stock",
+        "price": "Price",
+        "compare_price": "Original Price",
+        "shipping": "Shipping",
+        "description": "Description",
+        "variants": "Options",
+        "select_option": "Select option"
+    },
+    "cart": {
+        "title": "Shopping Cart",
+        "empty": "Your cart is empty",
+        "subtotal": "Subtotal",
+        "shipping": "Shipping",
+        "total": "Total",
+        "checkout": "Proceed to Checkout",
+        "continue_shopping": "Continue Shopping",
+        "quantity": "Qty",
+        "remove": "Remove",
+        "added": "Added to cart"
+    },
+    "checkout": {
+        "title": "Checkout",
+        "recipient_name": "Recipient Name",
+        "recipient_phone": "Phone Number",
+        "shipping_address": "Shipping Address",
+        "notes": "Order Notes",
+        "place_order": "Place Order",
+        "order_summary": "Order Summary"
+    },
+    "orders": {
+        "title": "My Orders",
+        "order_number": "Order #",
+        "status": "Status",
+        "date": "Date",
+        "total": "Total",
+        "view": "View Details",
+        "status_pending": "Pending",
+        "status_confirmed": "Confirmed",
+        "status_processing": "Processing",
+        "status_shipped": "Shipped",
+        "status_delivered": "Delivered",
+        "status_cancelled": "Cancelled"
+    },
+    "admin": {
+        "dashboard": "Dashboard",
+        "products": "Products",
+        "orders": "Orders",
+        "exchange_rates": "Exchange Rates",
+        "attributes": "Attributes",
+        "total_revenue": "Total Revenue",
+        "new_customers": "New Customers (30d)",
+        "set_rate": "Set New Rate",
+        "rate": "Rate (1 RMB = X IDR)"
+    },
+    "common": {
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "edit": "Edit",
+        "create": "Create",
+        "search": "Search",
+        "loading": "Loading...",
+        "confirm_delete": "Are you sure you want to delete this?",
+        "yes": "Yes",
+        "no": "No"
+    }
+}
