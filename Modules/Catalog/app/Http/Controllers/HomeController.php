@@ -67,7 +67,10 @@ class HomeController extends Controller
             ?? $product->translations->firstWhere('locale', 'en');
 
         $activeVariants = $product->variants->where('is_active', true);
-        $minPriceRmb = $activeVariants->min('price') ?? $product->price ?? 0;
+        $minVariantPrice = $activeVariants->min('price');
+        $minPriceRmb = $minVariantPrice !== null
+            ? ($product->price + $minVariantPrice)
+            : ($product->price ?? 0);
 
         $thumbnail = $product->thumbnail
             ?? ($product->getFirstMediaUrl('images', 'thumb') ?: $product->getFirstMediaUrl('images') ?: null);

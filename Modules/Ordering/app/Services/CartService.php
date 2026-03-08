@@ -58,7 +58,7 @@ class CartService
     {
         $cart->load('items.variant.product', 'items.product');
 
-        $subtotalRmb = $cart->items->sum(fn ($item) => ($item->variant?->price ?? $item->product?->price ?? 0) * $item->quantity);
+        $subtotalRmb = $cart->items->sum(fn ($item) => (($item->product?->price ?? 0) + ($item->variant?->price ?? 0)) * $item->quantity);
         $subtotalIdr = $currency->rmbToIdr($subtotalRmb);
         $shippingIdr = $shipping->calculateShippingIdr($cart);
         $itemCount = $cart->items->sum('quantity');

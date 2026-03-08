@@ -42,7 +42,7 @@ class CartController extends Controller
                     ?? $product?->translations->firstWhere('locale', 'en');
                 $thumbnail = $product?->thumbnail
                     ?? ($product?->getFirstMediaUrl('images', 'thumb') ?: $product?->getFirstMediaUrl('images') ?: null);
-                $priceRmb = $variant?->price ?? $product?->price ?? 0;
+                $priceRmb = ($product?->price ?? 0) + ($variant?->price ?? 0);
 
                 return [
                     'id' => $item->id,
@@ -52,8 +52,8 @@ class CartController extends Controller
                     'variant' => $variant ? [
                         'id' => $variant->id,
                         'sku' => $variant->sku,
-                        'price' => $variant->price,
-                        'price_idr' => $this->currency->rmbToIdr($variant->price),
+                        'price' => $priceRmb,
+                        'price_idr' => $this->currency->rmbToIdr($priceRmb),
                         'product' => $product ? [
                             'id' => $product->id,
                             'slug' => $product->slug,

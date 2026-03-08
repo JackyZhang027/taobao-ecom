@@ -69,9 +69,9 @@ class ProductController extends Controller
         $variants = $product->variants->where('is_active', true)->map(fn ($v) => [
             'id' => $v->id,
             'sku' => $v->sku,
-            'price_rmb' => $v->price,
-            'price_idr' => $this->currency->rmbToIdr($v->price),
-            'compare_price_idr' => $v->compare_price ? $this->currency->rmbToIdr($v->compare_price) : null,
+            'price_rmb' => $product->price + $v->price,
+            'price_idr' => $this->currency->rmbToIdr($product->price + $v->price),
+            'compare_price_idr' => $v->compare_price ? $this->currency->rmbToIdr($product->price + $v->compare_price) : null,
             'stock' => $v->stock,
             'is_active' => $v->is_active,
             'sort_order' => $v->sort_order,
@@ -116,7 +116,10 @@ class ProductController extends Controller
             ?? $product->translations->firstWhere('locale', 'en');
 
         $activeVariants = $product->variants->where('is_active', true);
-        $minPriceRmb = $activeVariants->min('price') ?? $product->price ?? 0;
+        $minVariantPrice = $activeVariants->min('price');
+        $minPriceRmb = $minVariantPrice !== null
+            ? ($product->price + $minVariantPrice)
+            : ($product->price ?? 0);
 
         $thumbnail = $product->thumbnail
             ?? ($product->getFirstMediaUrl('images', 'thumb') ?: $product->getFirstMediaUrl('images') ?: null);

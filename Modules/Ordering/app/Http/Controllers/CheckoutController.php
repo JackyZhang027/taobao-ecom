@@ -69,7 +69,7 @@ class CheckoutController extends Controller
                 $product = $variant?->product ?? $item->product;
                 $translation = $product?->translations->firstWhere('locale', $locale)
                     ?? $product?->translations->firstWhere('locale', 'en');
-                $priceRmb = $variant?->price ?? $product?->price ?? 0;
+                $priceRmb = ($product?->price ?? 0) + ($variant?->price ?? 0);
                 $unitPriceIdr = $this->currency->rmbToIdr($priceRmb);
 
                 OrderLine::create([
