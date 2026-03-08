@@ -48,12 +48,16 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
+        // Filter out empty translations to avoid validation errors for optional languages
+        $translations = array_filter($request->input('translations', []), fn($t) => !empty($t['name']));
+        $request->merge(['translations' => $translations]);
+
         $request->validate([
             'slug' => 'required|string|unique:products,slug',
             'price' => 'numeric|min:0',
             'delivery_charge' => 'numeric|min:0',
             'categories' => 'required|array|min:1',
-            'translations' => 'required|array',
+            'translations' => 'required|array|min:1',
             'translations.*.name' => 'required|string|max:255',
             'variants' => 'nullable|array',
             'variants.*.sku' => 'required_with:variants|string|max:255',
@@ -119,6 +123,10 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
+        // Filter out empty translations
+        $translations = array_filter($request->input('translations', []), fn($t) => !empty($t['name']));
+        $request->merge(['translations' => $translations]);
+
         $request->validate([
             'slug' => 'required|string|unique:products,slug,' . $product->id,
             'price' => 'numeric|min:0',
@@ -126,6 +134,7 @@ class ProductController extends Controller
             'categories' => 'required|array|min:1',
             'variants' => 'nullable|array',
             'variants.*.sku' => 'required_with:variants|string|max:255',
+            'translations' => 'required|array|min:1',
             'translations.*.name' => 'required|string|max:255',
             'translations.*.meta_title' => 'nullable|string|max:255',
             'translations.*.meta_description' => 'nullable|string|max:500',

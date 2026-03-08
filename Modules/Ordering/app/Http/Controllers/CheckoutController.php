@@ -74,11 +74,11 @@ class CheckoutController extends Controller
 
                 OrderLine::create([
                     'order_id'           => $order->id,
-                    'product_id'         => $variant ? null : $product?->id,
+                    'product_id'         => $product?->id,
                     'product_variant_id' => $variant?->id,
                     'product_name'       => $translation?->name ?? $product?->slug,
                     'variant_name'       => $variant?->sku,
-                    'sku'                => $variant?->sku,
+                    'sku'                => $variant?->sku ?? $product?->slug ?? '-',
                     'unit_price_idr'     => $unitPriceIdr,
                     'quantity'           => $item->quantity,
                     'subtotal_idr'       => $unitPriceIdr * $item->quantity,

@@ -244,12 +244,16 @@ export default function AdminProductCreate({ categories, attributeTypes, exchang
                                         <TabsContent key={locale.key} value={locale.key} className="space-y-4 pt-2">
                                             <div className="space-y-1">
                                                 <Label>Product Name</Label>
-                                                <Input
-                                                    value={formData.translations[locale.key].name}
-                                                    onChange={(e) => updateTranslation(locale.key, 'name', e.target.value)}
-                                                    placeholder={`Product name in ${locale.label}`}
-                                                />
-                                            </div>
+                                                    <Input
+                                                        value={formData.translations[locale.key].name}
+                                                        onChange={(e) => updateTranslation(locale.key, 'name', e.target.value)}
+                                                        placeholder={`Product name in ${locale.label}`}
+                                                        className={errors[`translations.${locale.key}.name`] ? 'border-destructive' : ''}
+                                                    />
+                                                    {errors[`translations.${locale.key}.name`] && (
+                                                        <p className="text-xs text-destructive mt-1">{errors[`translations.${locale.key}.name`]}</p>
+                                                    )}
+                                                </div>
                                             <div className="space-y-1">
                                                 <Label>Description</Label>
                                                 <RichTextEditor
@@ -298,8 +302,21 @@ export default function AdminProductCreate({ categories, attributeTypes, exchang
                                                         placeholder="keyword1, keyword2, keyword3"
                                                         maxLength={255}
                                                     />
+                                                    {errors[`translations.${locale.key}.meta_title`] && (
+                                                        <p className="text-xs text-destructive">{errors[`translations.${locale.key}.meta_title`]}</p>
+                                                    )}
+                                                    {errors[`translations.${locale.key}.meta_description`] && (
+                                                        <p className="text-xs text-destructive">{errors[`translations.${locale.key}.meta_description`]}</p>
+                                                    )}
+                                                    {errors[`translations.${locale.key}.meta_keywords`] && (
+                                                        <p className="text-xs text-destructive">{errors[`translations.${locale.key}.meta_keywords`]}</p>
+                                                    )}
                                                 </div>
                                             </div>
+                                            {/* General Translation Errors */}
+                                            {errors.translations && (
+                                                <p className="text-sm text-destructive mt-4">{errors.translations}</p>
+                                            )}
                                         </TabsContent>
                                     ))}
                                 </Tabs>

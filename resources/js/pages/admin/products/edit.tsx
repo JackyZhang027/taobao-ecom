@@ -286,10 +286,14 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
                                             <div className="space-y-1">
                                                 <Label>Product Name</Label>
                                                 <Input
-                                                    value={formData.translations[locale.key].name}
+                                                    value={formData.translations[locale.key]?.name || ''}
                                                     onChange={(e) => updateTranslation(locale.key, 'name', e.target.value)}
                                                     placeholder={`Product name in ${locale.label}`}
+                                                    className={errors[`translations.${locale.key}.name`] ? 'border-destructive' : ''}
                                                 />
+                                                {errors[`translations.${locale.key}.name`] && (
+                                                    <p className="text-xs text-destructive mt-1">{errors[`translations.${locale.key}.name`]}</p>
+                                                )}
                                             </div>
                                             <div className="space-y-1">
                                                 <Label>Description</Label>
@@ -298,6 +302,9 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
                                                     onChange={(html) => updateTranslation(locale.key, 'description', html)}
                                                     placeholder={`Product description in ${locale.label}...`}
                                                 />
+                                                {errors[`translations.${locale.key}.description`] && (
+                                                    <p className="text-xs text-destructive mt-1">{errors[`translations.${locale.key}.description`]}</p>
+                                                )}
                                             </div>
 
                                             {/* SEO Meta Section */}
@@ -308,39 +315,54 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
                                                 <div className="space-y-1">
                                                     <Label className="text-xs">Meta Title</Label>
                                                     <Input
-                                                        value={formData.translations[locale.key].meta_title}
+                                                        value={formData.translations[locale.key]?.meta_title || ''}
                                                         onChange={(e) => updateTranslation(locale.key, 'meta_title', e.target.value)}
                                                         placeholder="SEO title (max 60 chars recommended)"
                                                         maxLength={255}
+                                                        className={errors[`translations.${locale.key}.meta_title`] ? 'border-destructive' : ''}
                                                     />
                                                     <p className="text-xs text-muted-foreground text-right">
                                                         {formData.translations[locale.key].meta_title.length}/60
                                                     </p>
+                                                    {errors[`translations.${locale.key}.meta_title`] && (
+                                                        <p className="text-xs text-destructive mt-1">{errors[`translations.${locale.key}.meta_title`]}</p>
+                                                    )}
                                                 </div>
                                                 <div className="space-y-1">
                                                     <Label className="text-xs">Meta Description</Label>
                                                     <textarea
                                                         rows={2}
-                                                        value={formData.translations[locale.key].meta_description}
+                                                        value={formData.translations[locale.key]?.meta_description || ''}
                                                         onChange={(e) => updateTranslation(locale.key, 'meta_description', e.target.value)}
                                                         placeholder="SEO description (max 160 chars recommended)"
                                                         maxLength={500}
-                                                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                                        className={errors[`translations.${locale.key}.meta_description`] ? 'border-destructive w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring' : 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring'}
                                                     />
                                                     <p className="text-xs text-muted-foreground text-right">
                                                         {formData.translations[locale.key].meta_description.length}/160
                                                     </p>
+                                                    {errors[`translations.${locale.key}.meta_description`] && (
+                                                        <p className="text-xs text-destructive mt-1">{errors[`translations.${locale.key}.meta_description`]}</p>
+                                                    )}
                                                 </div>
                                                 <div className="space-y-1">
                                                     <Label className="text-xs">Meta Keywords</Label>
                                                     <Input
-                                                        value={formData.translations[locale.key].meta_keywords}
+                                                        value={formData.translations[locale.key]?.meta_keywords || ''}
                                                         onChange={(e) => updateTranslation(locale.key, 'meta_keywords', e.target.value)}
                                                         placeholder="keyword1, keyword2, keyword3"
                                                         maxLength={255}
+                                                        className={errors[`translations.${locale.key}.meta_keywords`] ? 'border-destructive' : ''}
                                                     />
+                                                    {errors[`translations.${locale.key}.meta_keywords`] && (
+                                                        <p className="text-xs text-destructive mt-1">{errors[`translations.${locale.key}.meta_keywords`]}</p>
+                                                    )}
                                                 </div>
                                             </div>
+                                            {/* General Translation Errors */}
+                                            {errors.translations && (
+                                                <p className="text-sm text-destructive mt-4">{errors.translations}</p>
+                                            )}
                                         </TabsContent>
                                     ))}
                                 </Tabs>
