@@ -38,6 +38,7 @@ export default function CustomerLayout({ children, fullWidth = false }: Customer
                         <LanguageSwitcher />
                         {user ? (
                             <>
+                                <Link href="/profile" className="hover:text-blue-400 transition-colors">{t('nav.profile')}</Link>
                                 <Link href="/wishlist" className="hover:text-blue-400 transition-colors">{t('nav.wishlist')}</Link>
                                 <Link href="/orders" className="hover:text-blue-400 transition-colors">{t('nav.orders')}</Link>
                                 <Link href="/logout" method="post" as="button" className="hover:text-blue-400 transition-colors">{t('nav.logout')}</Link>
@@ -81,7 +82,7 @@ export default function CustomerLayout({ children, fullWidth = false }: Customer
                                 )}
                             </Link>
                             {user ? (
-                                <Link href="/orders" className="hidden md:block text-slate-700 hover:text-blue-600 transition-colors">
+                                <Link href="/profile" className="hidden md:block text-slate-700 hover:text-blue-600 transition-colors">
                                     <User className="h-5 w-5" />
                                 </Link>
                             ) : (
@@ -107,6 +108,7 @@ export default function CustomerLayout({ children, fullWidth = false }: Customer
                         <Link href="/shop" className="block text-sm font-medium py-2 hover:text-blue-600" onClick={() => setMobileOpen(false)}>{t('nav.shop')}</Link>
                         {user ? (
                             <>
+                                <Link href="/profile" className="block text-sm font-medium py-2 hover:text-blue-600" onClick={() => setMobileOpen(false)}>{t('nav.profile')}</Link>
                                 <Link href="/wishlist" className="block text-sm font-medium py-2 hover:text-blue-600" onClick={() => setMobileOpen(false)}>{t('nav.wishlist')}</Link>
                                 <Link href="/orders" className="block text-sm font-medium py-2 hover:text-blue-600" onClick={() => setMobileOpen(false)}>{t('nav.orders')}</Link>
                                 <Link href="/logout" method="post" as="button" className="block text-sm font-medium py-2 hover:text-blue-600 text-left w-full" onClick={() => setMobileOpen(false)}>{t('nav.logout')}</Link>

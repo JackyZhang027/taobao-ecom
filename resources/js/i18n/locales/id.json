@@ -7,7 +7,23 @@
         "login": "Masuk",
         "logout": "Keluar",
         "account": "Akun",
-        "wishlist": "Wishlist"
+        "wishlist": "Wishlist",
+        "profile": "Profil"
+    },
+    "profile": {
+        "title": "Profil Saya",
+        "profile_info": "Informasi Profil",
+        "profile_info_desc": "Perbarui nama dan alamat email Anda",
+        "change_password": "Ganti Kata Sandi",
+        "change_password_desc": "Pastikan akun Anda menggunakan kata sandi yang kuat",
+        "name": "Nama Lengkap",
+        "email": "Alamat Email",
+        "current_password": "Kata Sandi Saat Ini",
+        "new_password": "Kata Sandi Baru",
+        "confirm_password": "Konfirmasi Kata Sandi",
+        "save": "Simpan",
+        "save_password": "Perbarui Kata Sandi",
+        "saved": "Tersimpan"
     },
     "product": {
         "add_to_cart": "Tambah ke Keranjang",

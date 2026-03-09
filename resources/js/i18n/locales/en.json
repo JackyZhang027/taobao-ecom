@@ -7,7 +7,23 @@
         "login": "Login",
         "logout": "Logout",
         "account": "Account",
-        "wishlist": "Wishlist"
+        "wishlist": "Wishlist",
+        "profile": "Profile"
+    },
+    "profile": {
+        "title": "My Profile",
+        "profile_info": "Profile Information",
+        "profile_info_desc": "Update your name and email address",
+        "change_password": "Change Password",
+        "change_password_desc": "Ensure your account uses a strong password",
+        "name": "Full Name",
+        "email": "Email Address",
+        "current_password": "Current Password",
+        "new_password": "New Password",
+        "confirm_password": "Confirm Password",
+        "save": "Save",
+        "save_password": "Update Password",
+        "saved": "Saved"
     },
     "product": {
         "add_to_cart": "Add to Cart",

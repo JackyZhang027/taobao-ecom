@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Customer\ProfileController as CustomerProfileController;
 use Illuminate\Support\Facades\Route;
 use Modules\Catalog\Http\Controllers\HomeController;
 use Modules\Catalog\Http\Controllers\ProductController;
@@ -32,6 +33,12 @@ Route::middleware(['auth', 'verified', 'role:customer'])->group(function () {
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{order}/confirm-payment', [OrderController::class, 'confirmPayment'])->name('orders.confirm-payment');
+
+    Route::get('/profile', [CustomerProfileController::class, 'edit'])->name('customer.profile.edit');
+    Route::patch('/profile', [CustomerProfileController::class, 'update'])->name('customer.profile.update');
+    Route::put('/profile/password', [CustomerProfileController::class, 'updatePassword'])
+        ->middleware('throttle:6,1')
+        ->name('customer.profile.password');
 });
 
 Route::post('/webhooks/midtrans', [WebhookController::class, 'handle'])->name('webhooks.midtrans');
