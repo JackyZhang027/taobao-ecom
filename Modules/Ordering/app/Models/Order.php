@@ -20,7 +20,10 @@ class Order extends Model
         'exchange_rate_snapshot',
         'recipient_name',
         'recipient_phone',
-        'shipping_address',
+        'street_address',
+        'city',
+        'province',
+        'postal_code',
         'notes',
     ];
 

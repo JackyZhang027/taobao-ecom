@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Catalog\Http\Controllers\HomeController;
 use Modules\Catalog\Http\Controllers\ProductController;
+use Modules\Catalog\Http\Controllers\WishlistController;
 use Modules\Ordering\Http\Controllers\CartController;
 use Modules\Ordering\Http\Controllers\CheckoutController;
 use Modules\Ordering\Http\Controllers\OrderController;
@@ -23,6 +24,8 @@ Route::patch('/cart/{cartItem}', [CartController::class, 'update'])->name('cart.
 Route::delete('/cart/{cartItem}', [CartController::class, 'destroy'])->name('cart.destroy');
 
 Route::middleware(['auth', 'verified', 'role:customer'])->group(function () {
+    Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+    Route::post('/wishlist/{product}', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/checkout/complete/{order}', [CheckoutController::class, 'complete'])->name('checkout.complete');

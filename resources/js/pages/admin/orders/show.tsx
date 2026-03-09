@@ -101,7 +101,10 @@ export default function AdminOrderShow({ order }: OrderShowProps) {
                                 <p className="font-medium mb-1">Shipping Address</p>
                                 <p>{order.recipient_name}</p>
                                 <p className="text-muted-foreground">{order.recipient_phone}</p>
-                                <p className="text-muted-foreground">{order.shipping_address}</p>
+                                <p className="text-muted-foreground">{order.street_address}</p>
+                                <p className="text-muted-foreground">
+                                    {[order.city, order.province, order.postal_code].filter(Boolean).join(', ')}
+                                </p>
                             </div>
                         </CardContent>
                     </Card>

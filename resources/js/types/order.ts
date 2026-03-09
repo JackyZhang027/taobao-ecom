@@ -28,7 +28,10 @@ export type Order = {
     exchange_rate_snapshot: number;
     recipient_name: string;
     recipient_phone: string;
-    shipping_address: string;
+    street_address: string;
+    city: string;
+    province: string | null;
+    postal_code: string | null;
     notes: string | null;
     created_at: string;
     updated_at: string;

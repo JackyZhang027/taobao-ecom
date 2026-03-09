@@ -32,12 +32,14 @@ export type ProductVariant = {
     price: number;
     price_idr?: number;
     compare_price: number | null;
+    compare_price_idr?: number | null;
     stock: number;
     is_active: boolean;
     sort_order: number;
     attributes?: AttributeValue[];
     attribute_values?: AttributeValue[]; // from Laravel JSON serialization
     attributeValues?: AttributeValue[];
+    product?: Product;
 };
 
 export type ProductTranslation = {
@@ -63,13 +65,20 @@ export type Product = {
     thumbnail: string | null;
     price?: number;
     delivery_charge?: number;
+    delivery_charge_batam?: number;
+    delivery_charge_jakarta?: number;
     delivery_charge_idr?: number;
+    delivery_charge_batam_idr?: number;
+    delivery_charge_jakarta_idr?: number;
     is_active: boolean;
     sort_order: number;
     name: string;
     description: string | null;
     price_idr?: number;
     price_rmb?: number;
+    total_batam_idr?: number | null;
+    total_jakarta_idr?: number | null;
+    is_wishlisted?: boolean;
     variants?: ProductVariant[];
     categories?: Category[];
     translations?: ProductTranslation[];

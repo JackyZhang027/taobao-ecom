@@ -12,7 +12,15 @@ export type CartItem = {
             slug: string;
             thumbnail: string | null;
             name: string;
+            price_idr?: number;
         };
+    };
+    product?: {
+        id: number;
+        slug: string;
+        thumbnail: string | null;
+        name: string;
+        price_idr?: number;
     };
 };
 
@@ -26,6 +34,8 @@ export type Cart = {
 export type CartTotals = {
     subtotal_idr: number;
     shipping_idr: number;
+    shipping_batam_idr: number;
+    shipping_jakarta_idr: number;
     grand_total_idr: number;
     item_count: number;
 };

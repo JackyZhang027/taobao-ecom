@@ -34,7 +34,9 @@ export function VariantSelector({ variants, selectedId, onChange }: VariantSelec
                             disabled={!v.is_active}
                             onClick={() => onChange(v.id)}
                             className={`rounded border px-3 py-1 text-sm transition-colors
-                                ${selectedId === v.id ? 'border-primary bg-primary text-primary-foreground' : 'hover:border-primary'}
+                                ${selectedId === v.id
+                                    ? 'border-primary bg-primary text-primary-foreground'
+                                    : 'bg-white text-slate-900 border-slate-300 hover:border-primary'}
                                 ${!v.is_active ? 'cursor-not-allowed opacity-40' : ''}`}
                         >
                             {v.sku}
@@ -77,7 +79,9 @@ export function VariantSelector({ variants, selectedId, onChange }: VariantSelec
                                         disabled={!matchingVariant}
                                         onClick={() => matchingVariant && onChange(matchingVariant.id)}
                                         className={`rounded border px-3 py-1 text-sm transition-colors
-                                            ${isSelected ? 'border-primary bg-primary text-primary-foreground' : 'hover:border-primary'}
+                                            ${isSelected
+                                                ? 'border-primary bg-primary text-primary-foreground'
+                                                : 'bg-white text-slate-900 border-slate-300 hover:border-primary'}
                                             ${!matchingVariant ? 'cursor-not-allowed opacity-40' : ''}`.trim()}
                                     >
                                         {av.value}

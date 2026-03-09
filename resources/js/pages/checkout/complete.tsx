@@ -26,7 +26,7 @@ export default function CheckoutComplete({ order, snapToken, clientKey, isProduc
                     router.visit(`/orders/${order.id}`);
                 },
                 onPending: () => router.visit(`/orders/${order.id}`),
-                onError: () => router.visit('/checkout'),
+                onError: () => router.visit(`/orders/${order.id}`),
                 onClose: () => router.visit(`/orders/${order.id}`),
             });
         };

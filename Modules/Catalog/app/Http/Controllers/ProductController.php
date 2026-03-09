@@ -5,9 +5,11 @@ namespace Modules\Catalog\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
+use Modules\Admin\Models\ShopSetting;
 use Modules\Catalog\Models\AttributeType;
 use Modules\Catalog\Models\Category;
 use Modules\Catalog\Models\Product;
+use Modules\Catalog\Models\Wishlist;
 use Modules\Currency\Services\CurrencyService;
 
 class ProductController extends Controller
@@ -35,7 +37,12 @@ class ProductController extends Controller
             }
         }
 
-        $products = $query->paginate(12)->through(fn ($p) => $this->transformProduct($p));
+        $user = $request->user();
+        $wishlistProductIds = $user
+            ? Wishlist::where('user_id', $user->id)->pluck('product_id')->flip()
+            : collect();
+
+        $products = $query->paginate(12)->through(fn ($p) => $this->transformProduct($p, $wishlistProductIds));
         $categories = Category::orderBy('sort_order')->get();
         $attributeTypes = AttributeType::with('values')->orderBy('sort_order')->get();
 
@@ -47,11 +54,12 @@ class ProductController extends Controller
         ]);
 
         return Inertia::render('shop', [
-            'products'        => $products,
-            'categories'      => $categories,
-            'currentCategory' => $request->category,
-            'attributeTypes'  => $attributeTypes,
-            'activeFilters'   => empty($activeFilters) ? (object) [] : $activeFilters,
+            'products'         => $products,
+            'categories'       => $categories,
+            'currentCategory'  => $request->category,
+            'attributeTypes'   => $attributeTypes,
+            'activeFilters'    => empty($activeFilters) ? (object) [] : $activeFilters,
+            'whatsapp_number'  => ShopSetting::get('whatsapp_number', ''),
         ]);
     }
 
@@ -98,6 +106,8 @@ class ProductController extends Controller
                 'slug' => $product->slug,
                 'thumbnail' => $thumbnailUrl,
                 'delivery_charge_idr' => $this->currency->rmbToIdr($product->delivery_charge),
+                'delivery_charge_batam_idr' => $this->currency->rmbToIdr($product->delivery_charge_batam ?: $product->delivery_charge),
+                'delivery_charge_jakarta_idr' => $this->currency->rmbToIdr($product->delivery_charge_jakarta ?: $product->delivery_charge),
                 'name' => $translation?->name ?? $product->slug,
                 'description' => $translation?->description,
                 'price_rmb' => $product->price,
@@ -106,10 +116,11 @@ class ProductController extends Controller
                 'variants' => $variants,
                 'media' => $media,
             ],
+            'whatsapp_number' => ShopSetting::get('whatsapp_number', ''),
         ]);
     }
 
-    private function transformProduct(Product $product): array
+    private function transformProduct(Product $product, $wishlistProductIds = null): array
     {
         $locale = app()->getLocale();
         $translation = $product->translations->firstWhere('locale', $locale)
@@ -124,14 +135,20 @@ class ProductController extends Controller
         $thumbnail = $product->thumbnail
             ?? ($product->getFirstMediaUrl('images', 'thumb') ?: $product->getFirstMediaUrl('images') ?: null);
 
+        $deliveryBatamRmb = $product->delivery_charge_batam ?: $product->delivery_charge;
+        $deliveryJakartaRmb = $product->delivery_charge_jakarta ?: $product->delivery_charge;
+
         return [
-            'id' => $product->id,
-            'slug' => $product->slug,
-            'thumbnail' => $thumbnail,
-            'name' => $translation?->name ?? $product->slug,
-            'description' => $translation?->description,
-            'price_idr' => $this->currency->rmbToIdr($minPriceRmb),
-            'price_rmb' => $minPriceRmb,
+            'id'                  => $product->id,
+            'slug'                => $product->slug,
+            'thumbnail'           => $thumbnail,
+            'name'                => $translation?->name ?? $product->slug,
+            'description'         => $translation?->description,
+            'price_idr'           => $this->currency->rmbToIdr($minPriceRmb),
+            'price_rmb'           => $minPriceRmb,
+            'total_batam_idr'     => $this->currency->rmbToIdr($minPriceRmb + $deliveryBatamRmb),
+            'total_jakarta_idr'   => $this->currency->rmbToIdr($minPriceRmb + $deliveryJakartaRmb),
+            'is_wishlisted'       => $wishlistProductIds ? $wishlistProductIds->has($product->id) : false,
         ];
     }
 }

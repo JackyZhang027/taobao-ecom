@@ -18,6 +18,7 @@ export default function AdminShopSettings({ settings }: { settings: ShopSetting 
             meta_keywords: settings.meta_keywords || '',
             contact_email: settings.contact_email || '',
             contact_phone: settings.contact_phone || '',
+            whatsapp_number: settings.whatsapp_number || '',
         }
     });
 
@@ -92,6 +93,16 @@ export default function AdminShopSettings({ settings }: { settings: ShopSetting 
                                             onChange={(e: any) => setData('settings', { ...data.settings, contact_phone: e.target.value })}
                                         />
                                     </div>
+                                </div>
+                                <div className="space-y-1">
+                                    <Label htmlFor="whatsapp_number">WhatsApp Number</Label>
+                                    <Input
+                                        id="whatsapp_number"
+                                        value={data.settings.whatsapp_number}
+                                        onChange={(e: any) => setData('settings', { ...data.settings, whatsapp_number: e.target.value })}
+                                        placeholder="e.g. 6281234567890 (no + or spaces)"
+                                    />
+                                    <p className="text-xs text-muted-foreground">Used for the "Order Other Locations" WhatsApp button on the shop page.</p>
                                 </div>
                             </CardContent>
                         </Card>

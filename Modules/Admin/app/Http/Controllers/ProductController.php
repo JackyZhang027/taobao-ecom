@@ -54,8 +54,10 @@ class ProductController extends Controller
 
         $request->validate([
             'slug' => 'required|string|unique:products,slug',
-            'price' => 'numeric|min:0',
+            'price' => 'required|numeric|min:0.01',
             'delivery_charge' => 'numeric|min:0',
+            'delivery_charge_batam' => 'required|numeric|min:0',
+            'delivery_charge_jakarta' => 'required|numeric|min:0',
             'categories' => 'required|array|min:1',
             'translations' => 'required|array|min:1',
             'translations.*.name' => 'required|string|max:255',
@@ -68,7 +70,7 @@ class ProductController extends Controller
             'images.*' => 'image|max:10240',
         ]);
 
-        $product = Product::create($request->only(['slug', 'thumbnail', 'price', 'delivery_charge', 'is_active', 'sort_order']));
+        $product = Product::create($request->only(['slug', 'thumbnail', 'price', 'delivery_charge', 'delivery_charge_batam', 'delivery_charge_jakarta', 'is_active', 'sort_order']));
 
         foreach ($request->translations as $locale => $data) {
             ProductTranslation::create(['product_id' => $product->id, 'locale' => $locale, ...$data]);
@@ -129,8 +131,10 @@ class ProductController extends Controller
 
         $request->validate([
             'slug' => 'required|string|unique:products,slug,' . $product->id,
-            'price' => 'numeric|min:0',
+            'price' => 'required|numeric|min:0.01',
             'delivery_charge' => 'numeric|min:0',
+            'delivery_charge_batam' => 'required|numeric|min:0',
+            'delivery_charge_jakarta' => 'required|numeric|min:0',
             'categories' => 'required|array|min:1',
             'variants' => 'nullable|array',
             'variants.*.sku' => 'required_with:variants|string|max:255',
@@ -143,7 +147,7 @@ class ProductController extends Controller
             'images.*' => 'image|max:10240',
         ]);
 
-        $product->update($request->only(['slug', 'thumbnail', 'price', 'delivery_charge', 'is_active', 'sort_order']));
+        $product->update($request->only(['slug', 'thumbnail', 'price', 'delivery_charge', 'delivery_charge_batam', 'delivery_charge_jakarta', 'is_active', 'sort_order']));
 
         foreach ($request->translations ?? [] as $locale => $data) {
             ProductTranslation::updateOrCreate(

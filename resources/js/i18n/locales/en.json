@@ -6,7 +6,8 @@
         "orders": "Orders",
         "login": "Login",
         "logout": "Logout",
-        "account": "Account"
+        "account": "Account",
+        "wishlist": "Wishlist"
     },
     "product": {
         "add_to_cart": "Add to Cart",
@@ -16,13 +17,17 @@
         "shipping": "Shipping",
         "description": "Description",
         "variants": "Options",
-        "select_option": "Select option"
+        "select_option": "Select option",
+        "view_detail": "View Detail"
     },
     "cart": {
         "title": "Shopping Cart",
         "empty": "Your cart is empty",
         "subtotal": "Subtotal",
         "shipping": "Shipping",
+        "shipping_batam": "Shipping (Batam)",
+        "shipping_jakarta": "Shipping (Jakarta)",
+        "shipping_note": "Shipping calculated at checkout",
         "total": "Total",
         "checkout": "Proceed to Checkout",
         "continue_shopping": "Continue Shopping",
@@ -63,6 +68,10 @@
         "new_customers": "New Customers (30d)",
         "set_rate": "Set New Rate",
         "rate": "Rate (1 RMB = X IDR)"
+    },
+    "wishlist": {
+        "title": "My Wishlist",
+        "empty": "Your wishlist is empty."
     },
     "common": {
         "save": "Save",

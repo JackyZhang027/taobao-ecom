@@ -73,8 +73,13 @@ export default function CartIndex({ cart, totals }: CartIndexProps) {
                         {/* Cart Items */}
                         <div className="space-y-3">
                             {cart.items.map((item) => {
-                                const price = item.variant?.price_idr ?? 0;
+                                // Full item price = product base price + variant addon price
+                                const productPrice = (item.variant?.product?.price_idr ?? item.product?.price_idr ?? 0);
+                                const variantAddon = item.variant?.price_idr ?? 0;
+                                const price = productPrice + variantAddon;
                                 const subtotal = price * item.quantity;
+                                const productName = item.variant?.product?.name ?? item.product?.name;
+                                const thumbnail = item.variant?.product?.thumbnail ?? item.product?.thumbnail;
                                 return (
                                     <div
                                         key={item.id}
@@ -83,10 +88,10 @@ export default function CartIndex({ cart, totals }: CartIndexProps) {
                                         {/* Product */}
                                         <div className="flex items-center gap-4">
                                             <div className="w-20 h-20 shrink-0 rounded-sm overflow-hidden bg-[#F1F5F9]">
-                                                {item.variant?.product?.thumbnail ? (
+                                                {thumbnail ? (
                                                     <img
-                                                        src={item.variant.product.thumbnail}
-                                                        alt={item.variant.product.name}
+                                                        src={thumbnail}
+                                                        alt={productName}
                                                         className="w-full h-full object-cover"
                                                     />
                                                 ) : (
@@ -95,7 +100,7 @@ export default function CartIndex({ cart, totals }: CartIndexProps) {
                                             </div>
                                             <div>
                                                 <p className="font-medium text-slate-900 text-sm line-clamp-2">
-                                                    {item.variant?.product?.name}
+                                                    {productName}
                                                 </p>
                                                 {item.variant?.sku && (
                                                     <p className="text-xs text-slate-400 mt-0.5">SKU: {item.variant.sku}</p>
@@ -110,6 +115,7 @@ export default function CartIndex({ cart, totals }: CartIndexProps) {
                                                 {price > 0 ? formatIdr(price) : '-'}
                                             </span>
                                         </div>
+
 
                                         {/* Quantity */}
                                         <div className="flex items-center gap-2 border border-slate-200 w-fit rounded-sm overflow-hidden">
@@ -164,6 +170,9 @@ export default function CartIndex({ cart, totals }: CartIndexProps) {
                             <div className="flex justify-between items-center py-3 border-b border-slate-200">
                                 <span className="font-medium text-slate-900">{t('cart.subtotal')}</span>
                                 <span className="text-slate-500">{formatIdr(totals.subtotal_idr)}</span>
+                            </div>
+                            <div className="flex justify-between items-center py-3 border-b border-slate-200">
+                                <span className="text-slate-500 text-xs">{t('cart.shipping_note')}</span>
                             </div>
                             <div className="flex justify-between items-center py-3">
                                 <span className="font-bold text-slate-900">{t('cart.total')}</span>

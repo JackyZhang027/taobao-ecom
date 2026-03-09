@@ -55,6 +55,8 @@ export default function AdminProductCreate({ categories, attributeTypes, exchang
         slug: '',
         price: '0',
         delivery_charge: '0',
+        delivery_charge_batam: '0',
+        delivery_charge_jakarta: '0',
         is_active: true,
         sort_order: '0',
         categories: [] as number[],
@@ -66,9 +68,10 @@ export default function AdminProductCreate({ categories, attributeTypes, exchang
 
     // Computed final price
     const priceRmb = parseFloat(formData.price) || 0;
-    const deliveryChargeRmb = parseFloat(formData.delivery_charge) || 0;
-    const finalPriceRmb = priceRmb + deliveryChargeRmb;
-    const finalPriceIdr = finalPriceRmb * (exchangeRate || 0);
+    const deliveryChargeBatamRmb = parseFloat(formData.delivery_charge_batam) || 0;
+    const deliveryChargeJakartaRmb = parseFloat(formData.delivery_charge_jakarta) || 0;
+    const finalPriceBatamRmb = priceRmb + deliveryChargeBatamRmb;
+    const finalPriceJakartaRmb = priceRmb + deliveryChargeJakartaRmb;
 
     useEffect(() => {
         if (!slugManuallyEdited && formData.translations.en.name) {
@@ -165,6 +168,8 @@ export default function AdminProductCreate({ categories, attributeTypes, exchang
         fd.append('slug', formData.slug);
         fd.append('price', formData.price);
         fd.append('delivery_charge', formData.delivery_charge);
+        fd.append('delivery_charge_batam', formData.delivery_charge_batam);
+        fd.append('delivery_charge_jakarta', formData.delivery_charge_jakarta);
         fd.append('is_active', formData.is_active ? '1' : '0');
         fd.append('sort_order', formData.sort_order);
 
@@ -435,41 +440,93 @@ export default function AdminProductCreate({ categories, attributeTypes, exchang
                                     {errors.slug && <p className="text-sm text-destructive">{errors.slug}</p>}
                                 </div>
                                 <div className="space-y-1">
-                                    <Label htmlFor="price">Price (RMB)</Label>
+                                    <Label htmlFor="price">Price (RMB) <span className="text-destructive">*</span></Label>
                                     <Input
                                         id="price"
                                         type="number"
                                         step="0.01"
+                                        min="0.01"
                                         value={formData.price}
                                         onChange={(e) => setFormData((prev) => ({ ...prev, price: e.target.value }))}
+                                        required
                                     />
+                                    {errors.price && <p className="text-sm text-destructive">{errors.price}</p>}
                                 </div>
                                 <div className="space-y-1">
-                                    <Label htmlFor="delivery_charge">Delivery Charge (RMB)</Label>
+                                    <Label htmlFor="delivery_charge_batam">Delivery Charge — Batam (RMB) <span className="text-destructive">*</span></Label>
                                     <Input
-                                        id="delivery_charge"
+                                        id="delivery_charge_batam"
                                         type="number"
                                         step="0.01"
-                                        value={formData.delivery_charge}
-                                        onChange={(e) => setFormData((prev) => ({ ...prev, delivery_charge: e.target.value }))}
+                                        value={formData.delivery_charge_batam}
+                                        onChange={(e) => setFormData((prev) => ({ ...prev, delivery_charge_batam: e.target.value }))}
+                                        required
                                     />
+                                    {errors.delivery_charge_batam && <p className="text-sm text-destructive">{errors.delivery_charge_batam}</p>}
+                                </div>
+                                <div className="space-y-1">
+                                    <Label htmlFor="delivery_charge_jakarta">Delivery Charge — Jakarta (RMB) <span className="text-destructive">*</span></Label>
+                                    <Input
+                                        id="delivery_charge_jakarta"
+                                        type="number"
+                                        step="0.01"
+                                        value={formData.delivery_charge_jakarta}
+                                        onChange={(e) => setFormData((prev) => ({ ...prev, delivery_charge_jakarta: e.target.value }))}
+                                        required
+                                    />
+                                    {errors.delivery_charge_jakarta && <p className="text-sm text-destructive">{errors.delivery_charge_jakarta}</p>}
                                 </div>
 
                                 {/* Final Price Display */}
-                                <div className="rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3 space-y-1.5">
+                                <div className="rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3 space-y-2">
                                     <div className="flex items-center justify-between">
                                         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Final Price</p>
                                         <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">
                                             Rate: 1 RMB = {exchangeRate.toLocaleString('en-US')} IDR
                                         </span>
                                     </div>
-                                    <div className="flex items-baseline justify-between">
-                                        <span className="text-sm text-muted-foreground">Price + Delivery</span>
-                                        <span className="font-semibold text-sm">{formatRmb(finalPriceRmb)}</span>
+                                    <div className="flex items-baseline justify-between border-b border-muted pb-1.5 pt-1">
+                                        <div className="flex flex-col">
+                                            <span className="text-xs text-muted-foreground">Price</span>
+                                            <span className="text-[10px] text-muted-foreground italic">{formatIdr(priceRmb * exchangeRate)}</span>
+                                        </div>
+                                        <span className="text-sm font-medium">{formatRmb(priceRmb)}</span>
                                     </div>
-                                    <div className="flex items-baseline justify-between">
-                                        <span className="text-sm text-muted-foreground">≈ IDR</span>
-                                        <span className="font-semibold text-sm text-primary">{formatIdr(finalPriceIdr)}</span>
+                                    {/* Batam */}
+                                    <div className="space-y-0.5">
+                                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Batam</p>
+                                        <div className="flex items-baseline justify-between">
+                                            <div className="flex flex-col">
+                                                <span className="text-xs text-muted-foreground">Delivery</span>
+                                                <span className="text-[10px] text-muted-foreground italic">{formatIdr(deliveryChargeBatamRmb * exchangeRate)}</span>
+                                            </div>
+                                            <span className="text-sm font-medium">{formatRmb(deliveryChargeBatamRmb)}</span>
+                                        </div>
+                                        <div className="flex items-baseline justify-between">
+                                            <span className="text-sm font-bold">Total</span>
+                                            <div className="flex flex-col items-end">
+                                                <span className="font-bold text-sm text-primary">{formatIdr(finalPriceBatamRmb * exchangeRate)}</span>
+                                                <span className="text-[10px] text-muted-foreground">{formatRmb(finalPriceBatamRmb)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {/* Jakarta */}
+                                    <div className="space-y-0.5 border-t border-muted pt-1.5">
+                                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Jakarta</p>
+                                        <div className="flex items-baseline justify-between">
+                                            <div className="flex flex-col">
+                                                <span className="text-xs text-muted-foreground">Delivery</span>
+                                                <span className="text-[10px] text-muted-foreground italic">{formatIdr(deliveryChargeJakartaRmb * exchangeRate)}</span>
+                                            </div>
+                                            <span className="text-sm font-medium">{formatRmb(deliveryChargeJakartaRmb)}</span>
+                                        </div>
+                                        <div className="flex items-baseline justify-between">
+                                            <span className="text-sm font-bold">Total</span>
+                                            <div className="flex flex-col items-end">
+                                                <span className="font-bold text-sm text-primary">{formatIdr(finalPriceJakartaRmb * exchangeRate)}</span>
+                                                <span className="text-[10px] text-muted-foreground">{formatRmb(finalPriceJakartaRmb)}</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 

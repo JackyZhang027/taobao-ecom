@@ -21,9 +21,10 @@ interface ShopProps {
     attributeTypes: AttributeType[];
     currentCategory?: string;
     activeFilters: { search?: string; attributes?: number[] };
+    whatsapp_number?: string;
 }
 
-export default function Shop({ products, categories, attributeTypes, currentCategory, activeFilters }: ShopProps) {
+export default function Shop({ products, categories, attributeTypes, currentCategory, activeFilters, whatsapp_number }: ShopProps) {
     const [filterOpen, setFilterOpen] = useState(false);
     const [draftSearch, setDraftSearch] = useState(activeFilters.search ?? '');
     const [draftAttributes, setDraftAttributes] = useState<number[]>(activeFilters.attributes ?? []);
@@ -252,7 +253,7 @@ export default function Shop({ products, categories, attributeTypes, currentCate
                 ) : (
                     <div className="grid grid-cols-2 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {products.data.map((product) => (
-                            <ProductCard key={product.id} product={product} />
+                            <ProductCard key={product.id} product={product} whatsappNumber={whatsapp_number} />
                         ))}
                     </div>
                 )}

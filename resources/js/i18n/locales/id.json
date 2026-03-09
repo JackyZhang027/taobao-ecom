@@ -6,7 +6,8 @@
         "orders": "Pesanan",
         "login": "Masuk",
         "logout": "Keluar",
-        "account": "Akun"
+        "account": "Akun",
+        "wishlist": "Wishlist"
     },
     "product": {
         "add_to_cart": "Tambah ke Keranjang",
@@ -16,13 +17,17 @@
         "shipping": "Ongkir",
         "description": "Deskripsi",
         "variants": "Pilihan",
-        "select_option": "Pilih opsi"
+        "select_option": "Pilih opsi",
+        "view_detail": "Lihat Detail"
     },
     "cart": {
         "title": "Keranjang Belanja",
         "empty": "Keranjang Anda kosong",
         "subtotal": "Subtotal",
         "shipping": "Ongkir",
+        "shipping_batam": "Ongkir (Batam)",
+        "shipping_jakarta": "Ongkir (Jakarta)",
+        "shipping_note": "Ongkir dihitung saat checkout",
         "total": "Total",
         "checkout": "Lanjut ke Pembayaran",
         "continue_shopping": "Lanjut Belanja",
@@ -63,6 +68,10 @@
         "new_customers": "Pelanggan Baru (30h)",
         "set_rate": "Atur Kurs Baru",
         "rate": "Kurs (1 RMB = X IDR)"
+    },
+    "wishlist": {
+        "title": "Wishlist Saya",
+        "empty": "Wishlist Anda masih kosong."
     },
     "common": {
         "save": "Simpan",

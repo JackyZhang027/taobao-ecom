@@ -11,6 +11,7 @@ use Modules\Admin\Http\Controllers\AttributeValueController;
 use Modules\Admin\Http\Controllers\CategoryController;
 use Modules\Admin\Http\Controllers\ShopSettingController;
 use Modules\Admin\Http\Controllers\HeroSlideController;
+use Modules\Admin\Http\Controllers\WishlistController as AdminWishlistController;
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
@@ -20,7 +21,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:ad
     
     Route::get('categories/datatable', [CategoryController::class, 'datatable'])->name('categories.datatable');
     Route::resource('categories', CategoryController::class)->except(['show']);
+    Route::get('wishlists/datatable', [AdminWishlistController::class, 'datatable'])->name('wishlists.datatable');
+    Route::get('wishlists', [AdminWishlistController::class, 'index'])->name('wishlists.index');
+    Route::delete('wishlists/{wishlist}', [AdminWishlistController::class, 'destroy'])->name('wishlists.destroy');
     Route::get('orders/datatable', [OrderController::class, 'datatable'])->name('orders.datatable');
+    Route::get('orders/create', [OrderController::class, 'create'])->name('orders.create');
+    Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');

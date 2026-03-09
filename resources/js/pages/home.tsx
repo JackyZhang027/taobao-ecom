@@ -13,9 +13,10 @@ interface HomeProps {
     categories: Category[];
     shopSettings: Record<string, string>;
     products: Product[];
+    whatsapp_number?: string;
 }
 
-export default function Home({ heroSlides, categories, shopSettings, products }: HomeProps) {
+export default function Home({ heroSlides, categories, shopSettings, products, whatsapp_number }: HomeProps) {
     const { t } = useTranslation();
     const [currentSlide, setCurrentSlide] = useState(0);
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -191,7 +192,7 @@ export default function Home({ heroSlides, categories, shopSettings, products }:
                     </div>
                     <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
                         {products.map((product) => (
-                            <ProductCard key={product.id} product={product} />
+                            <ProductCard key={product.id} product={product} whatsappNumber={whatsapp_number} />
                         ))}
                     </div>
                     <div className="mt-12 flex justify-center">

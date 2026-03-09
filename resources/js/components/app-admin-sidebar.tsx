@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { LayoutGrid, Package, ShoppingCart, Tag, TrendingUp, FolderTree, Settings, Image as ImageIcon } from 'lucide-react';
+import { LayoutGrid, Package, ShoppingCart, Tag, TrendingUp, FolderTree, Settings, Image as ImageIcon, Heart } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -22,6 +22,7 @@ const masterDataItems: NavItem[] = [
 
 const transactionItems: NavItem[] = [
     { title: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+    { title: 'Wishlists', href: '/admin/wishlists', icon: Heart },
 ];
 
 const settingItems: NavItem[] = [

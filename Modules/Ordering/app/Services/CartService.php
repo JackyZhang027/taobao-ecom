@@ -54,20 +54,32 @@ class CartService
         $guestCart->delete();
     }
 
-    public function computeTotals(Cart $cart, CurrencyService $currency, ShippingService $shipping): array
+    public function computeTotals(Cart $cart, CurrencyService $currency, ShippingService $shipping, string $city = 'Batam'): array
     {
         $cart->load('items.variant.product', 'items.product');
 
-        $subtotalRmb = $cart->items->sum(fn ($item) => (($item->product?->price ?? 0) + ($item->variant?->price ?? 0)) * $item->quantity);
+        $subtotalRmb = $cart->items->sum(function ($item) {
+            $product = $item->variant?->product ?? $item->product;
+
+            return (($product?->price ?? 0) + ($item->variant?->price ?? 0)) * $item->quantity;
+        });
         $subtotalIdr = $currency->rmbToIdr($subtotalRmb);
-        $shippingIdr = $shipping->calculateShippingIdr($cart);
+        $shippingBatamIdr = $shipping->calculateShippingIdr($cart, 'Batam');
+        $shippingJakartaIdr = $shipping->calculateShippingIdr($cart, 'Jakarta');
+        $shippingIdr = match (strtolower($city)) {
+            'jakarta' => $shippingJakartaIdr,
+            default   => $shippingBatamIdr,
+        };
         $itemCount = $cart->items->sum('quantity');
 
         return [
-            'subtotal_idr' => $subtotalIdr,
-            'shipping_idr' => $shippingIdr,
-            'grand_total_idr' => $subtotalIdr + $shippingIdr,
-            'item_count' => $itemCount,
+            'subtotal_idr'         => $subtotalIdr,
+            'shipping_idr'         => $shippingIdr,
+            'shipping_batam_idr'   => $shippingBatamIdr,
+            'shipping_jakarta_idr' => $shippingJakartaIdr,
+            'grand_total_idr'      => $subtotalIdr + $shippingIdr,
+            'item_count'           => $itemCount,
+            'city'                 => $city,
         ];
     }
 }
