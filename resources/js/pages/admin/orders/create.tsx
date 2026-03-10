@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Plus, Trash2 } from 'lucide-react';
 import AdminLayout from '@/layouts/admin-layout';
 import { Button } from '@/components/ui/button';
+import { NumberInput } from '@/components/ui/number-input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCurrency } from '@/hooks/use-currency';
 
@@ -275,13 +276,9 @@ export default function AdminOrderCreate({ customers, products, exchangeRate }: 
                                             Delivery Charge (RMB) *
                                             <span className="text-xs text-slate-400 ml-1">Manual — city is not Batam/Jakarta</span>
                                         </label>
-                                        <input
-                                            type="number"
-                                            min={0}
-                                            step="0.01"
-                                            value={manualShippingRmb}
-                                            onChange={(e) => setManualShippingRmb(Number(e.target.value))}
-                                            className="w-full border rounded px-3 py-2 text-sm"
+                                        <NumberInput
+                                            value={String(manualShippingRmb)}
+                                            onChange={(v) => setManualShippingRmb(parseFloat(v) || 0)}
                                         />
                                         {errors.manual_shipping_rmb && <p className="text-xs text-red-500 mt-1">{errors.manual_shipping_rmb}</p>}
                                     </div>

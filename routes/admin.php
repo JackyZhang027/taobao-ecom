@@ -12,6 +12,10 @@ use Modules\Admin\Http\Controllers\CategoryController;
 use Modules\Admin\Http\Controllers\ShopSettingController;
 use Modules\Admin\Http\Controllers\HeroSlideController;
 use Modules\Admin\Http\Controllers\WishlistController as AdminWishlistController;
+use Modules\Accounting\Http\Controllers\AccountController;
+use Modules\Accounting\Http\Controllers\JournalEntryController;
+use Modules\Accounting\Http\Controllers\LedgerController;
+use Modules\Accounting\Http\Controllers\ReportController;
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
@@ -45,4 +49,26 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:ad
 
     Route::get('settings/hero/datatable', [HeroSlideController::class, 'datatable'])->name('settings.hero.datatable');
     Route::resource('settings/hero', HeroSlideController::class)->names('settings.hero');
+
+    // --- Accounting ---
+    // Chart of Accounts
+    Route::get('accounting/accounts/datatable', [AccountController::class, 'datatable'])->name('accounting.accounts.datatable');
+    Route::resource('accounting/accounts', AccountController::class)->names('accounting.accounts')->except(['show']);
+
+    // Journal Entries
+    Route::get('accounting/journals/datatable', [JournalEntryController::class, 'datatable'])->name('accounting.journals.datatable');
+    Route::get('accounting/journals/create', [JournalEntryController::class, 'create'])->name('accounting.journals.create');
+    Route::post('accounting/journals', [JournalEntryController::class, 'store'])->name('accounting.journals.store');
+    Route::get('accounting/journals', [JournalEntryController::class, 'index'])->name('accounting.journals.index');
+    Route::get('accounting/journals/{journalEntry}', [JournalEntryController::class, 'show'])->name('accounting.journals.show');
+    Route::post('accounting/journals/{journalEntry}/post', [JournalEntryController::class, 'post'])->name('accounting.journals.post');
+    Route::post('accounting/journals/{journalEntry}/void', [JournalEntryController::class, 'void'])->name('accounting.journals.void');
+
+    // General Ledger
+    Route::get('accounting/ledger', [LedgerController::class, 'index'])->name('accounting.ledger.index');
+
+    // Reports
+    Route::get('accounting/reports/trial-balance', [ReportController::class, 'trialBalance'])->name('accounting.reports.trial-balance');
+    Route::get('accounting/reports/balance-sheet', [ReportController::class, 'balanceSheet'])->name('accounting.reports.balance-sheet');
+    Route::get('accounting/reports/income-statement', [ReportController::class, 'incomeStatement'])->name('accounting.reports.income-statement');
 });

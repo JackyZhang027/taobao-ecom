@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import AdminLayout from '@/layouts/admin-layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { NumberInput } from '@/components/ui/number-input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -362,11 +363,9 @@ export default function AdminProductCreate({ categories, attributeTypes, exchang
                                             </div>
                                             <div className="space-y-1">
                                                 <Label>Additional Price (RMB)</Label>
-                                                <Input
-                                                    type="number"
-                                                    step="0.01"
+                                                <NumberInput
                                                     value={variant.price}
-                                                    onChange={(e) => updateVariant(index, 'price', e.target.value)}
+                                                    onChange={(v) => updateVariant(index, 'price', v)}
                                                 />
                                             </div>
                                         </div>
@@ -441,37 +440,30 @@ export default function AdminProductCreate({ categories, attributeTypes, exchang
                                 </div>
                                 <div className="space-y-1">
                                     <Label htmlFor="price">Price (RMB) <span className="text-destructive">*</span></Label>
-                                    <Input
+                                    <NumberInput
                                         id="price"
-                                        type="number"
-                                        step="0.01"
-                                        min="0.01"
                                         value={formData.price}
-                                        onChange={(e) => setFormData((prev) => ({ ...prev, price: e.target.value }))}
+                                        onChange={(v) => setFormData((prev) => ({ ...prev, price: v }))}
                                         required
                                     />
                                     {errors.price && <p className="text-sm text-destructive">{errors.price}</p>}
                                 </div>
                                 <div className="space-y-1">
                                     <Label htmlFor="delivery_charge_batam">Delivery Charge — Batam (RMB) <span className="text-destructive">*</span></Label>
-                                    <Input
+                                    <NumberInput
                                         id="delivery_charge_batam"
-                                        type="number"
-                                        step="0.01"
                                         value={formData.delivery_charge_batam}
-                                        onChange={(e) => setFormData((prev) => ({ ...prev, delivery_charge_batam: e.target.value }))}
+                                        onChange={(v) => setFormData((prev) => ({ ...prev, delivery_charge_batam: v }))}
                                         required
                                     />
                                     {errors.delivery_charge_batam && <p className="text-sm text-destructive">{errors.delivery_charge_batam}</p>}
                                 </div>
                                 <div className="space-y-1">
                                     <Label htmlFor="delivery_charge_jakarta">Delivery Charge — Jakarta (RMB) <span className="text-destructive">*</span></Label>
-                                    <Input
+                                    <NumberInput
                                         id="delivery_charge_jakarta"
-                                        type="number"
-                                        step="0.01"
                                         value={formData.delivery_charge_jakarta}
-                                        onChange={(e) => setFormData((prev) => ({ ...prev, delivery_charge_jakarta: e.target.value }))}
+                                        onChange={(v) => setFormData((prev) => ({ ...prev, delivery_charge_jakarta: v }))}
                                         required
                                     />
                                     {errors.delivery_charge_jakarta && <p className="text-sm text-destructive">{errors.delivery_charge_jakarta}</p>}

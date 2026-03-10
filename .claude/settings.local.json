@@ -39,7 +39,23 @@
       "Bash(php artisan tinker --execute=\"print_r\\(DB::select\\(\"\"SELECT CONSTRAINT_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = ''cart_items'' AND TABLE_SCHEMA = DATABASE\\(\\)\"\"\\)\\);\")",
       "Bash(php artisan tinker --execute=\"print_r\\(DB::select\\(\"\"SELECT TABLE_NAME, CONSTRAINT_NAME, COLUMN_NAME, REFERENCED_TABLE_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = DATABASE\\(\\) AND REFERENCED_TABLE_NAME IS NOT NULL AND \\(TABLE_NAME = ''cart_items'' OR REFERENCED_TABLE_NAME = ''cart_items''\\)\"\"\\)\\);\")",
       "Bash(grep -l \"class Order\" /c/Users/user/Herd/taobao/Modules/*/app/Models/*.php)",
-      "Read(//c/Users/user/.claude/plans/**)"
+      "Read(//c/Users/user/.claude/plans/**)",
+      "Bash(xargs grep -l \"ShopSettings\")",
+      "Bash(xargs grep -l \"mergeGuestCart\")",
+      "Bash(xargs grep -l \"Wishlist\\\\|Favorite\\\\|Bookmark\")",
+      "Bash(git add Modules/Admin/app/Http/Controllers/WishlistController.php Modules/Catalog/app/Http/Controllers/WishlistController.php Modules/Catalog/app/Models/Wishlist.php Modules/Catalog/database/migrations/2026_03_09_100001_add_delivery_charges_to_products_table.php Modules/Catalog/database/migrations/2026_03_09_100003_create_wishlists_table.php Modules/Ordering/database/migrations/2026_03_09_100002_restructure_orders_address_fields.php resources/js/pages/admin/orders/create.tsx \"resources/js/pages/admin/wishlists/\" \"resources/js/pages/wishlist/\" Modules/Admin/app/Http/Controllers/OrderController.php Modules/Admin/app/Http/Controllers/ProductController.php Modules/Catalog/app/Http/Controllers/HomeController.php Modules/Catalog/app/Http/Controllers/ProductController.php Modules/Catalog/app/Models/Product.php Modules/Ordering/app/Http/Controllers/CheckoutController.php Modules/Ordering/app/Models/Order.php Modules/Ordering/app/Services/CartService.php Modules/Ordering/app/Services/ShippingService.php app/Listeners/MergeGuestCartOnLogin.php app/Providers/AppServiceProvider.php app/Providers/FortifyServiceProvider.php resources/js/components/app-admin-sidebar.tsx resources/js/components/product-card.tsx resources/js/components/variant-selector.tsx resources/js/i18n/locales/en.json resources/js/i18n/locales/id.json resources/js/layouts/customer-layout.tsx resources/js/pages/admin/orders/show.tsx resources/js/pages/admin/products/create.tsx resources/js/pages/admin/products/edit.tsx resources/js/pages/admin/settings/shop.tsx resources/js/pages/cart/index.tsx resources/js/pages/checkout/complete.tsx resources/js/pages/checkout/index.tsx resources/js/pages/home.tsx resources/js/pages/products/show.tsx resources/js/pages/shop.tsx resources/js/types/cart.ts resources/js/types/order.ts resources/js/types/product.ts routes/admin.php routes/web.php)",
+      "Bash(git commit:*)",
+      "Bash(git push origin master)",
+      "Bash(git add resources/js/i18n/locales/en.json resources/js/i18n/locales/id.json resources/js/layouts/customer-layout.tsx routes/web.php app/Http/Controllers/Customer/ resources/js/pages/profile/)",
+      "Bash(git push)",
+      "Bash(php artisan module:list)",
+      "Bash(php artisan module:enable Accounting)",
+      "Bash(echo \"export type * from ''./accounting'';\")",
+      "Bash(\"c:/Users/user/Herd/taobao/resources/js/types/index.ts\")",
+      "Bash(php artisan route:list --path=accounting)",
+      "Bash(node -e \"const p=require\\(''./package.json''\\); const deps={...p.dependencies,...p.devDependencies}; Object.keys\\(deps\\).filter\\(k=>k.includes\\(''radix''\\)||k.includes\\(''cmdk''\\)\\).forEach\\(k=>console.log\\(k,deps[k]\\)\\)\")",
+      "Bash(npm install @radix-ui/react-popover cmdk)",
+      "Bash(grep -v \"^$\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\user\\.claude\\plans"

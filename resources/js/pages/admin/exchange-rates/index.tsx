@@ -5,6 +5,7 @@ import AdminLayout from '@/layouts/admin-layout';
 import { AdminDataTable, type AdminDataTableRef } from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { NumberInput } from '@/components/ui/number-input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -61,13 +62,11 @@ export default function AdminExchangeRates() {
                         <form onSubmit={submit} className="space-y-4">
                             <div className="space-y-1">
                                 <Label htmlFor="rate">Rate (1 RMB = X IDR)</Label>
-                                <Input
+                                <NumberInput
                                     id="rate"
-                                    type="number"
-                                    step="0.01"
-                                    min="0.01"
                                     value={data.rate}
-                                    onChange={(e) => setData('rate', e.target.value)}
+                                    onChange={(v) => setData('rate', v)}
+                                    placeholder="e.g. 2,200.00"
                                     required
                                 />
                                 {errors.rate && <p className="text-sm text-destructive">{errors.rate}</p>}

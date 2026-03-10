@@ -4,5 +4,6 @@
     "Currency": true,
     "Ordering": true,
     "Payment": true,
-    "Admin": true
+    "Admin": true,
+    "Accounting": true
 }
