@@ -17,6 +17,7 @@
         "laravel/wayfinder": "^0.1.9",
         "midtrans/midtrans-php": "^2.6",
         "nwidart/laravel-modules": "^11.0",
+        "predis/predis": "^3.4",
         "spatie/laravel-medialibrary": "^11.21",
         "spatie/laravel-permission": "^6.0",
         "yajra/laravel-datatables-oracle": "^12.7"

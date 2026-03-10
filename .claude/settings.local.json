@@ -60,7 +60,10 @@
       "Bash(grep -E \"checkout\\\\.\\(success|error\\)\" resources/js/i18n/locales/*.json)",
       "Bash(php artisan tinker --execute=\"echo App\\\\Models\\\\User::where\\(''email'', ''admin@example.com''\\)->exists\\(\\) ? ''exists'' : ''not found'';\")",
       "Bash(php artisan db:seed --class=\"Modules\\\\Admin\\\\Database\\\\Seeders\\\\AdminDatabaseSeeder\")",
-      "Bash(php artisan db:seed)"
+      "Bash(php artisan db:seed)",
+      "Bash(php artisan config:clear)",
+      "Bash(php artisan tinker --execute=\"Cache::forever\\(''cache_ver_products'', microtime\\(true\\)\\); $v = Cache::get\\(''cache_ver_products''\\); Cache::remember\\(''test_product_''.$v, 60, fn\\(\\) => ''ok''\\); echo Cache::get\\(''test_product_''.$v\\);\")",
+      "Bash(php artisan tinker --execute=\"Cache::put\\(''test_ver'', 1\\); echo Cache::get\\(''test_ver''\\);\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\user\\.claude\\plans"

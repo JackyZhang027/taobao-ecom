@@ -5,6 +5,7 @@ namespace Modules\Admin\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Modules\Currency\Models\ExchangeRate;
 use Modules\Currency\Services\CurrencyService;
@@ -33,6 +34,8 @@ class ExchangeRateController extends Controller
     {
         $request->validate(['rate' => 'required|numeric|min:0.01']);
         $this->currency->setRate((float) $request->rate, $request->user()->id, $request->notes);
+
+        Cache::forever('cache_ver_products', microtime(true));
 
         return back();
     }

@@ -4,6 +4,7 @@ namespace Modules\Admin\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Cache;
 use Modules\Catalog\Models\Product;
 use Modules\Catalog\Models\ProductVariant;
 
@@ -24,6 +25,8 @@ class VariantController extends Controller
             $variant->attributeValues()->sync($request->attribute_value_ids);
         }
 
+        Cache::forever('cache_ver_products', microtime(true));
+
         return back();
     }
 
@@ -39,12 +42,16 @@ class VariantController extends Controller
             $variant->attributeValues()->sync($request->attribute_value_ids);
         }
 
+        Cache::forever('cache_ver_products', microtime(true));
+
         return back();
     }
 
     public function destroy(ProductVariant $variant)
     {
         $variant->delete();
+
+        Cache::forever('cache_ver_products', microtime(true));
 
         return back();
     }

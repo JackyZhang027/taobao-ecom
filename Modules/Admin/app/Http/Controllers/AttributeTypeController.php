@@ -5,6 +5,7 @@ namespace Modules\Admin\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Modules\Catalog\Models\AttributeType;
 use Yajra\DataTables\Facades\DataTables;
@@ -45,6 +46,8 @@ class AttributeTypeController extends Controller
             }
         }
 
+        Cache::forever('cache_ver_attributes', microtime(true));
+
         return redirect()->route('admin.attribute-types.index');
     }
 
@@ -62,12 +65,16 @@ class AttributeTypeController extends Controller
         $request->validate(['name' => 'required|string|max:100']);
         $attributeType->update($request->only(['name', 'name_id', 'sort_order']));
 
+        Cache::forever('cache_ver_attributes', microtime(true));
+
         return back();
     }
 
     public function destroy(AttributeType $attributeType)
     {
         $attributeType->delete();
+
+        Cache::forever('cache_ver_attributes', microtime(true));
 
         return redirect()->route('admin.attribute-types.index');
     }

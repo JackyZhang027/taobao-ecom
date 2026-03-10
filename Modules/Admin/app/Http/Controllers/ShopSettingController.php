@@ -4,6 +4,7 @@ namespace Modules\Admin\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Modules\Admin\Models\ShopSetting;
 
@@ -29,6 +30,8 @@ class ShopSettingController extends Controller
         foreach ($data['settings'] as $key => $value) {
             ShopSetting::set($key, $value);
         }
+
+        Cache::forever('cache_ver_settings', microtime(true));
 
         // Return a response suitable for Inertia / Toast
         return redirect()->back();

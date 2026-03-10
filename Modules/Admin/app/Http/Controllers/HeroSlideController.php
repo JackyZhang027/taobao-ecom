@@ -4,6 +4,7 @@ namespace Modules\Admin\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Modules\Admin\Models\HeroSlide;
 use Yajra\DataTables\Facades\DataTables;
@@ -52,6 +53,8 @@ class HeroSlideController extends Controller
             $slide->addMediaFromRequest('image')->toMediaCollection('image');
         }
 
+        Cache::forever('cache_ver_hero', microtime(true));
+
         return redirect()->route('admin.settings.hero.index');
     }
 
@@ -90,12 +93,17 @@ class HeroSlideController extends Controller
             $hero->addMediaFromRequest('image')->toMediaCollection('image');
         }
 
+        Cache::forever('cache_ver_hero', microtime(true));
+
         return redirect()->route('admin.settings.hero.index');
     }
 
     public function destroy(HeroSlide $hero)
     {
         $hero->delete();
+
+        Cache::forever('cache_ver_hero', microtime(true));
+
         return redirect()->route('admin.settings.hero.index');
     }
 }

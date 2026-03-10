@@ -4,6 +4,7 @@ namespace Modules\Catalog\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Modules\Admin\Models\ShopSetting;
 use Modules\Catalog\Models\AttributeType;
@@ -38,13 +39,38 @@ class ProductController extends Controller
         }
 
         $user = $request->user();
-        $wishlistProductIds = $user
-            ? Wishlist::where('user_id', $user->id)->pluck('product_id')->flip()
-            : collect();
 
-        $products = $query->paginate(12)->through(fn ($p) => $this->transformProduct($p, $wishlistProductIds));
-        $categories = Category::orderBy('sort_order')->get();
-        $attributeTypes = AttributeType::with('values')->orderBy('sort_order')->get();
+        $catV      = Cache::get('cache_ver_categories', 0);
+        $attrV     = Cache::get('cache_ver_attributes', 0);
+        $settingsV = Cache::get('cache_ver_settings', 0);
+        $productV  = Cache::get('cache_ver_products', 0);
+
+        $categories = Cache::remember("shop_all_categories_{$catV}", 3600, fn () =>
+            Category::orderBy('sort_order')->get()
+        );
+
+        $attributeTypes = Cache::remember("shop_attribute_types_{$attrV}", 3600, fn () =>
+            AttributeType::with('values')->orderBy('sort_order')->get()
+        );
+
+        $shopSettings = Cache::remember("shop_settings_{$settingsV}", 3600, fn () =>
+            ShopSetting::all()->pluck('value', 'key')
+        );
+
+        $filterKey = md5(serialize($request->only(['category', 'search', 'attributes', 'page'])));
+        $paginatedData = Cache::remember("shop_products_{$filterKey}_{$productV}", 600, function () use ($query) {
+            return $query->paginate(12)
+                ->through(fn ($p) => $this->transformProduct($p, collect([])))
+                ->toArray();
+        });
+
+        if ($user) {
+            $wishlistIds = Wishlist::where('user_id', $user->id)->pluck('product_id')->flip();
+            $paginatedData['data'] = array_map(function ($p) use ($wishlistIds) {
+                $p['is_wishlisted'] = $wishlistIds->has($p['id']);
+                return $p;
+            }, $paginatedData['data']);
+        }
 
         $activeFilters = array_filter([
             'search'     => $request->input('search') ?: null,
@@ -54,69 +80,84 @@ class ProductController extends Controller
         ]);
 
         return Inertia::render('shop', [
-            'products'         => $products,
+            'products'         => $paginatedData,
             'categories'       => $categories,
             'currentCategory'  => $request->category,
             'attributeTypes'   => $attributeTypes,
             'activeFilters'    => empty($activeFilters) ? (object) [] : $activeFilters,
-            'whatsapp_number'  => ShopSetting::get('whatsapp_number', ''),
+            'whatsapp_number'  => $shopSettings->get('whatsapp_number', ''),
         ]);
     }
 
     public function show(string $slug)
     {
-        $product = Product::with(['translations', 'variants.attributeValues.type', 'categories', 'media'])
-            ->where('slug', $slug)
-            ->where('is_active', true)
-            ->firstOrFail();
+        $productV = Cache::get('cache_ver_products', 0);
+        $productData = Cache::remember("product_show_{$slug}_{$productV}", 3600, function () use ($slug) {
+            $product = Product::with(['translations', 'variants.attributeValues.type', 'categories', 'media'])
+                ->where('slug', $slug)
+                ->where('is_active', true)
+                ->firstOrFail();
 
-        $locale = app()->getLocale();
-        $translation = $product->translations->firstWhere('locale', $locale)
-            ?? $product->translations->firstWhere('locale', 'en');
+            $locale = app()->getLocale();
+            $translation = $product->translations->firstWhere('locale', $locale)
+                ?? $product->translations->firstWhere('locale', 'en');
 
-        $variants = $product->variants->where('is_active', true)->map(fn ($v) => [
-            'id' => $v->id,
-            'sku' => $v->sku,
-            'price_rmb' => $product->price + $v->price,
-            'price_idr' => $this->currency->rmbToIdr($product->price + $v->price),
-            'compare_price_idr' => $v->compare_price ? $this->currency->rmbToIdr($product->price + $v->compare_price) : null,
-            'stock' => $v->stock,
-            'is_active' => $v->is_active,
-            'sort_order' => $v->sort_order,
-            'attributes' => $v->attributeValues->map(fn ($av) => [
-                'id' => $av->id,
-                'value' => $av->value,
-                'value_id' => $av->value_id,
-                'type' => ['id' => $av->type->id, 'name' => $av->type->name, 'name_id' => $av->type->name_id],
-            ]),
-        ]);
+            $variants = $product->variants->where('is_active', true)->map(fn ($v) => [
+                'id'                => $v->id,
+                'sku'               => $v->sku,
+                'price_rmb'         => $product->price + $v->price,
+                'price_idr'         => $this->currency->rmbToIdr($product->price + $v->price),
+                'compare_price_idr' => $v->compare_price ? $this->currency->rmbToIdr($product->price + $v->compare_price) : null,
+                'stock'             => $v->stock,
+                'is_active'         => $v->is_active,
+                'sort_order'        => $v->sort_order,
+                'attributes'        => $v->attributeValues->map(fn ($av) => [
+                    'id'       => $av->id,
+                    'value'    => $av->value,
+                    'value_id' => $av->value_id,
+                    'type'     => ['id' => $av->type->id, 'name' => $av->type->name, 'name_id' => $av->type->name_id],
+                ]),
+            ]);
 
-        $media = $product->getMedia('images')->map(fn ($m) => [
-            'id'    => $m->id,
-            'url'   => $m->getUrl('optimized') ?: $m->getUrl(),
-            'thumb' => $m->getUrl('thumb') ?: $m->getUrl(),
-        ])->values();
+            $media = $product->getMedia('images')->map(fn ($m) => [
+                'id'    => $m->id,
+                'url'   => $m->getUrl('optimized') ?: $m->getUrl(),
+                'thumb' => $m->getUrl('thumb') ?: $m->getUrl(),
+            ])->values();
 
-        $thumbnailUrl = $product->thumbnail
-            ?? ($media->isNotEmpty() ? ($media->first()['thumb'] ?? $media->first()['url']) : null);
+            $thumbnailUrl = $product->thumbnail
+                ?? ($media->isNotEmpty() ? ($media->first()['thumb'] ?? $media->first()['url']) : null);
+
+            return [
+                'id'                          => $product->id,
+                'slug'                        => $product->slug,
+                'thumbnail'                   => $thumbnailUrl,
+                'delivery_charge_idr'         => $this->currency->rmbToIdr($product->delivery_charge),
+                'delivery_charge_batam_idr'   => $this->currency->rmbToIdr($product->delivery_charge_batam ?: $product->delivery_charge),
+                'delivery_charge_jakarta_idr' => $this->currency->rmbToIdr($product->delivery_charge_jakarta ?: $product->delivery_charge),
+                'name'                        => $translation?->name ?? $product->slug,
+                'description'                 => $translation?->description,
+                'price_rmb'                   => $product->price,
+                'price_idr'                   => $product->price ? $this->currency->rmbToIdr($product->price) : null,
+                'categories'                  => $product->categories->map(fn ($c) => [
+                    'id'      => $c->id,
+                    'name'    => $c->name,
+                    'name_id' => $c->name_id,
+                    'slug'    => $c->slug,
+                ])->all(),
+                'variants'                    => $variants,
+                'media'                       => $media,
+            ];
+        });
+
+        $settingsV = Cache::get('cache_ver_settings', 0);
+        $shopSettings = Cache::remember("shop_settings_{$settingsV}", 3600, fn () =>
+            ShopSetting::all()->pluck('value', 'key')
+        );
 
         return Inertia::render('products/show', [
-            'product' => [
-                'id' => $product->id,
-                'slug' => $product->slug,
-                'thumbnail' => $thumbnailUrl,
-                'delivery_charge_idr' => $this->currency->rmbToIdr($product->delivery_charge),
-                'delivery_charge_batam_idr' => $this->currency->rmbToIdr($product->delivery_charge_batam ?: $product->delivery_charge),
-                'delivery_charge_jakarta_idr' => $this->currency->rmbToIdr($product->delivery_charge_jakarta ?: $product->delivery_charge),
-                'name' => $translation?->name ?? $product->slug,
-                'description' => $translation?->description,
-                'price_rmb' => $product->price,
-                'price_idr' => $product->price ? $this->currency->rmbToIdr($product->price) : null,
-                'categories' => $product->categories,
-                'variants' => $variants,
-                'media' => $media,
-            ],
-            'whatsapp_number' => ShopSetting::get('whatsapp_number', ''),
+            'product'         => $productData,
+            'whatsapp_number' => $shopSettings->get('whatsapp_number', ''),
         ]);
     }
 

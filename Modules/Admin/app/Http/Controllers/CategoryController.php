@@ -5,6 +5,7 @@ namespace Modules\Admin\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Modules\Catalog\Models\Category;
@@ -58,6 +59,8 @@ class CategoryController extends Controller
         if ($request->hasFile('image')) {
             $category->addMedia($request->file('image'))->toMediaCollection('image');
         }
+
+        Cache::forever('cache_ver_categories', microtime(true));
 
         return redirect()->route('admin.categories.index');
     }
@@ -135,6 +138,8 @@ class CategoryController extends Controller
             $category->addMedia($request->file('image'))->toMediaCollection('image');
         }
 
+        Cache::forever('cache_ver_categories', microtime(true));
+
         return redirect()->route('admin.categories.index');
     }
 
@@ -151,6 +156,8 @@ class CategoryController extends Controller
         }
 
         $category->delete();
+
+        Cache::forever('cache_ver_categories', microtime(true));
 
         return redirect()->route('admin.categories.index');
     }

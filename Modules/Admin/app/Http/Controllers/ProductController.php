@@ -5,6 +5,7 @@ namespace Modules\Admin\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Modules\Catalog\Models\AttributeType;
 use Modules\Catalog\Models\Category;
@@ -103,6 +104,8 @@ class ProductController extends Controller
                 $variant->attributeValues()->sync($variantData['attribute_value_ids']);
             }
         }
+
+        Cache::forever('cache_ver_products', microtime(true));
 
         return redirect()->route('admin.products.edit', $product);
     }
@@ -213,12 +216,16 @@ class ProductController extends Controller
             $product->variants()->delete();
         }
 
+        Cache::forever('cache_ver_products', microtime(true));
+
         return redirect()->back();
     }
 
     public function destroy(Product $product)
     {
         $product->delete();
+
+        Cache::forever('cache_ver_products', microtime(true));
 
         return redirect()->route('admin.products.index');
     }
