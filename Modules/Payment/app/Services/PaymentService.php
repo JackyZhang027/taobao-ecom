@@ -66,6 +66,10 @@ class PaymentService
 
         $order = $payment->order;
 
+        if (! $order) {
+            return;
+        }
+
         match ($payload['transaction_status']) {
             'settlement', 'capture' => $order->update(['status' => 'confirmed']),
             'cancel', 'expire', 'deny' => $order->update(['status' => 'cancelled']),

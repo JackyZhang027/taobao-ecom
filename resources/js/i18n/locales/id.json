@@ -58,7 +58,9 @@
         "shipping_address": "Alamat Pengiriman",
         "notes": "Catatan Pesanan",
         "place_order": "Buat Pesanan",
-        "order_summary": "Ringkasan Pesanan"
+        "order_summary": "Ringkasan Pesanan",
+        "success": "Pesanan berhasil dibuat!",
+        "error": "Gagal membuat pesanan. Silakan periksa kembali data Anda."
     },
     "orders": {
         "title": "Pesanan Saya",

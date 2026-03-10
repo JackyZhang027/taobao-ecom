@@ -62,11 +62,23 @@ class CategoryController extends Controller
         return redirect()->route('admin.categories.index');
     }
 
+    /**
+     * Recursively collect IDs of a category and all its descendants.
+     */
+    private function descendantIds(Category $category): array
+    {
+        $ids = [$category->id];
+        foreach ($category->children as $child) {
+            $ids = array_merge($ids, $this->descendantIds($child));
+        }
+
+        return $ids;
+    }
+
     public function edit(Category $category)
     {
-        // Get all categories EXCEPT the current one and its descendants (to prevent cyclic parent assignment)
-        // For simplicity, we just exclude the current category itself, but ideally we'd exclude descendants too.
-        $categories = Category::where('id', '!=', $category->id)->get();
+        $excludedIds = $this->descendantIds($category->load('children.children'));
+        $categories = Category::whereNotIn('id', $excludedIds)->get();
 
         $media = $category->getFirstMedia('image');
         $image = $media ? [
@@ -95,10 +107,10 @@ class CategoryController extends Controller
             'parent_id' => [
                 'nullable',
                 Rule::exists('categories', 'id'),
-                // Prevent category from being its own parent
+                // Prevent circular hierarchy (self or any descendant)
                 function ($attribute, $value, $fail) use ($category) {
-                    if ($value == $category->id) {
-                        $fail('A category cannot be its own parent.');
+                    if ($value && in_array((int) $value, $this->descendantIds($category->load('children.children')))) {
+                        $fail('A category cannot have itself or one of its descendants as its parent.');
                     }
                 },
             ],

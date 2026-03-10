@@ -68,6 +68,9 @@ class ProductController extends Controller
             'translations.*.meta_keywords' => 'nullable|string|max:255',
             'images' => 'nullable|array',
             'images.*' => 'image|max:10240',
+        ], [
+            'translations.required' => 'At least one translation with a product name is required.',
+            'translations.min' => 'At least one translation with a product name is required.',
         ]);
 
         $product = Product::create($request->only(['slug', 'thumbnail', 'price', 'delivery_charge', 'delivery_charge_batam', 'delivery_charge_jakarta', 'is_active', 'sort_order']));
@@ -145,6 +148,9 @@ class ProductController extends Controller
             'translations.*.meta_keywords' => 'nullable|string|max:255',
             'images' => 'nullable|array',
             'images.*' => 'image|max:10240',
+        ], [
+            'translations.required' => 'At least one translation with a product name is required.',
+            'translations.min' => 'At least one translation with a product name is required.',
         ]);
 
         $product->update($request->only(['slug', 'thumbnail', 'price', 'delivery_charge', 'delivery_charge_batam', 'delivery_charge_jakarta', 'is_active', 'sort_order']));

@@ -13,10 +13,17 @@ declare module '@inertiajs/core' {
     }
 }
 
+interface SnapPayOptions {
+    onSuccess?: (result: Record<string, unknown>) => void;
+    onPending?: (result: Record<string, unknown>) => void;
+    onError?: (result: Record<string, unknown>) => void;
+    onClose?: () => void;
+}
+
 declare global {
     interface Window {
         snap: {
-            pay: (token: string, options: object) => void;
+            pay: (token: string, options: SnapPayOptions) => void;
         };
     }
 }

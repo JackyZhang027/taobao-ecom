@@ -2,6 +2,7 @@
 
 namespace Modules\Ordering\Services;
 
+use Illuminate\Support\Facades\Log;
 use Modules\Currency\Services\CurrencyService;
 use Modules\Ordering\Models\Cart;
 
@@ -12,11 +13,13 @@ class ShippingService
     public function calculateShippingRmb(Cart $cart, string $city = 'Batam'): float
     {
         return $cart->items
-            ->load('variant.product', 'product')
+            ->loadMissing('variant.product', 'product')
             ->unique(fn ($item) => $item->variant?->product_id ?? ('p_' . $item->product_id))
             ->sum(function ($item) use ($city) {
                 $product = $item->variant?->product ?? $item->product;
                 if (! $product) {
+                    Log::warning('ShippingService: cart item has no resolvable product', ['cart_item_id' => $item->id]);
+
                     return 0;
                 }
 

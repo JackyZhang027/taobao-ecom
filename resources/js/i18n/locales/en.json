@@ -58,7 +58,9 @@
         "shipping_address": "Shipping Address",
         "notes": "Order Notes",
         "place_order": "Place Order",
-        "order_summary": "Order Summary"
+        "order_summary": "Order Summary",
+        "success": "Order placed successfully!",
+        "error": "Failed to place order. Please check your details."
     },
     "orders": {
         "title": "My Orders",
