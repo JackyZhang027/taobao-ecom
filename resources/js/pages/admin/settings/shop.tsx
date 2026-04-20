@@ -9,7 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { ShopSetting } from '@/types/settings';
 
 export default function AdminShopSettings({ settings }: { settings: ShopSetting }) {
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors } = useForm<{
+        settings: Record<string, any>;
+        favicon: File | null;
+        logo: File | null;
+    }>({
         settings: {
             shop_name: settings.shop_name || '',
             description: settings.description || '',
@@ -19,12 +23,15 @@ export default function AdminShopSettings({ settings }: { settings: ShopSetting 
             contact_email: settings.contact_email || '',
             contact_phone: settings.contact_phone || '',
             whatsapp_number: settings.whatsapp_number || '',
-        }
+        },
+        favicon: null,
+        logo: null,
     });
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
         post('/admin/settings/shop', {
+            forceFormData: true,
             onSuccess: () => toast.success('Shop settings updated successfully'),
             onError: () => toast.error('Failed to update settings'),
         });
@@ -58,12 +65,45 @@ export default function AdminShopSettings({ settings }: { settings: ShopSetting 
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="space-y-1">
-                                    <Label htmlFor="shop_name">Shop Name</Label>
+                                    <Label htmlFor="shop_name">Shop / App Name</Label>
                                     <Input
                                         id="shop_name"
                                         value={data.settings.shop_name}
                                         onChange={(e: any) => setData('settings', { ...data.settings, shop_name: e.target.value })}
+                                        placeholder="Enter the name of your shop"
                                     />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <Label htmlFor="logo">Logo Image</Label>
+                                        {(settings as any).logo && (
+                                            <div className="mb-2">
+                                                <img src={(settings as any).logo} alt="Logo" className="h-12 w-auto object-contain bg-muted/50 p-2 rounded" />
+                                            </div>
+                                        )}
+                                        <Input
+                                            id="logo"
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e: any) => setData('logo', e.target.files?.[0] || null)}
+                                        />
+                                        <p className="text-xs text-muted-foreground">Will be used in the navbar and auth layouts.</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="favicon">Favicon</Label>
+                                        {(settings as any).favicon && (
+                                            <div className="mb-2">
+                                                <img src={(settings as any).favicon} alt="Favicon" className="h-8 w-8 object-contain bg-muted/50 p-1 rounded" />
+                                            </div>
+                                        )}
+                                        <Input
+                                            id="favicon"
+                                            type="file"
+                                            accept="image/x-icon,image/png,image/svg+xml"
+                                            onChange={(e: any) => setData('favicon', e.target.files?.[0] || null)}
+                                        />
+                                    </div>
                                 </div>
 
                                 <div className="space-y-1">

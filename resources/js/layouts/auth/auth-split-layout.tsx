@@ -8,7 +8,7 @@ export default function AuthSplitLayout({
     title,
     description,
 }: AuthLayoutProps) {
-    const { name } = usePage().props;
+    const { name, shopSettings } = usePage<any>().props;
 
     return (
         <div className="relative grid h-dvh flex-col items-center justify-center px-8 sm:px-0 lg:max-w-none lg:grid-cols-2 lg:px-0">
@@ -22,8 +22,12 @@ export default function AuthSplitLayout({
                     href={home()}
                     className="relative z-20 flex items-center text-lg font-bold tracking-tight"
                 >
-                    <AppLogoIcon className="mr-2 size-8 fill-current text-white" />
-                    Taobao
+                    {shopSettings?.logo ? (
+                        <img src={shopSettings.logo} alt="Logo" className="mr-2 h-8 w-auto object-contain" />
+                    ) : (
+                        <AppLogoIcon className="mr-2 size-8 fill-current text-white" />
+                    )}
+                    {name}
                 </Link>
                 <div className="relative z-20 mt-auto">
                     <blockquote className="space-y-2">
@@ -40,7 +44,11 @@ export default function AuthSplitLayout({
                         href={home()}
                         className="relative z-20 flex items-center justify-center lg:hidden"
                     >
-                        <AppLogoIcon className="h-10 fill-current text-black sm:h-12" />
+                        {shopSettings?.logo ? (
+                            <img src={shopSettings.logo} alt="Logo" className="h-10 sm:h-12 w-auto object-contain" />
+                        ) : (
+                            <AppLogoIcon className="h-10 fill-current text-black sm:h-12" />
+                        )}
                     </Link>
                     <div className="flex flex-col space-y-2 text-center sm:text-left">
                         <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>

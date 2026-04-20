@@ -23,12 +23,26 @@ class ShopSettingController extends Controller
 
     public function update(Request $request)
     {
-        $data = $request->validate([
-            'settings' => 'required|array',
+        $request->validate([
+            'settings' => 'nullable|array',
+            'favicon' => 'nullable|image',
+            'logo' => 'nullable|image',
         ]);
 
-        foreach ($data['settings'] as $key => $value) {
-            ShopSetting::set($key, $value);
+        if ($request->has('settings')) {
+            foreach ($request->settings as $key => $value) {
+                ShopSetting::set($key, $value);
+            }
+        }
+
+        if ($request->hasFile('favicon')) {
+            $path = $request->file('favicon')->store('settings', 'public');
+            ShopSetting::set('favicon', \Illuminate\Support\Facades\Storage::url($path));
+        }
+
+        if ($request->hasFile('logo')) {
+            $path = $request->file('logo')->store('settings', 'public');
+            ShopSetting::set('logo', \Illuminate\Support\Facades\Storage::url($path));
         }
 
         Cache::forever('cache_ver_settings', microtime(true));
