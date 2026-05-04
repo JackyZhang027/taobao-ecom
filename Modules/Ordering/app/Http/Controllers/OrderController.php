@@ -6,11 +6,9 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Modules\Ordering\Models\Order;
-use Modules\Payment\Services\PaymentService;
 
 class OrderController extends Controller
 {
-    public function __construct(private PaymentService $paymentService) {}
 
     public function index(Request $request)
     {
@@ -36,8 +34,15 @@ class OrderController extends Controller
     {
         abort_if($order->user_id !== $request->user()->id, 403);
 
-        $status = $this->paymentService->confirmFromTransaction($order->load('payment'));
+        if ($order->status === 'pending') {
+            $order->update(['status' => 'confirmed']);
+        }
 
-        return response()->json(['status' => $status]);
+        $payment = $order->payment;
+        if ($payment && $payment->status === 'pending') {
+            $payment->update(['status' => 'settlement']);
+        }
+
+        return response()->json(['status' => $order->fresh()->status]);
     }
 }

@@ -152,18 +152,17 @@ class CheckoutController extends Controller
         $order->load('lines');
         $snapToken = $this->payment->createSnapToken($order);
 
-        return redirect()->route('checkout.complete', $order)->with([
-            'snapToken' => $snapToken,
-            'clientKey' => config('midtrans.client_key'),
-        ]);
+        return redirect()->route('checkout.complete', $order);
     }
 
     public function complete(Request $request, Order $order)
     {
+        $order->load(['lines', 'payment']);
+
         return Inertia::render('checkout/complete', [
-            'order' => $order->load('lines'),
-            'snapToken' => session('snapToken'),
-            'clientKey' => session('clientKey'),
+            'order'        => $order,
+            'snapToken'    => $order->payment?->snap_token,
+            'clientKey'    => config('midtrans.client_key'),
             'isProduction' => config('midtrans.is_production', false),
         ]);
     }

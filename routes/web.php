@@ -24,7 +24,7 @@ Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
 Route::patch('/cart/{cartItem}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/cart/{cartItem}', [CartController::class, 'destroy'])->name('cart.destroy');
 
-Route::middleware(['auth', 'verified', 'role:customer'])->group(function () {
+Route::middleware(['auth', 'verified', 'role:customer|admin'])->group(function () {
     Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
     Route::post('/wishlist/{product}', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');

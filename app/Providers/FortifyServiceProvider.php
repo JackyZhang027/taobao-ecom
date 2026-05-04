@@ -11,6 +11,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
+use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
 
@@ -24,11 +25,27 @@ class FortifyServiceProvider extends ServiceProvider
         $this->app->instance(LoginResponseContract::class, new class implements LoginResponseContract {
             public function toResponse($request)
             {
-                $url = $request->user()->hasRole('admin') ? '/admin' : '/shop';
+                if ($request->wantsJson()) {
+                    return response()->json(['two_factor' => false]);
+                }
 
+                if ($request->user()->hasRole('admin')) {
+                    return redirect()->intended('/admin');
+                }
+
+                // For customers, discard any intended URL pointing to the admin panel
+                $intended = session()->pull('url.intended');
+
+                return redirect(($intended && ! str_starts_with($intended, '/admin')) ? $intended : '/shop');
+            }
+        });
+
+        $this->app->instance(RegisterResponseContract::class, new class implements RegisterResponseContract {
+            public function toResponse($request)
+            {
                 return $request->wantsJson()
-                    ? response()->json(['two_factor' => false])
-                    : redirect()->intended($url);
+                    ? new \Illuminate\Http\JsonResponse('', 201)
+                    : redirect('/shop');
             }
         });
     }
