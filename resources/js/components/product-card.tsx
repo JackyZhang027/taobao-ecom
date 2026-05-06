@@ -42,9 +42,9 @@ export function ProductCard({ product, whatsappNumber }: ProductCardProps) {
     const waMessage = encodeURIComponent(`Halo, saya ingin memesan: ${product.name}`);
     const waLink = whatsappNumber ? `https://wa.me/${whatsappNumber}?text=${waMessage}` : null;
 
-    const hasDualPrices =
-        product.total_batam_idr !== undefined && product.total_batam_idr !== null &&
-        product.total_jakarta_idr !== undefined && product.total_jakarta_idr !== null;
+    const hasBatam = product.total_batam_idr != null && product.total_batam_idr > 0;
+    const hasJakarta = product.total_jakarta_idr != null && product.total_jakarta_idr > 0;
+    const hasDualPrices = hasBatam || hasJakarta;
 
     return (
         <div className="relative bg-[#F1F5F9] overflow-hidden rounded-sm">
@@ -114,31 +114,48 @@ export function ProductCard({ product, whatsappNumber }: ProductCardProps) {
                 <div className="mt-2">
                     {hasDualPrices ? (
                         <div className="flex flex-col gap-0.5">
-                            <div className="flex items-center justify-between text-sm">
-                                <span className="text-slate-500">Batam</span>
-                                <span className="font-bold text-slate-900">{formatIdr(product.total_batam_idr!)}</span>
-                            </div>
-                            <div className="flex items-center justify-between text-sm">
-                                <span className="text-slate-500">Jakarta</span>
-                                <span className="font-bold text-slate-900">{formatIdr(product.total_jakarta_idr!)}</span>
-                            </div>
+                            {hasBatam && (
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-slate-500">Batam</span>
+                                    <span className="font-bold text-slate-900">{formatIdr(product.total_batam_idr!)}</span>
+                                </div>
+                            )}
+                            {hasJakarta && (
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-slate-500">Jakarta</span>
+                                    <span className="font-bold text-slate-900">{formatIdr(product.total_jakarta_idr!)}</span>
+                                </div>
+                            )}
                         </div>
-                    ) : product.price_idr !== undefined ? (
-                        <span className="font-bold text-slate-900">{formatIdr(product.price_idr)}</span>
                     ) : null}
                 </div>
 
-                {waLink && (
-                    <a
-                        href={waLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-3 flex items-center justify-center gap-2 w-full py-2 text-xs font-medium text-white bg-green-500 hover:bg-green-600 transition-colors rounded-sm"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <MessageCircle className="h-3.5 w-3.5" />
-                        Pesan ke Lokasi Lain
-                    </a>
+                {hasDualPrices ? (
+                    waLink && (
+                        <a
+                            href={waLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-3 flex items-center justify-center gap-2 w-full py-2 text-xs font-medium text-white bg-green-500 hover:bg-green-600 transition-colors rounded-sm"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <MessageCircle className="h-3.5 w-3.5" />
+                            Pesan ke Lokasi Lain
+                        </a>
+                    )
+                ) : (
+                    waLink && (
+                        <a
+                            href={waLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-3 flex items-center justify-center gap-2 w-full py-2 text-xs font-medium text-white bg-green-500 hover:bg-green-600 transition-colors rounded-sm"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <MessageCircle className="h-3.5 w-3.5" />
+                            Contact WA
+                        </a>
+                    )
                 )}
             </div>
         </div>

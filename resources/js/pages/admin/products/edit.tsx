@@ -20,6 +20,9 @@ interface VariantRow {
     is_active: boolean;
     sort_order: string;
     attribute_value_ids: number[];
+    existingImageUrl?: string | null;
+    imageFile?: File | null;
+    imagePreview?: string | null;
 }
 
 interface TranslationData {
@@ -58,6 +61,9 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
             is_active: v.is_active ?? true,
             sort_order: String(v.sort_order ?? 0),
             attribute_value_ids: (v.attribute_values || v.attributeValues)?.map((av: any) => av.id) ?? [],
+            existingImageUrl: v.image_url ?? null,
+            imageFile: null,
+            imagePreview: null,
         })) ?? [];
 
     const [slugManuallyEdited, setSlugManuallyEdited] = useState(true);
@@ -99,10 +105,11 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
 
     // Computed final price
     const priceRmb = parseFloat(formData.price) || 0;
-    const deliveryChargeBatamRmb = parseFloat(formData.delivery_charge_batam) || 0;
-    const deliveryChargeJakartaRmb = parseFloat(formData.delivery_charge_jakarta) || 0;
-    const finalPriceBatamRmb = priceRmb + deliveryChargeBatamRmb;
-    const finalPriceJakartaRmb = priceRmb + deliveryChargeJakartaRmb;
+    const deliveryChargeBatamIdr = parseFloat(formData.delivery_charge_batam) || 0;
+    const deliveryChargeJakartaIdr = parseFloat(formData.delivery_charge_jakarta) || 0;
+    const priceIdr = priceRmb * exchangeRate;
+    const finalPriceBatamIdr = priceIdr + deliveryChargeBatamIdr;
+    const finalPriceJakartaIdr = priceIdr + deliveryChargeJakartaIdr;
 
     useEffect(() => {
         if (!slugManuallyEdited && formData.translations.en.name) {
@@ -127,8 +134,20 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
     const addVariant = () => {
         setVariants((prev) => [
             ...prev,
-            { sku: '', price: '0', is_active: true, sort_order: '0', attribute_value_ids: [] },
+            { sku: '', price: '0', is_active: true, sort_order: '0', attribute_value_ids: [], existingImageUrl: null, imageFile: null, imagePreview: null },
         ]);
+    };
+
+    const handleVariantImageChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0] ?? null;
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            setVariants((prev) => prev.map((v, i) =>
+                i === index ? { ...v, imageFile: file, imagePreview: ev.target?.result as string } : v
+            ));
+        };
+        reader.readAsDataURL(file);
     };
 
     const updateVariant = (index: number, field: keyof VariantRow, value: any) => {
@@ -200,6 +219,16 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
             }
         }
 
+        // Validate: each variant must have an image (existing or newly uploaded)
+        if (variants.length > 0) {
+            const missingImage = variants.some((v) => !v.existingImageUrl && !v.imageFile);
+            if (missingImage) {
+                setErrors({ variants_image: 'Each variant must have an image.' });
+                setProcessing(false);
+                return;
+            }
+        }
+
         const fd = new FormData();
         fd.append('_method', 'PUT');
         fd.append('slug', formData.slug);
@@ -236,6 +265,12 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
 
         deletedImageIds.forEach((id) => fd.append('deleted_images[]', String(id)));
         newImageFiles.forEach((file) => fd.append('images[]', file));
+
+        variants.forEach((variant, vi) => {
+            if (variant.imageFile) {
+                fd.append(`variants[${vi}][image]`, variant.imageFile);
+            }
+        });
 
         router.post(`/admin/products/${product.id}`, fd, {
             forceFormData: true,
@@ -395,6 +430,35 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
                                                 <Trash2 className="h-4 w-4 text-destructive" />
                                             </Button>
                                         </div>
+                                        {/* Variant image upload */}
+                                        <div className="space-y-1">
+                                            <Label>
+                                                Variant Image <span className="text-destructive">*</span>
+                                            </Label>
+                                            <div className="flex items-center gap-3">
+                                                {(variant.imagePreview || variant.existingImageUrl) && (
+                                                    <img
+                                                        src={variant.imagePreview ?? variant.existingImageUrl!}
+                                                        alt="Variant"
+                                                        className="h-16 w-16 rounded object-cover border"
+                                                    />
+                                                )}
+                                                <label className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-muted-foreground/40 px-3 py-2 text-sm hover:border-primary/50 hover:bg-muted/50 transition-colors">
+                                                    <Upload className="h-4 w-4 text-muted-foreground" />
+                                                    {variant.existingImageUrl || variant.imagePreview ? 'Replace image' : 'Upload image'}
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        className="hidden"
+                                                        onChange={(e) => handleVariantImageChange(index, e)}
+                                                    />
+                                                </label>
+                                            </div>
+                                            {errors.variants_image && !variant.existingImageUrl && !variant.imageFile && (
+                                                <p className="text-xs text-destructive">{errors.variants_image}</p>
+                                            )}
+                                        </div>
+
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="space-y-1">
                                                 <Label>SKU</Label>
@@ -494,22 +558,20 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
                                     {errors.price && <p className="text-sm text-destructive">{errors.price}</p>}
                                 </div>
                                 <div className="space-y-1">
-                                    <Label htmlFor="delivery_charge_batam">Delivery Charge — Batam (RMB) <span className="text-destructive">*</span></Label>
+                                    <Label htmlFor="delivery_charge_batam">Delivery Charge — Batam (IDR)</Label>
                                     <NumberInput
                                         id="delivery_charge_batam"
                                         value={formData.delivery_charge_batam}
                                         onChange={(v) => setFormData((prev) => ({ ...prev, delivery_charge_batam: v }))}
-                                        required
                                     />
                                     {errors.delivery_charge_batam && <p className="text-sm text-destructive">{errors.delivery_charge_batam}</p>}
                                 </div>
                                 <div className="space-y-1">
-                                    <Label htmlFor="delivery_charge_jakarta">Delivery Charge — Jakarta (RMB) <span className="text-destructive">*</span></Label>
+                                    <Label htmlFor="delivery_charge_jakarta">Delivery Charge — Jakarta (IDR)</Label>
                                     <NumberInput
                                         id="delivery_charge_jakarta"
                                         value={formData.delivery_charge_jakarta}
                                         onChange={(v) => setFormData((prev) => ({ ...prev, delivery_charge_jakarta: v }))}
-                                        required
                                     />
                                     {errors.delivery_charge_jakarta && <p className="text-sm text-destructive">{errors.delivery_charge_jakarta}</p>}
                                 </div>
@@ -523,46 +585,31 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
                                         </span>
                                     </div>
                                     <div className="flex items-baseline justify-between border-b border-muted pb-1.5 pt-1">
-                                        <div className="flex flex-col">
-                                            <span className="text-xs text-muted-foreground">Price</span>
-                                            <span className="text-[10px] text-muted-foreground italic">{formatIdr(priceRmb * exchangeRate)}</span>
-                                        </div>
-                                        <span className="text-sm font-medium">{formatRmb(priceRmb)}</span>
+                                        <span className="text-xs text-muted-foreground">Price (IDR)</span>
+                                        <span className="text-sm font-medium">{formatIdr(priceIdr)}</span>
                                     </div>
                                     {/* Batam */}
                                     <div className="space-y-0.5">
                                         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Batam</p>
                                         <div className="flex items-baseline justify-between">
-                                            <div className="flex flex-col">
-                                                <span className="text-xs text-muted-foreground">Delivery</span>
-                                                <span className="text-[10px] text-muted-foreground italic">{formatIdr(deliveryChargeBatamRmb * exchangeRate)}</span>
-                                            </div>
-                                            <span className="text-sm font-medium">{formatRmb(deliveryChargeBatamRmb)}</span>
+                                            <span className="text-xs text-muted-foreground">Delivery (IDR)</span>
+                                            <span className="text-sm font-medium">{formatIdr(deliveryChargeBatamIdr)}</span>
                                         </div>
                                         <div className="flex items-baseline justify-between">
                                             <span className="text-sm font-bold">Total</span>
-                                            <div className="flex flex-col items-end">
-                                                <span className="font-bold text-sm text-primary">{formatIdr(finalPriceBatamRmb * exchangeRate)}</span>
-                                                <span className="text-[10px] text-muted-foreground">{formatRmb(finalPriceBatamRmb)}</span>
-                                            </div>
+                                            <span className="font-bold text-sm text-primary">{formatIdr(finalPriceBatamIdr)}</span>
                                         </div>
                                     </div>
                                     {/* Jakarta */}
                                     <div className="space-y-0.5 border-t border-muted pt-1.5">
                                         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Jakarta</p>
                                         <div className="flex items-baseline justify-between">
-                                            <div className="flex flex-col">
-                                                <span className="text-xs text-muted-foreground">Delivery</span>
-                                                <span className="text-[10px] text-muted-foreground italic">{formatIdr(deliveryChargeJakartaRmb * exchangeRate)}</span>
-                                            </div>
-                                            <span className="text-sm font-medium">{formatRmb(deliveryChargeJakartaRmb)}</span>
+                                            <span className="text-xs text-muted-foreground">Delivery (IDR)</span>
+                                            <span className="text-sm font-medium">{formatIdr(deliveryChargeJakartaIdr)}</span>
                                         </div>
                                         <div className="flex items-baseline justify-between">
                                             <span className="text-sm font-bold">Total</span>
-                                            <div className="flex flex-col items-end">
-                                                <span className="font-bold text-sm text-primary">{formatIdr(finalPriceJakartaRmb * exchangeRate)}</span>
-                                                <span className="text-[10px] text-muted-foreground">{formatRmb(finalPriceJakartaRmb)}</span>
-                                            </div>
+                                            <span className="font-bold text-sm text-primary">{formatIdr(finalPriceJakartaIdr)}</span>
                                         </div>
                                     </div>
                                 </div>

@@ -72,6 +72,18 @@ class CartService
         };
         $itemCount = $cart->items->sum('quantity');
 
+        $uniqueItems = $cart->items->unique(
+            fn ($item) => $item->variant?->product_id ?? ('p_' . $item->product_id)
+        );
+        $canDeliverBatam = $uniqueItems->every(function ($item) {
+            $product = $item->variant?->product ?? $item->product;
+            return $product && ($product->delivery_charge_batam ?: $product->delivery_charge) > 0;
+        });
+        $canDeliverJakarta = $uniqueItems->every(function ($item) {
+            $product = $item->variant?->product ?? $item->product;
+            return $product && ($product->delivery_charge_jakarta ?: $product->delivery_charge) > 0;
+        });
+
         return [
             'subtotal_idr'         => $subtotalIdr,
             'shipping_idr'         => $shippingIdr,
@@ -80,6 +92,8 @@ class CartService
             'grand_total_idr'      => $subtotalIdr + $shippingIdr,
             'item_count'           => $itemCount,
             'city'                 => $city,
+            'can_deliver_batam'    => $canDeliverBatam,
+            'can_deliver_jakarta'  => $canDeliverJakarta,
         ];
     }
 }

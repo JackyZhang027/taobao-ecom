@@ -36,6 +36,7 @@ export type ProductVariant = {
     stock: number;
     is_active: boolean;
     sort_order: number;
+    image_url?: string | null;
     attributes?: AttributeValue[];
     attribute_values?: AttributeValue[]; // from Laravel JSON serialization
     attributeValues?: AttributeValue[];

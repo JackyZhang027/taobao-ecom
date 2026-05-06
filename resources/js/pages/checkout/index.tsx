@@ -47,6 +47,8 @@ export default function CheckoutIndex({ cart, totals, whatsapp_number }: Checkou
         });
     };
 
+    const canDeliver = data.city === 'Jakarta' ? totals.can_deliver_jakarta : totals.can_deliver_batam;
+
     // Per-item price for order summary sidebar
     const itemPrice = (item: Cart['items'][0]) => {
         const productPrice = item.variant?.product?.price_idr ?? item.product?.price_idr ?? 0;
@@ -161,6 +163,11 @@ export default function CheckoutIndex({ cart, totals, whatsapp_number }: Checkou
                                             </button>
                                         ))}
                                     </div>
+                                    {!canDeliver && (
+                                        <p className="text-xs text-red-500 mt-1">
+                                            Delivery is not available to {data.city}. Please select another city.
+                                        </p>
+                                    )}
                                     {errors.city && <p className="text-xs text-red-500 mt-1">{errors.city}</p>}
                                 </div>
 
@@ -209,8 +216,8 @@ export default function CheckoutIndex({ cart, totals, whatsapp_number }: Checkou
 
                         <button
                             type="submit"
-                            disabled={processing}
-                            className="w-full bg-slate-900 hover:bg-slate-800 disabled:opacity-60 text-white py-4 font-semibold text-sm uppercase tracking-widest transition-colors rounded-sm"
+                            disabled={processing || !canDeliver}
+                            className="w-full bg-slate-900 hover:bg-slate-800 disabled:opacity-60 disabled:cursor-not-allowed text-white py-4 font-semibold text-sm uppercase tracking-widest transition-colors rounded-sm"
                         >
                             {processing ? 'Placing Order...' : t('checkout.place_order')}
                         </button>

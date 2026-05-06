@@ -93,7 +93,7 @@ class ProductController extends Controller
     {
         $productV = Cache::get('cache_ver_products', 0);
         $productData = Cache::remember("product_show_{$slug}_{$productV}", 3600, function () use ($slug) {
-            $product = Product::with(['translations', 'variants.attributeValues.type', 'categories', 'media'])
+            $product = Product::with(['translations', 'variants.attributeValues.type', 'variants.media', 'categories', 'media'])
                 ->where('slug', $slug)
                 ->where('is_active', true)
                 ->firstOrFail();
@@ -111,6 +111,7 @@ class ProductController extends Controller
                 'stock'             => $v->stock,
                 'is_active'         => $v->is_active,
                 'sort_order'        => $v->sort_order,
+                'image_url'         => $v->getFirstMediaUrl('image') ?: null,
                 'attributes'        => $v->attributeValues->map(fn ($av) => [
                     'id'       => $av->id,
                     'value'    => $av->value,
@@ -132,9 +133,9 @@ class ProductController extends Controller
                 'id'                          => $product->id,
                 'slug'                        => $product->slug,
                 'thumbnail'                   => $thumbnailUrl,
-                'delivery_charge_idr'         => $this->currency->rmbToIdr($product->delivery_charge),
-                'delivery_charge_batam_idr'   => $this->currency->rmbToIdr($product->delivery_charge_batam ?: $product->delivery_charge),
-                'delivery_charge_jakarta_idr' => $this->currency->rmbToIdr($product->delivery_charge_jakarta ?: $product->delivery_charge),
+                'delivery_charge_idr'         => (float) $product->delivery_charge,
+                'delivery_charge_batam_idr'   => (float) ($product->delivery_charge_batam ?: $product->delivery_charge),
+                'delivery_charge_jakarta_idr' => (float) ($product->delivery_charge_jakarta ?: $product->delivery_charge),
                 'name'                        => $translation?->name ?? $product->slug,
                 'description'                 => $translation?->description,
                 'price_rmb'                   => $product->price,
@@ -176,8 +177,8 @@ class ProductController extends Controller
         $thumbnail = $product->thumbnail
             ?? ($product->getFirstMediaUrl('images', 'thumb') ?: $product->getFirstMediaUrl('images') ?: null);
 
-        $deliveryBatamRmb = $product->delivery_charge_batam ?: $product->delivery_charge;
-        $deliveryJakartaRmb = $product->delivery_charge_jakarta ?: $product->delivery_charge;
+        $deliveryBatamIdr = (float) ($product->delivery_charge_batam ?: $product->delivery_charge);
+        $deliveryJakartaIdr = (float) ($product->delivery_charge_jakarta ?: $product->delivery_charge);
 
         return [
             'id'                  => $product->id,
@@ -187,8 +188,8 @@ class ProductController extends Controller
             'description'         => $translation?->description,
             'price_idr'           => $this->currency->rmbToIdr($minPriceRmb),
             'price_rmb'           => $minPriceRmb,
-            'total_batam_idr'     => $this->currency->rmbToIdr($minPriceRmb + $deliveryBatamRmb),
-            'total_jakarta_idr'   => $this->currency->rmbToIdr($minPriceRmb + $deliveryJakartaRmb),
+            'total_batam_idr'     => $deliveryBatamIdr > 0 ? $this->currency->rmbToIdr($minPriceRmb) + $deliveryBatamIdr : null,
+            'total_jakarta_idr'   => $deliveryJakartaIdr > 0 ? $this->currency->rmbToIdr($minPriceRmb) + $deliveryJakartaIdr : null,
             'is_wishlisted'       => $wishlistProductIds ? $wishlistProductIds->has($product->id) : false,
         ];
     }

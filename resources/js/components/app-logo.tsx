@@ -6,12 +6,12 @@ export default function AppLogo() {
 
     return (
         <>
-            <div className="flex aspect-square size-8 items-center justify-center rounded-md bg-transparent text-sidebar-primary-foreground overflow-hidden">
+            <div className="flex aspect-square size-12 items-center justify-center rounded-md bg-transparent text-sidebar-primary-foreground overflow-hidden">
                 {shopSettings?.logo ? (
                     <img src={shopSettings.logo} alt="Logo" className="w-full h-full object-contain" />
                 ) : (
-                    <div className="flex aspect-square size-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
-                        <AppLogoIcon className="size-5 fill-current text-white dark:text-black" />
+                    <div className="flex aspect-square size-12 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
+                        <AppLogoIcon className="size-7 fill-current text-white dark:text-black" />
                     </div>
                 )}
             </div>

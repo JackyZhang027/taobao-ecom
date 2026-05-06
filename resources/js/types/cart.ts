@@ -38,4 +38,6 @@ export type CartTotals = {
     shipping_jakarta_idr: number;
     grand_total_idr: number;
     item_count: number;
+    can_deliver_batam: boolean;
+    can_deliver_jakarta: boolean;
 };

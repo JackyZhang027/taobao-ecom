@@ -103,6 +103,15 @@ class CheckoutController extends Controller
 
         $city = $request->city;
         $totals = $this->cartService->computeTotals($cart, $this->currency, $this->shipping, $city);
+
+        $canDeliver = strtolower($city) === 'jakarta'
+            ? $totals['can_deliver_jakarta']
+            : $totals['can_deliver_batam'];
+
+        if (! $canDeliver) {
+            return back()->withErrors(['city' => 'Delivery is not available for the selected city.']);
+        }
+
         $exchangeRate = $this->currency->getActiveRate();
 
         $order = DB::transaction(function () use ($request, $cart, $totals, $exchangeRate, $city) {

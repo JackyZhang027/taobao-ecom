@@ -26,18 +26,54 @@ export default function ProductShow({ product, whatsapp_number }: ShowProps) {
     const [activeImageIndex, setActiveImageIndex] = useState(0);
     const [lightboxOpen, setLightboxOpen] = useState(false);
 
+    const noDeliveryAvailable =
+        (product.delivery_charge_batam_idr ?? 0) === 0 &&
+        (product.delivery_charge_jakarta_idr ?? 0) === 0;
+
     const selectedVariant = product.variants?.find((v) => v.id === selectedVariantId);
     const hasVariants = product.variants && product.variants.length > 0;
     const displayPrice = hasVariants ? selectedVariant?.price_idr : product.price_idr;
     const comparePrice = hasVariants ? (selectedVariant?.compare_price_idr ?? null) : null;
 
-    // Build displayable images list: prefer media collection, fall back to thumbnail
-    const images: ProductMedia[] =
+    // Build displayable images: product media first, then any variant images not already present
+    const productImages: ProductMedia[] =
         product.media && product.media.length > 0
             ? product.media
             : product.thumbnail
               ? [{ id: 0, url: product.thumbnail, thumb: product.thumbnail }]
               : [];
+
+    // Map variant id → image index for two-way sync
+    const variantImageMap = new Map<number, number>();
+    const images: ProductMedia[] = [...productImages];
+    product.variants?.forEach((variant) => {
+        if (variant.image_url) {
+            const existingIdx = images.findIndex((img) => img.url === variant.image_url);
+            if (existingIdx >= 0) {
+                variantImageMap.set(variant.id, existingIdx);
+            } else {
+                variantImageMap.set(variant.id, images.length);
+                images.push({ id: -variant.id, url: variant.image_url, thumb: variant.image_url });
+            }
+        }
+    });
+
+    function handleVariantChange(variantId: number | null) {
+        setSelectedVariantId(variantId);
+        if (variantId !== null && variantImageMap.has(variantId)) {
+            setActiveImageIndex(variantImageMap.get(variantId)!);
+        }
+    }
+
+    function handleImageChange(index: number) {
+        setActiveImageIndex(index);
+        for (const [variantId, imgIndex] of variantImageMap.entries()) {
+            if (imgIndex === index) {
+                setSelectedVariantId(variantId);
+                break;
+            }
+        }
+    }
 
     const activeImage = images[activeImageIndex];
 
@@ -50,6 +86,11 @@ export default function ProductShow({ product, whatsapp_number }: ShowProps) {
         e?.stopPropagation();
         setActiveImageIndex((i) => Math.min(images.length - 1, i + 1));
     }
+
+    const hasShipping =
+        (product.delivery_charge_batam_idr ?? 0) > 0 ||
+        (product.delivery_charge_jakarta_idr ?? 0) > 0 ||
+        !!whatsapp_number;
 
     return (
         <CustomerLayout fullWidth>
@@ -101,7 +142,7 @@ export default function ProductShow({ product, whatsapp_number }: ShowProps) {
                                 {images.map((img, i) => (
                                     <button
                                         key={img.id}
-                                        onClick={() => setActiveImageIndex(i)}
+                                        onClick={() => handleImageChange(i)}
                                         className={`shrink-0 w-16 h-16 rounded-sm overflow-hidden border-2 transition-colors ${
                                             i === activeImageIndex
                                                 ? 'border-blue-600'
@@ -164,14 +205,17 @@ export default function ProductShow({ product, whatsapp_number }: ShowProps) {
                                     <VariantSelector
                                         variants={product.variants}
                                         selectedId={selectedVariantId}
-                                        onChange={setSelectedVariantId}
+                                        onChange={handleVariantChange}
                                     />
                                 </div>
                             )}
 
-                            {(product.delivery_charge_batam_idr !== undefined || product.delivery_charge_jakarta_idr !== undefined) && (
+                            {hasShipping && (
                                 <div className="mb-6">
-                                    <p className="text-sm font-semibold text-slate-700 mb-2">{t('product.shipping')}</p>
+                                    <p className="text-sm font-semibold text-slate-700 mb-2">
+                                        {t('product.shipping')}
+                                    </p>
+
                                     <div className="border border-slate-100 rounded-sm overflow-hidden text-sm">
                                         {/* Header */}
                                         <div className="grid grid-cols-3 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-400 uppercase tracking-wide">
@@ -179,88 +223,107 @@ export default function ProductShow({ product, whatsapp_number }: ShowProps) {
                                             <span className="text-right">Delivery</span>
                                             <span className="text-right">Total</span>
                                         </div>
-                                        {product.delivery_charge_batam_idr !== undefined && (
+
+                                        {/* Batam */}
+                                        {(product.delivery_charge_batam_idr ?? 0) > 0 && (
                                             <div className="grid grid-cols-3 px-3 py-2 border-t border-slate-100">
                                                 <span className="text-slate-700 font-medium">Batam</span>
                                                 <span className="text-right text-slate-500">
-                                                    {product.delivery_charge_batam_idr === 0 ? 'Free' : formatIdr(product.delivery_charge_batam_idr)}
+                                                    {formatIdr(product.delivery_charge_batam_idr!)}
                                                 </span>
                                                 <span className="text-right font-semibold text-slate-900">
-                                                    {displayPrice ? formatIdr(displayPrice + product.delivery_charge_batam_idr) : '-'}
+                                                    {displayPrice
+                                                        ? formatIdr(displayPrice + product.delivery_charge_batam_idr!)
+                                                        : '-'}
                                                 </span>
                                             </div>
                                         )}
-                                        {product.delivery_charge_jakarta_idr !== undefined && (
+
+                                        {/* Jakarta */}
+                                        {(product.delivery_charge_jakarta_idr ?? 0) > 0 && (
                                             <div className="grid grid-cols-3 px-3 py-2 border-t border-slate-100">
                                                 <span className="text-slate-700 font-medium">Jakarta</span>
                                                 <span className="text-right text-slate-500">
-                                                    {product.delivery_charge_jakarta_idr === 0 ? 'Free' : formatIdr(product.delivery_charge_jakarta_idr)}
+                                                    {formatIdr(product.delivery_charge_jakarta_idr!)}
                                                 </span>
                                                 <span className="text-right font-semibold text-slate-900">
-                                                    {displayPrice ? formatIdr(displayPrice + product.delivery_charge_jakarta_idr) : '-'}
+                                                    {displayPrice
+                                                        ? formatIdr(displayPrice + product.delivery_charge_jakarta_idr!)
+                                                        : '-'}
                                                 </span>
                                             </div>
                                         )}
-                                        {/* Others row */}
-                                        <div className="grid grid-cols-3 px-3 py-2 border-t border-slate-100 items-center">
-                                            <span className="text-slate-700 font-medium">Others</span>
-                                            <div className="col-span-2 flex justify-end">
-                                                {whatsapp_number && (
+
+                                        {/* Others - ALWAYS shown if whatsapp exists */}
+                                        {whatsapp_number && (
+                                            <div className="grid grid-cols-3 px-3 py-2 border-t border-slate-100 items-center">
+                                                <span className="text-slate-700 font-medium">Others</span>
+
+                                                <span className="col-span-2 flex justify-end">
                                                     <a
                                                         href={`https://wa.me/${whatsapp_number.replace(/\D/g, '')}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="inline-flex items-center gap-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-semibold px-3 py-1.5 rounded transition-colors"
                                                     >
-                                                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-current" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                                                        <svg
+                                                            viewBox="0 0 24 24"
+                                                            className="h-3.5 w-3.5 fill-current"
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                        >
+                                                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
                                                         </svg>
                                                         Contact WA
                                                     </a>
-                                                )}
+                                                </span>
                                             </div>
-                                        </div>
+                                        )}
                                     </div>
                                 </div>
                             )}
 
-                            <div className="flex items-center gap-3">
-                                <div className="flex items-center border border-slate-200 rounded-sm overflow-hidden shrink-0">
-                                    <button
-                                        type="button"
-                                        onClick={() => setQty((q) => Math.max(1, q - 1))}
-                                        className="w-10 h-12 flex items-center justify-center hover:bg-slate-100 transition-colors"
-                                    >
-                                        <Minus className="h-3.5 w-3.5 text-slate-600" />
-                                    </button>
-                                    <span className="w-10 text-center text-sm font-medium">{qty}</span>
-                                    <button
-                                        type="button"
-                                        onClick={() => setQty((q) => q + 1)}
-                                        className="w-10 h-12 flex items-center justify-center hover:bg-slate-100 transition-colors"
-                                    >
-                                        <Plus className="h-3.5 w-3.5 text-slate-600" />
-                                    </button>
-                                </div>
+                            {!noDeliveryAvailable && (
+                                <div className="flex items-center gap-3">
+                                    <div className="flex items-center border border-slate-200 rounded-sm overflow-hidden shrink-0">
+                                        <button
+                                            type="button"
+                                            onClick={() => setQty((q) => Math.max(1, q - 1))}
+                                            className="w-10 h-12 flex items-center justify-center hover:bg-slate-100 transition-colors"
+                                        >
+                                            <Minus className="h-3.5 w-3.5 text-slate-600" />
+                                        </button>
 
-                                <button
-                                    disabled={product.variants && product.variants.length > 0 && !selectedVariant}
-                                    onClick={() => {
-                                        if (product.variants && product.variants.length > 0) {
-                                            if (selectedVariantId) {
-                                                addItem(selectedVariantId, qty);
+                                        <span className="w-10 text-center text-sm font-medium">{qty}</span>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setQty((q) => q + 1)}
+                                            className="w-10 h-12 flex items-center justify-center hover:bg-slate-100 transition-colors"
+                                        >
+                                            <Plus className="h-3.5 w-3.5 text-slate-600" />
+                                        </button>
+                                    </div>
+
+                                    <button
+                                        disabled={product.variants && product.variants.length > 0 && !selectedVariant}
+                                        onClick={() => {
+                                            if (product.variants && product.variants.length > 0) {
+                                                if (selectedVariantId) {
+                                                    addItem(selectedVariantId, qty);
+                                                    toast.success(t('cart.added') || 'Added to cart');
+                                                }
+                                            } else {
+                                                addProduct(product.id, qty);
                                                 toast.success(t('cart.added') || 'Added to cart');
                                             }
-                                        } else {
-                                            addProduct(product.id, qty);
-                                            toast.success(t('cart.added') || 'Added to cart');
-                                        }
-                                    }}
-                                    className="flex-1 bg-slate-900 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 text-white py-3 font-semibold text-sm uppercase tracking-widest transition-colors rounded-sm"
-                                >
-                                    {t('product.add_to_cart')}
-                                </button>
-                            </div>
+                                        }}
+                                        className="flex-1 bg-slate-900 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 text-white py-3 font-semibold text-sm uppercase tracking-widest transition-colors rounded-sm"
+                                    >
+                                        {t('product.add_to_cart')}
+                                    </button>
+                                </div>
+                            )}
+
                         </div>
                     </div>
                 </div>
@@ -315,7 +378,7 @@ export default function ProductShow({ product, whatsapp_number }: ShowProps) {
                                 {images.map((img, i) => (
                                     <button
                                         key={img.id}
-                                        onClick={(e) => { e.stopPropagation(); setActiveImageIndex(i); }}
+                                        onClick={(e) => { e.stopPropagation(); handleImageChange(i); }}
                                         className={`w-10 h-10 rounded overflow-hidden border-2 transition-colors ${
                                             i === activeImageIndex ? 'border-white' : 'border-white/30'
                                         }`}

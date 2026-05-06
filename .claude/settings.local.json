@@ -65,7 +65,12 @@
       "Bash(php artisan tinker --execute=\"Cache::forever\\(''cache_ver_products'', microtime\\(true\\)\\); $v = Cache::get\\(''cache_ver_products''\\); Cache::remember\\(''test_product_''.$v, 60, fn\\(\\) => ''ok''\\); echo Cache::get\\(''test_product_''.$v\\);\")",
       "Bash(php artisan tinker --execute=\"Cache::put\\(''test_ver'', 1\\); echo Cache::get\\(''test_ver''\\);\")",
       "Bash(xargs grep *)",
-      "Bash(xargs ls *)"
+      "Bash(xargs ls *)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\user\\\\Herd\\\\taobao\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(php artisan *)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\user\\\\Herd\\\\taobao\" -Recurse -Name -Include \"*.tsx\", \"*.ts\", \"*.php\")",
+      "Bash(Select-Object -First 50)"
     ],
     "additionalDirectories": [
       "c:\\Users\\user\\.claude\\plans"

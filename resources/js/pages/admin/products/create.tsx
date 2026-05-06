@@ -449,22 +449,20 @@ export default function AdminProductCreate({ categories, attributeTypes, exchang
                                     {errors.price && <p className="text-sm text-destructive">{errors.price}</p>}
                                 </div>
                                 <div className="space-y-1">
-                                    <Label htmlFor="delivery_charge_batam">Delivery Charge — Batam (RMB) <span className="text-destructive">*</span></Label>
+                                    <Label htmlFor="delivery_charge_batam">Delivery Charge — Batam (IDR)</Label>
                                     <NumberInput
                                         id="delivery_charge_batam"
                                         value={formData.delivery_charge_batam}
                                         onChange={(v) => setFormData((prev) => ({ ...prev, delivery_charge_batam: v }))}
-                                        required
                                     />
                                     {errors.delivery_charge_batam && <p className="text-sm text-destructive">{errors.delivery_charge_batam}</p>}
                                 </div>
                                 <div className="space-y-1">
-                                    <Label htmlFor="delivery_charge_jakarta">Delivery Charge — Jakarta (RMB) <span className="text-destructive">*</span></Label>
+                                    <Label htmlFor="delivery_charge_jakarta">Delivery Charge — Jakarta (IDR)</Label>
                                     <NumberInput
                                         id="delivery_charge_jakarta"
                                         value={formData.delivery_charge_jakarta}
                                         onChange={(v) => setFormData((prev) => ({ ...prev, delivery_charge_jakarta: v }))}
-                                        required
                                     />
                                     {errors.delivery_charge_jakarta && <p className="text-sm text-destructive">{errors.delivery_charge_jakarta}</p>}
                                 </div>

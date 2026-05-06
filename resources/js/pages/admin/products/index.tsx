@@ -8,6 +8,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus } from 'lucide-react';
 
 const columns = [
+    {
+        data: 'image',
+        title: 'Image',
+        orderable: false,
+        searchable: false,
+        render: (data: string) => data,
+    },
     { data: 'name', title: 'Name' },
     { data: 'slug', title: 'Slug', className: 'text-muted-foreground' },
     { data: 'price_display', title: 'Price (RMB)' },

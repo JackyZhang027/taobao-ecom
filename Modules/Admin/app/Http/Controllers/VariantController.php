@@ -13,13 +13,18 @@ class VariantController extends Controller
     public function store(Request $request, Product $product)
     {
         $request->validate([
-            'sku' => 'required|string|unique:product_variants,sku',
+            'sku'   => 'required|string|unique:product_variants,sku',
             'price' => 'required|numeric|min:0',
+            'image' => 'required|image|max:5120',
         ]);
 
         $variant = $product->variants()->create(
             $request->only(['sku', 'price', 'compare_price', 'stock', 'is_active', 'sort_order'])
         );
+
+        if ($request->hasFile('image')) {
+            $variant->addMediaFromRequest('image')->toMediaCollection('image');
+        }
 
         if ($request->attribute_value_ids) {
             $variant->attributeValues()->sync($request->attribute_value_ids);
@@ -32,11 +37,19 @@ class VariantController extends Controller
 
     public function update(Request $request, ProductVariant $variant)
     {
-        $request->validate(['price' => 'required|numeric|min:0']);
+        $request->validate([
+            'price' => 'required|numeric|min:0',
+            'image' => 'nullable|image|max:5120',
+        ]);
 
         $variant->update(
             $request->only(['sku', 'price', 'compare_price', 'stock', 'is_active', 'sort_order'])
         );
+
+        if ($request->hasFile('image')) {
+            $variant->clearMediaCollection('image');
+            $variant->addMediaFromRequest('image')->toMediaCollection('image');
+        }
 
         if ($request->has('attribute_value_ids')) {
             $variant->attributeValues()->sync($request->attribute_value_ids);
