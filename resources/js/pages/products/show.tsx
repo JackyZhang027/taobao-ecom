@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import DOMPurify from 'dompurify';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight, Minus, Plus, X, ZoomIn } from 'lucide-react';
@@ -194,7 +195,7 @@ export default function ProductShow({ product, whatsapp_number }: ShowProps) {
                         {product.description && (
                             <div
                                 className="text-slate-500 leading-relaxed prose prose-sm max-w-none"
-                                dangerouslySetInnerHTML={{ __html: product.description }}
+                                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(product.description) }}
                             />
                         )}
 

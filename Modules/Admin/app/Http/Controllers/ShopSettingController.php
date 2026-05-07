@@ -10,14 +10,24 @@ use Modules\Admin\Models\ShopSetting;
 
 class ShopSettingController extends Controller
 {
+    private const ALLOWED_SETTING_KEYS = [
+        'shop_name',
+        'shop_email',
+        'whatsapp_number',
+        'address',
+        'tagline',
+        'footer_text',
+        'meta_title',
+        'meta_description',
+        'meta_keywords',
+    ];
+
     public function edit()
     {
-        // Load all settings into a simple key => value array
         $settings = ShopSetting::all()->pluck('value', 'key');
-        
-        // Provide sane defaults if missing
+
         return Inertia::render('admin/settings/shop', [
-            'settings' => $settings
+            'settings' => $settings,
         ]);
     }
 
@@ -25,12 +35,14 @@ class ShopSettingController extends Controller
     {
         $request->validate([
             'settings' => 'nullable|array',
-            'favicon' => 'nullable|image',
-            'logo' => 'nullable|image',
+            'settings.*' => 'nullable|string|max:1000',
+            'favicon' => 'nullable|image|max:2048',
+            'logo' => 'nullable|image|max:2048',
         ]);
 
         if ($request->has('settings')) {
             foreach ($request->settings as $key => $value) {
+                abort_if(! in_array($key, self::ALLOWED_SETTING_KEYS, true), 422, "Unknown setting key: {$key}");
                 ShopSetting::set($key, $value);
             }
         }

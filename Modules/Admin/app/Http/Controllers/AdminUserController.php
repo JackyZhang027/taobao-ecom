@@ -42,15 +42,17 @@ class AdminUserController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|string|email|max:255|unique:users,email',
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
-            'role'     => 'required|string|exists:roles,name',
+            'role' => ['required', 'string', 'exists:roles,name', 'not_in:customer'],
         ]);
 
+        $this->authorizeRoleAssignment($request, $validated['role']);
+
         $user = User::create([
-            'name'     => $validated['name'],
-            'email'    => $validated['email'],
+            'name' => $validated['name'],
+            'email' => $validated['email'],
             'password' => $validated['password'],
         ]);
 
@@ -64,24 +66,26 @@ class AdminUserController extends Controller
         $roles = Role::where('name', '!=', 'customer')->orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('admin/users/edit', [
-            'user'     => $user->only('id', 'name', 'email'),
+            'user' => $user->only('id', 'name', 'email'),
             'userRole' => $user->getRoleNames()->first(),
-            'roles'    => $roles,
+            'roles' => $roles,
         ]);
     }
 
     public function update(Request $request, User $user)
     {
         $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'name' => 'required|string|max:255',
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'password' => 'nullable|string|min:8|confirmed',
-            'role'     => 'required|string|exists:roles,name',
+            'role' => ['required', 'string', 'exists:roles,name', 'not_in:customer'],
         ]);
+
+        $this->authorizeRoleAssignment($request, $validated['role']);
 
         $user->update(['name' => $validated['name'], 'email' => $validated['email']]);
 
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $user->update(['password' => $validated['password']]);
         }
 
@@ -99,5 +103,13 @@ class AdminUserController extends Controller
         $user->delete();
 
         return redirect()->route('admin.users.index')->with('success', 'Admin user deleted.');
+    }
+
+    private function authorizeRoleAssignment(Request $request, string $role): void
+    {
+        // Only a user who already holds the 'admin' role may assign it to others.
+        if ($role === 'admin' && ! $request->user()->hasRole('admin')) {
+            abort(403, 'You are not allowed to assign the admin role.');
+        }
     }
 }

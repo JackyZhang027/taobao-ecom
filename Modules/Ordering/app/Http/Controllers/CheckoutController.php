@@ -9,6 +9,7 @@ use Inertia\Inertia;
 use Modules\Admin\Models\ShopSetting;
 use Modules\Currency\Services\CurrencyService;
 use Modules\Ordering\Models\CartItem;
+use Modules\Payment\Models\Payment;
 use Modules\Ordering\Models\Order;
 use Modules\Ordering\Models\OrderLine;
 use Modules\Ordering\Services\CartService;
@@ -38,10 +39,9 @@ class CheckoutController extends Controller
 
         $locale = app()->getLocale();
         $cartData = [
-            'id'         => $cart->id,
-            'user_id'    => $cart->user_id,
-            'session_id' => $cart->session_id,
-            'items'      => $cart->items->map(function ($item) use ($locale) {
+            'id' => $cart->id,
+            'user_id' => $cart->user_id,
+            'items' => $cart->items->map(function ($item) use ($locale) {
                 $variant = $item->variant;
                 $product = $variant?->product ?? $item->product;
                 $translation = $product?->translations->firstWhere('locale', $locale)
@@ -51,29 +51,29 @@ class CheckoutController extends Controller
                 $priceRmb = ($product?->price ?? 0) + ($variant?->price ?? 0);
 
                 return [
-                    'id'                 => $item->id,
-                    'cart_id'            => $item->cart_id,
+                    'id' => $item->id,
+                    'cart_id' => $item->cart_id,
                     'product_variant_id' => $item->product_variant_id,
-                    'quantity'           => $item->quantity,
-                    'variant'            => $variant ? [
-                        'id'       => $variant->id,
-                        'sku'      => $variant->sku,
+                    'quantity' => $item->quantity,
+                    'variant' => $variant ? [
+                        'id' => $variant->id,
+                        'sku' => $variant->sku,
                         'price_idr' => $this->currency->rmbToIdr($priceRmb),
-                        'product'  => $product ? [
-                            'id'        => $product->id,
-                            'slug'      => $product->slug,
+                        'product' => $product ? [
+                            'id' => $product->id,
+                            'slug' => $product->slug,
                             'thumbnail' => $thumbnail,
-                            'name'      => $translation?->name ?? $product->slug,
+                            'name' => $translation?->name ?? $product->slug,
                         ] : null,
                     ] : ($product ? [
-                        'id'       => null,
-                        'sku'      => null,
+                        'id' => null,
+                        'sku' => null,
                         'price_idr' => $this->currency->rmbToIdr($priceRmb),
-                        'product'  => [
-                            'id'        => $product->id,
-                            'slug'      => $product->slug,
+                        'product' => [
+                            'id' => $product->id,
+                            'slug' => $product->slug,
                             'thumbnail' => $thumbnail,
-                            'name'      => $translation?->name ?? $product->slug,
+                            'name' => $translation?->name ?? $product->slug,
                         ],
                     ] : null),
                 ];
@@ -81,8 +81,8 @@ class CheckoutController extends Controller
         ];
 
         return Inertia::render('checkout/index', [
-            'cart'            => $cartData,
-            'totals'          => $totals,
+            'cart' => $cartData,
+            'totals' => $totals,
             'whatsapp_number' => ShopSetting::get('whatsapp_number', ''),
         ]);
     }
@@ -90,12 +90,12 @@ class CheckoutController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'recipient_name'  => 'required|string|max:255',
+            'recipient_name' => 'required|string|max:255',
             'recipient_phone' => 'required|string|max:30',
-            'street_address'  => 'required|string',
-            'city'            => 'required|string|in:Batam,Jakarta',
-            'province'        => 'nullable|string|max:100',
-            'postal_code'     => 'nullable|string|max:10',
+            'street_address' => 'required|string',
+            'city' => 'required|string|in:Batam,Jakarta',
+            'province' => 'nullable|string|max:100',
+            'postal_code' => 'nullable|string|max:10',
         ]);
 
         $cart = $this->cartService->resolveCart($request);
@@ -116,19 +116,19 @@ class CheckoutController extends Controller
 
         $order = DB::transaction(function () use ($request, $cart, $totals, $exchangeRate, $city) {
             $order = Order::create([
-                'user_id'                => $request->user()->id,
-                'status'                 => 'pending',
-                'subtotal_idr'           => $totals['subtotal_idr'],
-                'shipping_idr'           => $totals['shipping_idr'],
-                'grand_total_idr'        => $totals['grand_total_idr'],
+                'user_id' => $request->user()->id,
+                'status' => 'pending',
+                'subtotal_idr' => $totals['subtotal_idr'],
+                'shipping_idr' => $totals['shipping_idr'],
+                'grand_total_idr' => $totals['grand_total_idr'],
                 'exchange_rate_snapshot' => $exchangeRate,
-                'recipient_name'         => $request->recipient_name,
-                'recipient_phone'        => $request->recipient_phone,
-                'street_address'         => $request->street_address,
-                'city'                   => $city,
-                'province'               => $request->province,
-                'postal_code'            => $request->postal_code,
-                'notes'                  => $request->notes,
+                'recipient_name' => $request->recipient_name,
+                'recipient_phone' => $request->recipient_phone,
+                'street_address' => $request->street_address,
+                'city' => $city,
+                'province' => $request->province,
+                'postal_code' => $request->postal_code,
+                'notes' => $request->notes,
             ]);
 
             $locale = app()->getLocale();
@@ -141,15 +141,15 @@ class CheckoutController extends Controller
                 $unitPriceIdr = $this->currency->rmbToIdr($priceRmb);
 
                 OrderLine::create([
-                    'order_id'           => $order->id,
-                    'product_id'         => $product?->id,
+                    'order_id' => $order->id,
+                    'product_id' => $product?->id,
                     'product_variant_id' => $variant?->id,
-                    'product_name'       => $translation?->name ?? $product?->slug,
-                    'variant_name'       => $variant?->sku,
-                    'sku'                => $variant?->sku ?? $product?->slug ?? '-',
-                    'unit_price_idr'     => $unitPriceIdr,
-                    'quantity'           => $item->quantity,
-                    'subtotal_idr'       => $unitPriceIdr * $item->quantity,
+                    'product_name' => $translation?->name ?? $product?->slug,
+                    'variant_name' => $variant?->sku,
+                    'sku' => $variant?->sku ?? $product?->slug ?? '-',
+                    'unit_price_idr' => $unitPriceIdr,
+                    'quantity' => $item->quantity,
+                    'subtotal_idr' => $unitPriceIdr * $item->quantity,
                 ]);
             }
 
@@ -166,13 +166,38 @@ class CheckoutController extends Controller
 
     public function complete(Request $request, Order $order)
     {
+        abort_if($order->user_id !== $request->user()->id, 403);
+
         $order->load(['lines', 'payment']);
 
         return Inertia::render('checkout/complete', [
-            'order'        => $order,
-            'snapToken'    => $order->payment?->snap_token,
-            'clientKey'    => config('midtrans.client_key'),
+            'order' => $order,
+            'snapToken' => $order->payment?->snap_token,
+            'clientKey' => config('midtrans.client_key'),
             'isProduction' => config('midtrans.is_production', false),
         ]);
+    }
+
+    public function finish(Request $request)
+    {
+        $midtransOrderId = $request->query('order_id');
+
+        if (! $midtransOrderId) {
+            return redirect()->route('orders.index');
+        }
+
+        $payment = Payment::where('midtrans_order_id', $midtransOrderId)->first();
+
+        if (! $payment) {
+            return redirect()->route('orders.index');
+        }
+
+        $order = $payment->order;
+
+        abort_if($order->user_id !== $request->user()->id, 403);
+
+        $this->payment->confirmFromTransaction($order);
+
+        return redirect()->route('orders.show', $order);
     }
 }

@@ -19,7 +19,7 @@ class HeroSlideController extends Controller
     public function datatable()
     {
         $query = HeroSlide::query();
-        
+
         return DataTables::of($query)
             ->addColumn('image_url', fn ($slide) => $slide->getFirstMediaUrl('image', 'thumb'))
             ->addColumn('status', fn ($slide) => $slide->is_active ? 'Active' : 'Inactive')
@@ -37,16 +37,16 @@ class HeroSlideController extends Controller
         $data = $request->validate([
             'title' => 'nullable|string|max:255',
             'subtitle' => 'nullable|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:2000',
             'cta_text' => 'nullable|string|max:255',
-            'cta_link' => 'nullable|string|max:255',
+            'cta_link' => 'nullable|url|max:255',
             'sort_order' => 'nullable|integer',
             'is_active' => 'boolean',
             'image' => 'required|image|max:10240',
         ]);
 
         $data['sort_order'] = $data['sort_order'] ?? 0;
-        
+
         $slide = HeroSlide::create($data);
 
         if ($request->hasFile('image')) {
@@ -62,7 +62,7 @@ class HeroSlideController extends Controller
     {
         $hero->load('media');
         $imageUrl = $hero->getFirstMediaUrl('image');
-        
+
         return Inertia::render('admin/settings/hero/edit', [
             'heroSlide' => $hero,
             'imageUrl' => $imageUrl ?: null,
@@ -74,9 +74,9 @@ class HeroSlideController extends Controller
         $data = $request->validate([
             'title' => 'nullable|string|max:255',
             'subtitle' => 'nullable|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:2000',
             'cta_text' => 'nullable|string|max:255',
-            'cta_link' => 'nullable|string|max:255',
+            'cta_link' => 'nullable|url|max:255',
             'sort_order' => 'nullable|integer',
             'is_active' => 'boolean',
             'image' => 'nullable|image|max:10240',

@@ -27,6 +27,9 @@ class PaymentService
                 'order_id' => $midtransOrderId,
                 'gross_amount' => (int) $order->grand_total_idr,
             ],
+            'callbacks' => [
+                'finish' => route('checkout.finish'),
+            ],
             'customer_details' => [
                 'first_name' => $order->recipient_name,
                 'phone' => $order->recipient_phone,
@@ -57,7 +60,11 @@ class PaymentService
 
     public function handleWebhook(array $payload): void
     {
-        $payment = Payment::where('midtrans_order_id', $payload['order_id'])->firstOrFail();
+        $payment = Payment::where('midtrans_order_id', $payload['order_id'])->first();
+
+        if (! $payment) {
+            return;
+        }
 
         $payment->update([
             'status' => $payload['transaction_status'],

@@ -18,6 +18,7 @@ use Yajra\DataTables\Facades\DataTables;
 class ProductController extends Controller
 {
     public function __construct(private CurrencyService $currency) {}
+
     public function index()
     {
         return Inertia::render('admin/products/index');
@@ -31,14 +32,15 @@ class ProductController extends Controller
             ->addColumn('image', function ($p) {
                 $url = $p->thumbnail
                     ?? ($p->getFirstMediaUrl('images', 'thumb') ?: $p->getFirstMediaUrl('images') ?: null);
+
                 return $url
-                    ? "<img src=\"{$url}\" alt=\"\" class=\"h-12 w-12 object-cover rounded\" />"
+                    ? '<img src="'.htmlspecialchars($url, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" alt="" class="h-12 w-12 object-cover rounded" />'
                     : '<span class="text-xs text-muted-foreground">—</span>';
             })
             ->addColumn('name', fn ($p) => $p->translations->firstWhere('locale', 'en')?->name ?? $p->slug)
-            ->addColumn('price_display', fn ($p) => '¥' . number_format($p->price, 2))
-            ->addColumn('delivery_charge_idr', fn ($p) => 'Rp ' . number_format($p->delivery_charge_batam ?: $p->delivery_charge, 0, '.', ','))
-            ->addColumn('final_price_idr', fn ($p) => 'Rp ' . number_format($this->currency->rmbToIdr($p->price) + ($p->delivery_charge_batam ?: $p->delivery_charge), 0, '.', ','))
+            ->addColumn('price_display', fn ($p) => '¥'.number_format($p->price, 2))
+            ->addColumn('delivery_charge_idr', fn ($p) => 'Rp '.number_format($p->delivery_charge_batam ?: $p->delivery_charge, 0, '.', ','))
+            ->addColumn('final_price_idr', fn ($p) => 'Rp '.number_format($this->currency->rmbToIdr($p->price) + ($p->delivery_charge_batam ?: $p->delivery_charge), 0, '.', ','))
             ->addColumn('status', fn ($p) => $p->is_active ? 'Active' : 'Inactive')
             ->addColumn('variants_count', fn ($p) => $p->variants()->count())
             ->addColumn('actions', fn ($p) => $p->id)
@@ -58,7 +60,7 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         // Filter out empty translations to avoid validation errors for optional languages
-        $translations = array_filter($request->input('translations', []), fn($t) => !empty($t['name']));
+        $translations = array_filter($request->input('translations', []), fn ($t) => ! empty($t['name']));
         $request->merge(['translations' => $translations]);
 
         $request->validate([
@@ -87,7 +89,7 @@ class ProductController extends Controller
         $product = Product::create(array_merge(
             $request->only(['slug', 'thumbnail', 'price', 'delivery_charge', 'is_active', 'sort_order']),
             [
-                'delivery_charge_batam'   => $request->input('delivery_charge_batam') ?? 0,
+                'delivery_charge_batam' => $request->input('delivery_charge_batam') ?? 0,
                 'delivery_charge_jakarta' => $request->input('delivery_charge_jakarta') ?? 0,
             ]
         ));
@@ -116,7 +118,7 @@ class ProductController extends Controller
                 'is_active' => $variantData['is_active'] ?? true,
                 'sort_order' => $variantData['sort_order'] ?? 0,
             ]);
-            if (!empty($variantData['attribute_value_ids'])) {
+            if (! empty($variantData['attribute_value_ids'])) {
                 $variant->attributeValues()->sync($variantData['attribute_value_ids']);
             }
             if ($request->hasFile("variants.{$vi}.image")) {
@@ -141,6 +143,7 @@ class ProductController extends Controller
 
         $product->variants->transform(function ($variant) {
             $variant->image_url = $variant->getFirstMediaUrl('image') ?: null;
+
             return $variant;
         });
 
@@ -156,11 +159,11 @@ class ProductController extends Controller
     public function update(Request $request, Product $product)
     {
         // Filter out empty translations
-        $translations = array_filter($request->input('translations', []), fn($t) => !empty($t['name']));
+        $translations = array_filter($request->input('translations', []), fn ($t) => ! empty($t['name']));
         $request->merge(['translations' => $translations]);
 
         $request->validate([
-            'slug' => 'required|string|unique:products,slug,' . $product->id,
+            'slug' => 'required|string|unique:products,slug,'.$product->id,
             'price' => 'required|numeric|min:0.01',
             'delivery_charge' => 'numeric|min:0',
             'delivery_charge_batam' => 'nullable|numeric|min:0',
@@ -183,7 +186,7 @@ class ProductController extends Controller
         $product->update(array_merge(
             $request->only(['slug', 'thumbnail', 'price', 'delivery_charge', 'is_active', 'sort_order']),
             [
-                'delivery_charge_batam'   => $request->input('delivery_charge_batam') ?? 0,
+                'delivery_charge_batam' => $request->input('delivery_charge_batam') ?? 0,
                 'delivery_charge_jakarta' => $request->input('delivery_charge_jakarta') ?? 0,
             ]
         ));
@@ -222,7 +225,7 @@ class ProductController extends Controller
                 'is_active' => $variantData['is_active'] ?? true,
                 'sort_order' => $variantData['sort_order'] ?? 0,
             ];
-            if (!empty($variantData['id'])) {
+            if (! empty($variantData['id'])) {
                 $variant = ProductVariant::find($variantData['id']);
                 if ($variant && $variant->product_id === $product->id) {
                     $variant->update($variantFields);
@@ -232,7 +235,7 @@ class ProductController extends Controller
                 $variant = $product->variants()->create($variantFields);
                 $incomingIds[] = $variant->id;
             }
-            if (!empty($variantData['attribute_value_ids'])) {
+            if (! empty($variantData['attribute_value_ids'])) {
                 $variant->attributeValues()->sync($variantData['attribute_value_ids']);
             } else {
                 $variant->attributeValues()->detach();
@@ -244,7 +247,7 @@ class ProductController extends Controller
         }
 
         // Delete variants not in the incoming list
-        if (!empty($incomingIds)) {
+        if (! empty($incomingIds)) {
             $product->variants()->whereNotIn('id', $incomingIds)->delete();
         } elseif ($request->has('variants')) {
             $product->variants()->delete();

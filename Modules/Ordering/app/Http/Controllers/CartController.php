@@ -33,7 +33,6 @@ class CartController extends Controller
         $cartData = [
             'id' => $cart->id,
             'user_id' => $cart->user_id,
-            'session_id' => $cart->session_id,
             'items' => $cart->items->map(function ($item) use ($locale) {
                 $variant = $item->variant;
                 // For variant items: product comes from variant; for product items: direct product relation
@@ -86,8 +85,8 @@ class CartController extends Controller
     {
         $request->validate([
             'product_variant_id' => 'nullable|integer|exists:product_variants,id',
-            'product_id'         => 'nullable|integer|exists:products,id',
-            'quantity'           => 'integer|min:1',
+            'product_id' => 'nullable|integer|exists:products,id',
+            'quantity' => 'integer|min:1|max:999',
         ]);
 
         abort_if(! $request->product_variant_id && ! $request->product_id, 422, 'product_variant_id or product_id required');
@@ -107,10 +106,10 @@ class CartController extends Controller
             $existing->increment('quantity', $quantity);
         } else {
             CartItem::create([
-                'cart_id'            => $cart->id,
-                'product_id'         => $request->product_variant_id ? null : $request->product_id,
+                'cart_id' => $cart->id,
+                'product_id' => $request->product_variant_id ? null : $request->product_id,
                 'product_variant_id' => $request->product_variant_id,
-                'quantity'           => $quantity,
+                'quantity' => $quantity,
             ]);
         }
 
@@ -119,16 +118,26 @@ class CartController extends Controller
 
     public function update(Request $request, CartItem $cartItem)
     {
-        $request->validate(['quantity' => 'required|integer|min:1']);
+        $this->authorizeCartItem($cartItem, $request);
+        $request->validate(['quantity' => 'required|integer|min:1|max:999']);
         $cartItem->update(['quantity' => $request->quantity]);
 
         return back();
     }
 
-    public function destroy(CartItem $cartItem)
+    public function destroy(Request $request, CartItem $cartItem)
     {
+        $this->authorizeCartItem($cartItem, $request);
         $cartItem->delete();
 
         return back();
+    }
+
+    private function authorizeCartItem(CartItem $cartItem, Request $request): void
+    {
+        $cart = $cartItem->cart;
+        $isOwner = ($request->user() && $cart->user_id === $request->user()->id)
+            || ($cart->session_id !== null && $cart->session_id === $request->session()->getId());
+        abort_if(! $isOwner, 403);
     }
 }
