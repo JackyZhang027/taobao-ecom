@@ -96,6 +96,7 @@ class CheckoutController extends Controller
             'city' => 'required|string|in:Batam,Jakarta',
             'province' => 'nullable|string|max:100',
             'postal_code' => 'nullable|string|max:10',
+            'notes' => 'nullable|string|max:1000',
         ]);
 
         $cart = $this->cartService->resolveCart($request);

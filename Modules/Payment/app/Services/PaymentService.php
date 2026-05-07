@@ -20,7 +20,28 @@ class PaymentService
 
     public function createSnapToken(Order $order): string
     {
+        $existing = Payment::where('order_id', $order->id)->first();
+        if ($existing) {
+            return $existing->snap_token;
+        }
+
         $midtransOrderId = 'ORDER-' . $order->id . '-' . time();
+
+        $items = $order->lines->map(fn ($line) => [
+            'id' => (string) $line->id,
+            'price' => (int) $line->unit_price_idr,
+            'quantity' => $line->quantity,
+            'name' => $line->product_name . ($line->variant_name ? ' - ' . $line->variant_name : ''),
+        ])->toArray();
+
+        if ((int) $order->shipping_idr > 0) {
+            $items[] = [
+                'id' => 'SHIPPING',
+                'price' => (int) $order->shipping_idr,
+                'quantity' => 1,
+                'name' => 'Shipping',
+            ];
+        }
 
         $params = [
             'transaction_details' => [
@@ -37,12 +58,7 @@ class PaymentService
                     'address' => $order->shipping_address,
                 ],
             ],
-            'item_details' => $order->lines->map(fn ($line) => [
-                'id' => (string) $line->id,
-                'price' => (int) $line->unit_price_idr,
-                'quantity' => $line->quantity,
-                'name' => $line->product_name . ($line->variant_name ? ' - ' . $line->variant_name : ''),
-            ])->toArray(),
+            'item_details' => $items,
         ];
 
         $snapToken = Snap::getSnapToken($params);
@@ -58,6 +74,11 @@ class PaymentService
         return $snapToken;
     }
 
+    private const ALLOWED_STATUSES = [
+        'pending', 'settlement', 'capture', 'authorize',
+        'cancel', 'expire', 'deny', 'refund', 'partial_refund',
+    ];
+
     public function handleWebhook(array $payload): void
     {
         $payment = Payment::where('midtrans_order_id', $payload['order_id'])->first();
@@ -66,8 +87,29 @@ class PaymentService
             return;
         }
 
+        // Defense-in-depth: gross_amount in payload is covered by the signature, but
+        // verify it also matches our stored amount to catch any edge-case discrepancy.
+        if ((int) round((float) ($payload['gross_amount'] ?? 0)) !== (int) round($payment->amount)) {
+            \Log::warning('Midtrans webhook amount mismatch', [
+                'midtrans_order_id' => $payload['order_id'],
+                'expected' => $payment->amount,
+                'received' => $payload['gross_amount'] ?? null,
+            ]);
+            return;
+        }
+
+        $transactionStatus = $payload['transaction_status'] ?? '';
+
+        if (! in_array($transactionStatus, self::ALLOWED_STATUSES, true)) {
+            \Log::warning('Midtrans webhook unknown transaction_status', [
+                'midtrans_order_id' => $payload['order_id'],
+                'transaction_status' => $transactionStatus,
+            ]);
+            return;
+        }
+
         $payment->update([
-            'status' => $payload['transaction_status'],
+            'status' => $transactionStatus,
             'gateway_response' => $payload,
         ]);
 
@@ -77,7 +119,7 @@ class PaymentService
             return;
         }
 
-        match ($payload['transaction_status']) {
+        match ($transactionStatus) {
             'settlement', 'capture' => $order->update(['status' => 'confirmed']),
             'cancel', 'expire', 'deny' => $order->update(['status' => 'cancelled']),
             default => null,
