@@ -29,7 +29,7 @@ class FortifyServiceProvider extends ServiceProvider
                     return response()->json(['two_factor' => false]);
                 }
 
-                if ($request->user()->hasRole('admin')) {
+                if (! $request->user()->hasRole('customer')) {
                     return redirect()->intended('/admin');
                 }
 

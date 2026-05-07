@@ -70,7 +70,8 @@
       "Bash(Select-Object Name)",
       "Bash(php artisan *)",
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\user\\\\Herd\\\\taobao\" -Recurse -Name -Include \"*.tsx\", \"*.ts\", \"*.php\")",
-      "Bash(Select-Object -First 50)"
+      "Bash(Select-Object -First 50)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\user\\\\Herd\\\\taobao\\\\resources\\\\js\\\\pages\\\\admin\" -Recurse -Filter \"*variant*\" -ErrorAction SilentlyContinue)"
     ],
     "additionalDirectories": [
       "c:\\Users\\user\\.claude\\plans"

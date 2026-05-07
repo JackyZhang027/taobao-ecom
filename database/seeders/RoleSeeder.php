@@ -11,5 +11,10 @@ class RoleSeeder extends Seeder
     {
         Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
+
+        $this->call([
+            PermissionSeeder::class,
+            AccountingRoleSeeder::class,
+        ]);
     }
 }

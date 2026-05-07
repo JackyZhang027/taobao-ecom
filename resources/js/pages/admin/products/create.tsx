@@ -19,6 +19,8 @@ interface VariantRow {
     is_active: boolean;
     sort_order: string;
     attribute_value_ids: number[];
+    imageFile?: File | null;
+    imagePreview?: string | null;
 }
 
 interface TranslationData {
@@ -97,7 +99,7 @@ export default function AdminProductCreate({ categories, attributeTypes, exchang
     const addVariant = () => {
         setVariants((prev) => [
             ...prev,
-            { sku: '', price: '0', is_active: true, sort_order: '0', attribute_value_ids: [] },
+            { sku: '', price: '0', is_active: true, sort_order: '0', attribute_value_ids: [], imageFile: null, imagePreview: null },
         ]);
     };
 
@@ -107,6 +109,18 @@ export default function AdminProductCreate({ categories, attributeTypes, exchang
 
     const removeVariant = (index: number) => {
         setVariants((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    const handleVariantImageChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0] ?? null;
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            setVariants((prev) => prev.map((v, i) =>
+                i === index ? { ...v, imageFile: file, imagePreview: ev.target?.result as string } : v
+            ));
+        };
+        reader.readAsDataURL(file);
     };
 
     const selectAttributeValue = (variantIndex: number, attributeType: AttributeType, valueId: number) => {
@@ -165,6 +179,15 @@ export default function AdminProductCreate({ categories, attributeTypes, exchang
             }
         }
 
+        if (variants.length > 0) {
+            const missingImage = variants.some((v) => !v.imageFile);
+            if (missingImage) {
+                setErrors({ variants_image: 'Each variant must have an image.' });
+                setProcessing(false);
+                return;
+            }
+        }
+
         const fd = new FormData();
         fd.append('slug', formData.slug);
         fd.append('price', formData.price);
@@ -188,10 +211,15 @@ export default function AdminProductCreate({ categories, attributeTypes, exchang
                     (value as number[]).forEach((id) => fd.append(`variants[${vi}][attribute_value_ids][]`, String(id)));
                 } else if (field === 'is_active') {
                     fd.append(`variants[${vi}][${field}]`, value ? '1' : '0');
+                } else if (field === 'imageFile' || field === 'imagePreview') {
+                    // handled separately
                 } else {
                     fd.append(`variants[${vi}][${field}]`, String(value));
                 }
             });
+            if (variant.imageFile) {
+                fd.append(`variants[${vi}][image]`, variant.imageFile);
+            }
         });
 
         imageFiles.forEach((file) => fd.append('images[]', file));
@@ -348,6 +376,22 @@ export default function AdminProductCreate({ categories, attributeTypes, exchang
                                             <Button type="button" variant="ghost" size="sm" onClick={() => removeVariant(index)}>
                                                 <Trash2 className="h-4 w-4 text-destructive" />
                                             </Button>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label>Variant Image <span className="text-destructive">*</span></Label>
+                                            <div className="flex items-center gap-3">
+                                                {variant.imagePreview && (
+                                                    <img src={variant.imagePreview} alt="Variant" className="h-16 w-16 rounded object-cover border" />
+                                                )}
+                                                <label className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-muted-foreground/40 px-3 py-2 text-sm hover:border-primary/50 hover:bg-muted/50 transition-colors">
+                                                    <Upload className="h-4 w-4 text-muted-foreground" />
+                                                    {variant.imagePreview ? 'Replace image' : 'Upload image'}
+                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleVariantImageChange(index, e)} />
+                                                </label>
+                                            </div>
+                                            {errors.variants_image && !variant.imageFile && (
+                                                <p className="text-xs text-destructive">{errors.variants_image}</p>
+                                            )}
                                         </div>
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="space-y-1">
