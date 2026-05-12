@@ -106,8 +106,8 @@ class HomeController extends Controller
         $thumbnail = $product->thumbnail
             ?? ($product->getFirstMediaUrl('images', 'thumb') ?: $product->getFirstMediaUrl('images') ?: null);
 
-        $deliveryBatamRmb = $product->delivery_charge_batam ?: $product->delivery_charge;
-        $deliveryJakartaRmb = $product->delivery_charge_jakarta ?: $product->delivery_charge;
+        $deliveryBatamRmb = (float) ($product->delivery_charge_batam ?: $product->delivery_charge);
+        $deliveryJakartaRmb = (float) ($product->delivery_charge_jakarta ?: $product->delivery_charge);
 
         return [
             'id'                => $product->id,
@@ -117,8 +117,8 @@ class HomeController extends Controller
             'description'       => $translation?->description,
             'price_idr'         => $this->currency->rmbToIdr($minPriceRmb),
             'price_rmb'         => $minPriceRmb,
-            'total_batam_idr'   => $this->currency->rmbToIdr($minPriceRmb + $deliveryBatamRmb),
-            'total_jakarta_idr' => $this->currency->rmbToIdr($minPriceRmb + $deliveryJakartaRmb),
+            'total_batam_idr'   => $deliveryBatamRmb > 0 ? $this->currency->rmbToIdr($minPriceRmb + $deliveryBatamRmb) : null,
+            'total_jakarta_idr' => $deliveryJakartaRmb > 0 ? $this->currency->rmbToIdr($minPriceRmb + $deliveryJakartaRmb) : null,
             'is_wishlisted'     => $wishlistProductIds ? $wishlistProductIds->has($product->id) : false,
         ];
     }

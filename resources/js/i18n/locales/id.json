@@ -34,7 +34,13 @@
         "description": "Deskripsi",
         "variants": "Pilihan",
         "select_option": "Pilih opsi",
-        "view_detail": "Lihat Detail"
+        "view_detail": "Lihat Detail",
+        "no_image": "Tidak ada gambar",
+        "contact_wa": "Hubungi WA",
+        "order_other_location": "Pesan ke Lokasi Lain",
+        "add_wishlist": "Tambah ke wishlist",
+        "remove_wishlist": "Hapus dari wishlist",
+        "view_product": "Lihat produk"
     },
     "cart": {
         "title": "Keranjang Belanja",
@@ -90,6 +96,41 @@
     "wishlist": {
         "title": "Wishlist Saya",
         "empty": "Wishlist Anda masih kosong."
+    },
+    "home": {
+        "new_arrival": "Produk Baru",
+        "hero_title": "Temukan Koleksi Terbaru Kami",
+        "hero_desc": "Temukan koleksi terbaru produk berkualitas kami.",
+        "shop_now": "Belanja Sekarang",
+        "browse_category": "Belanja Berdasarkan Kategori",
+        "browse_category_desc": "Temukan koleksi terbaik kami dan dapatkan yang Anda butuhkan.",
+        "featured_products": "Produk Unggulan",
+        "featured_products_desc": "Produk pilihan, kualitas terjamin.",
+        "view_all": "Lihat Semua Produk",
+        "limited_offer": "Penawaran Terbatas",
+        "promo_title": "Produk Berkualitas, Untuk Semua",
+        "promo_desc": "Jelajahi katalog lengkap kami dan temukan yang Anda cari.",
+        "explore_more": "Jelajahi Lebih",
+        "feature_delivery": "Gratis Ongkir",
+        "feature_delivery_desc": "Untuk semua pesanan di atas Rp 500.000",
+        "feature_return": "Retur 90 Hari",
+        "feature_return_desc": "Jika barang bermasalah",
+        "feature_payment": "Pembayaran Aman",
+        "feature_payment_desc": "Pembayaran 100% aman",
+        "feature_support": "Dukungan 24/7",
+        "feature_support_desc": "Tim dukungan berdedikasi"
+    },
+    "footer": {
+        "tagline": "Produk berkualitas, dikurasi dengan cermat. Pengiriman cepat dan pengembalian mudah.",
+        "navigation": "Navigasi",
+        "help": "Bantuan",
+        "contact": "Kontak",
+        "shipping_policy": "Kebijakan Pengiriman",
+        "returns": "Pengembalian",
+        "faq": "FAQ",
+        "my_orders": "Pesanan Saya",
+        "all_rights": "Hak cipta dilindungi.",
+        "trusted": "Belanja terpercaya, setiap saat."
     },
     "common": {
         "save": "Simpan",

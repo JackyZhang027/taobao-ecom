@@ -34,7 +34,13 @@
         "description": "Description",
         "variants": "Options",
         "select_option": "Select option",
-        "view_detail": "View Detail"
+        "view_detail": "View Detail",
+        "no_image": "No image",
+        "contact_wa": "Contact WA",
+        "order_other_location": "Order to Other Location",
+        "add_wishlist": "Add to wishlist",
+        "remove_wishlist": "Remove from wishlist",
+        "view_product": "View product"
     },
     "cart": {
         "title": "Shopping Cart",
@@ -90,6 +96,41 @@
     "wishlist": {
         "title": "My Wishlist",
         "empty": "Your wishlist is empty."
+    },
+    "home": {
+        "new_arrival": "New Arrival",
+        "hero_title": "Discover Our New Collection",
+        "hero_desc": "Discover our latest collection of quality products.",
+        "shop_now": "Shop Now",
+        "browse_category": "Shop by Category",
+        "browse_category_desc": "Discover our top collections and find exactly what you need.",
+        "featured_products": "Featured Products",
+        "featured_products_desc": "Handpicked products, quality guaranteed.",
+        "view_all": "View All Products",
+        "limited_offer": "Limited Time Offer",
+        "promo_title": "Quality Products, For Everyone",
+        "promo_desc": "Explore our full catalog and find exactly what you're looking for.",
+        "explore_more": "Explore More",
+        "feature_delivery": "Free Delivery",
+        "feature_delivery_desc": "For all orders over Rp 500.000",
+        "feature_return": "90 Days Return",
+        "feature_return_desc": "If goods have problems",
+        "feature_payment": "Secure Payment",
+        "feature_payment_desc": "100% secure payment",
+        "feature_support": "24/7 Support",
+        "feature_support_desc": "Dedicated support team"
+    },
+    "footer": {
+        "tagline": "Quality products, thoughtfully curated. Fast shipping and easy returns.",
+        "navigation": "Navigation",
+        "help": "Help",
+        "contact": "Contact",
+        "shipping_policy": "Shipping Policy",
+        "returns": "Returns",
+        "faq": "FAQ",
+        "my_orders": "My Orders",
+        "all_rights": "All rights reserved.",
+        "trusted": "Trusted shopping, every time."
     },
     "common": {
         "save": "Save",

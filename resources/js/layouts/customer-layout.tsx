@@ -16,7 +16,7 @@ export default function CustomerLayout({ children, fullWidth = false }: Customer
     const [mobileOpen, setMobileOpen] = useState(false);
 
     return (
-        <div className="min-h-screen bg-white font-sans">
+        <div className="storefront min-h-screen bg-white text-slate-900 font-sans">
             {/* Top bar */}
             <div className="bg-slate-900 text-white text-xs py-2 hidden md:block">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
@@ -35,7 +35,6 @@ export default function CustomerLayout({ children, fullWidth = false }: Customer
                         )}
                     </div>
                     <div className="flex items-center gap-4">
-                        <LanguageSwitcher />
                         {user ? (
                             <>
                                 <Link href="/profile" className="hover:text-blue-400 transition-colors">{t('nav.profile')}</Link>
@@ -73,6 +72,7 @@ export default function CustomerLayout({ children, fullWidth = false }: Customer
 
                         {/* Icons */}
                         <div className="flex items-center gap-5">
+                            <LanguageSwitcher />
                             <Link href="/cart" className="relative text-slate-700 hover:text-blue-600 transition-colors">
                                 <ShoppingCart className="h-5 w-5" />
                                 {cartCount > 0 && (
@@ -116,7 +116,6 @@ export default function CustomerLayout({ children, fullWidth = false }: Customer
                         ) : (
                             <Link href="/login" className="block text-sm font-medium py-2 hover:text-blue-600" onClick={() => setMobileOpen(false)}>{t('nav.login')}</Link>
                         )}
-                        <div className="pt-2"><LanguageSwitcher /></div>
                     </div>
                 )}
             </nav>
@@ -132,7 +131,7 @@ export default function CustomerLayout({ children, fullWidth = false }: Customer
                         <div>
                             <h3 className="text-xl font-bold text-white mb-4">{shopSettings.shop_name || 'ShopNow'}</h3>
                             <p className="text-gray-400 text-sm leading-relaxed">
-                                Quality products, thoughtfully curated. Fast shipping and easy returns.
+                                {t('footer.tagline')}
                             </p>
                             <div className="flex gap-3 mt-6">
                                 {['f', 'in', 't'].map((label) => (
@@ -143,24 +142,24 @@ export default function CustomerLayout({ children, fullWidth = false }: Customer
                             </div>
                         </div>
                         <div>
-                            <h4 className="font-semibold text-sm uppercase tracking-wider mb-4 text-gray-300">Navigation</h4>
+                            <h4 className="font-semibold text-sm uppercase tracking-wider mb-4 text-gray-300">{t('footer.navigation')}</h4>
                             <ul className="space-y-2 text-sm text-gray-400">
-                                <li><Link href="/" className="hover:text-blue-400 transition-colors">Home</Link></li>
-                                <li><Link href="/shop" className="hover:text-blue-400 transition-colors">Shop</Link></li>
+                                <li><Link href="/" className="hover:text-blue-400 transition-colors">{t('nav.home')}</Link></li>
+                                <li><Link href="/shop" className="hover:text-blue-400 transition-colors">{t('nav.shop')}</Link></li>
                                 {user && <li><Link href="/wishlist" className="hover:text-blue-400 transition-colors">{t('nav.wishlist')}</Link></li>}
-                                {user && <li><Link href="/orders" className="hover:text-blue-400 transition-colors">My Orders</Link></li>}
+                                {user && <li><Link href="/orders" className="hover:text-blue-400 transition-colors">{t('footer.my_orders')}</Link></li>}
                             </ul>
                         </div>
                         <div>
-                            <h4 className="font-semibold text-sm uppercase tracking-wider mb-4 text-gray-300">Help</h4>
+                            <h4 className="font-semibold text-sm uppercase tracking-wider mb-4 text-gray-300">{t('footer.help')}</h4>
                             <ul className="space-y-2 text-sm text-gray-400">
-                                <li><span className="hover:text-blue-400 transition-colors cursor-pointer">Shipping Policy</span></li>
-                                <li><span className="hover:text-blue-400 transition-colors cursor-pointer">Returns</span></li>
-                                <li><span className="hover:text-blue-400 transition-colors cursor-pointer">FAQ</span></li>
+                                <li><span className="hover:text-blue-400 transition-colors cursor-pointer">{t('footer.shipping_policy')}</span></li>
+                                <li><span className="hover:text-blue-400 transition-colors cursor-pointer">{t('footer.returns')}</span></li>
+                                <li><span className="hover:text-blue-400 transition-colors cursor-pointer">{t('footer.faq')}</span></li>
                             </ul>
                         </div>
                         <div>
-                            <h4 className="font-semibold text-sm uppercase tracking-wider mb-4 text-gray-300">Contact</h4>
+                            <h4 className="font-semibold text-sm uppercase tracking-wider mb-4 text-gray-300">{t('footer.contact')}</h4>
                             <ul className="space-y-3 text-sm text-gray-400">
                                 {shopSettings.contact_email && (
                                     <li className="flex items-start gap-2"><Mail className="h-4 w-4 mt-0.5 shrink-0 text-blue-400" />{shopSettings.contact_email}</li>
@@ -174,8 +173,8 @@ export default function CustomerLayout({ children, fullWidth = false }: Customer
                 </div>
                 <div className="border-t border-white/10">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-gray-500">
-                        <p>&copy; {new Date().getFullYear()} {shopSettings.shop_name || 'ShopNow'}. All rights reserved.</p>
-                        <p>Trusted shopping, every time.</p>
+                        <p>&copy; {new Date().getFullYear()} {shopSettings.shop_name || 'ShopNow'}. {t('footer.all_rights')}</p>
+                        <p>{t('footer.trusted')}</p>
                     </div>
                 </div>
             </footer>

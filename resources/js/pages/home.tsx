@@ -137,15 +137,15 @@ export default function Home({ heroSlides, categories, shopSettings, products, w
                 /* Fallback hero when no slides */
                 <div className="w-full h-[500px] bg-[#F8FAFC] flex items-center justify-center">
                     <div className="text-center">
-                        <p className="text-sm font-semibold tracking-widest text-blue-600 uppercase mb-3">New Arrival</p>
+                        <p className="text-sm font-semibold tracking-widest text-blue-600 uppercase mb-3">{t('home.new_arrival')}</p>
                         <h1 className="text-5xl font-bold text-slate-900 mb-4 leading-tight">
-                            Discover Our<br />New Collection
+                            {t('home.hero_title')}
                         </h1>
                         <p className="text-slate-500 mb-8 max-w-md mx-auto">
-                            Discover our latest collection of quality products.
+                            {t('home.hero_desc')}
                         </p>
                         <Button className="bg-slate-900 hover:bg-slate-800 text-white px-10 py-6 rounded-none uppercase tracking-widest text-sm font-semibold" asChild>
-                            <Link href="/shop">Shop Now</Link>
+                            <Link href="/shop">{t('home.shop_now')}</Link>
                         </Button>
                     </div>
                 </div>
@@ -155,8 +155,8 @@ export default function Home({ heroSlides, categories, shopSettings, products, w
             {categories.length > 0 && (
                 <section className="mx-auto max-w-7xl px-4 md:px-8 py-16">
                     <div className="text-center mb-10">
-                        <h2 className="text-3xl font-bold text-slate-900">Shop by Category</h2>
-                        <p className="text-slate-400 mt-2 text-sm">Discover our top collections and find exactly what you need.</p>
+                        <h2 className="text-3xl font-bold text-slate-900">{t('home.browse_category')}</h2>
+                        <p className="text-slate-400 mt-2 text-sm">{t('home.browse_category_desc')}</p>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                         {categories.map((category) => (
@@ -187,10 +187,10 @@ export default function Home({ heroSlides, categories, shopSettings, products, w
             <section className="bg-white py-16">
                 <div className="mx-auto max-w-7xl px-4 md:px-8">
                     <div className="text-center mb-10">
-                        <h2 className="text-3xl font-bold text-slate-900">Featured Products</h2>
-                        <p className="text-slate-400 mt-2 text-sm">Handpicked products, quality guaranteed.</p>
+                        <h2 className="text-3xl font-bold text-slate-900">{t('home.featured_products')}</h2>
+                        <p className="text-slate-400 mt-2 text-sm">{t('home.featured_products_desc')}</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
                         {products.map((product) => (
                             <ProductCard key={product.id} product={product} whatsappNumber={whatsapp_number} />
                         ))}
@@ -198,10 +198,10 @@ export default function Home({ heroSlides, categories, shopSettings, products, w
                     <div className="mt-12 flex justify-center">
                         <Button
                             variant="outline"
-                            className="border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white px-12 py-3 rounded-none uppercase tracking-wider text-sm font-semibold transition-colors"
+                            className="bg-white border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white px-12 py-3 rounded-none uppercase tracking-wider text-sm font-semibold transition-colors"
                             asChild
                         >
-                            <Link href="/shop">View All Products</Link>
+                            <Link href="/shop">{t('home.view_all')}</Link>
                         </Button>
                     </div>
                 </div>
@@ -212,18 +212,18 @@ export default function Home({ heroSlides, categories, shopSettings, products, w
                 <div className="mx-auto max-w-7xl px-4 md:px-8">
                     <div className="grid md:grid-cols-2 gap-8 items-center">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-widest text-blue-600 mb-2">Limited Time Offer</p>
+                            <p className="text-xs font-semibold uppercase tracking-widest text-blue-600 mb-2">{t('home.limited_offer')}</p>
                             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 leading-snug mb-4">
-                                Quality Products,<br />For Everyone
+                                {t('home.promo_title')}
                             </h2>
                             <p className="text-slate-500 text-sm mb-6 leading-relaxed">
-                                Explore our full catalog and find exactly what you're looking for.
+                                {t('home.promo_desc')}
                             </p>
                             <Link
                                 href="/shop"
                                 className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 border-b-2 border-blue-600 pb-0.5 hover:gap-4 transition-all"
                             >
-                                Explore More <ArrowRight className="h-4 w-4" />
+                                {t('home.explore_more')} <ArrowRight className="h-4 w-4" />
                             </Link>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
@@ -252,10 +252,10 @@ export default function Home({ heroSlides, categories, shopSettings, products, w
                 <div className="mx-auto max-w-7xl px-4 md:px-8">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                         {[
-                            { icon: Truck, title: 'Free Delivery', desc: 'For all orders over Rp 500.000' },
-                            { icon: RotateCcw, title: '90 Days Return', desc: 'If goods have problems' },
-                            { icon: Shield, title: 'Secure Payment', desc: '100% secure payment' },
-                            { icon: Phone, title: '24/7 Support', desc: 'Dedicated support team' },
+                            { icon: Truck, title: t('home.feature_delivery'), desc: t('home.feature_delivery_desc') },
+                            { icon: RotateCcw, title: t('home.feature_return'), desc: t('home.feature_return_desc') },
+                            { icon: Shield, title: t('home.feature_payment'), desc: t('home.feature_payment_desc') },
+                            { icon: Phone, title: t('home.feature_support'), desc: t('home.feature_support_desc') },
                         ].map(({ icon: Icon, title, desc }) => (
                             <div key={title} className="flex items-start gap-4">
                                 <div className="w-10 h-10 shrink-0 flex items-center justify-center">

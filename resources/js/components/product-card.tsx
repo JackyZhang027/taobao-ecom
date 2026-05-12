@@ -47,7 +47,7 @@ export function ProductCard({ product, whatsappNumber }: ProductCardProps) {
     const hasDualPrices = hasBatam || hasJakarta;
 
     return (
-        <div className="relative bg-[#F1F5F9] overflow-hidden rounded-sm">
+        <div className="relative flex flex-col bg-white border border-slate-200 overflow-hidden rounded-sm">
             {/* Image */}
             <div
                 className="relative overflow-hidden"
@@ -63,7 +63,7 @@ export function ProductCard({ product, whatsappNumber }: ProductCardProps) {
                         />
                     ) : (
                         <div className="w-full aspect-square bg-slate-200 flex items-center justify-center">
-                            <span className="text-slate-400 text-sm">No image</span>
+                            <span className="text-slate-400 text-sm">{t('product.no_image')}</span>
                         </div>
                     )}
                 </Link>
@@ -81,7 +81,7 @@ export function ProductCard({ product, whatsappNumber }: ProductCardProps) {
                             className={`cursor-pointer w-9 h-9 bg-white flex items-center justify-center hover:bg-slate-900 hover:text-white transition-colors rounded-sm ${wishlistLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                             onClick={handleWishlist}
                             disabled={wishlistLoading}
-                            title={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                            title={wishlisted ? t('product.remove_wishlist') : t('product.add_wishlist')}
                         >
                             <Heart
                                 className={`h-4 w-4 transition-colors ${wishlisted ? 'fill-red-500 text-red-500' : ''}`}
@@ -90,7 +90,7 @@ export function ProductCard({ product, whatsappNumber }: ProductCardProps) {
                         <Link
                             href={`/products/${product.slug}`}
                             className="cursor-pointer w-9 h-9 bg-white flex items-center justify-center hover:bg-slate-900 hover:text-white transition-colors rounded-sm"
-                            title="View product"
+                            title={t('product.view_product')}
                         >
                             <Eye className="h-4 w-4" />
                         </Link>
@@ -99,9 +99,9 @@ export function ProductCard({ product, whatsappNumber }: ProductCardProps) {
             </div>
 
             {/* Content */}
-            <div className="p-4 bg-white">
+            <div className="p-3 sm:p-4 bg-white flex flex-col flex-1">
                 <Link href={`/products/${product.slug}`}>
-                    <h3 className="font-semibold text-slate-900 text-base line-clamp-1 hover:text-blue-600 transition-colors">
+                    <h3 className="font-semibold text-slate-900 text-sm sm:text-base line-clamp-1 hover:text-blue-600 transition-colors">
                         {product.name}
                     </h3>
                 </Link>
@@ -115,47 +115,34 @@ export function ProductCard({ product, whatsappNumber }: ProductCardProps) {
                     {hasDualPrices ? (
                         <div className="flex flex-col gap-0.5">
                             {hasBatam && (
-                                <div className="flex items-center justify-between text-sm">
-                                    <span className="text-slate-500">Batam</span>
-                                    <span className="font-bold text-slate-900">{formatIdr(product.total_batam_idr!)}</span>
+                                <div className="flex items-baseline justify-between gap-1 text-xs sm:text-sm">
+                                    <span className="text-slate-500 shrink-0">Batam</span>
+                                    <span className="font-bold text-slate-900 text-right">{formatIdr(product.total_batam_idr!)}</span>
                                 </div>
                             )}
                             {hasJakarta && (
-                                <div className="flex items-center justify-between text-sm">
-                                    <span className="text-slate-500">Jakarta</span>
-                                    <span className="font-bold text-slate-900">{formatIdr(product.total_jakarta_idr!)}</span>
+                                <div className="flex items-baseline justify-between gap-1 text-xs sm:text-sm">
+                                    <span className="text-slate-500 shrink-0">Jakarta</span>
+                                    <span className="font-bold text-slate-900 text-right">{formatIdr(product.total_jakarta_idr!)}</span>
                                 </div>
                             )}
                         </div>
                     ) : null}
                 </div>
 
-                {hasDualPrices ? (
-                    waLink && (
+                {waLink && (
+                    <div className="mt-auto pt-3">
                         <a
                             href={waLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="mt-3 flex items-center justify-center gap-2 w-full py-2 text-xs font-medium text-white bg-green-500 hover:bg-green-600 transition-colors rounded-sm"
+                            className="flex items-center justify-center gap-1.5 w-full py-2 min-h-[2.25rem] text-[11px] leading-tight font-medium text-white bg-green-500 hover:bg-green-600 transition-colors rounded-sm text-center"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <MessageCircle className="h-3.5 w-3.5" />
-                            Pesan ke Lokasi Lain
+                            <MessageCircle className="h-3 w-3 shrink-0" />
+                            {hasDualPrices ? t('product.order_other_location') : t('product.contact_wa')}
                         </a>
-                    )
-                ) : (
-                    waLink && (
-                        <a
-                            href={waLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mt-3 flex items-center justify-center gap-2 w-full py-2 text-xs font-medium text-white bg-green-500 hover:bg-green-600 transition-colors rounded-sm"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <MessageCircle className="h-3.5 w-3.5" />
-                            Contact WA
-                        </a>
-                    )
+                    </div>
                 )}
             </div>
         </div>

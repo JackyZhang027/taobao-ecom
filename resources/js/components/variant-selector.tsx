@@ -1,4 +1,3 @@
-import { useCurrency } from '@/hooks/use-currency';
 import type { AttributeType, ProductVariant } from '@/types/product';
 
 interface VariantSelectorProps {
@@ -8,7 +7,6 @@ interface VariantSelectorProps {
 }
 
 export function VariantSelector({ variants, selectedId, onChange }: VariantSelectorProps) {
-    const { formatIdr } = useCurrency();
 
     // Collect all attribute types present across variants
     const attributeTypeMap = new Map<number, AttributeType>();
@@ -35,17 +33,14 @@ export function VariantSelector({ variants, selectedId, onChange }: VariantSelec
                             onClick={() => onChange(v.id)}
                             className={`rounded border px-3 py-1 text-sm transition-colors
                                 ${selectedId === v.id
-                                    ? 'border-primary bg-primary text-primary-foreground'
-                                    : 'bg-white text-slate-900 border-slate-300 hover:border-primary'}
+                                    ? 'border-blue-600 bg-blue-600 text-white'
+                                    : 'bg-white text-slate-900 border-slate-300 hover:border-blue-600'}
                                 ${!v.is_active ? 'cursor-not-allowed opacity-40' : ''}`}
                         >
                             {v.sku}
                         </button>
                     ))}
                 </div>
-                {selectedVariant?.price_idr != null && (
-                    <p className="font-bold text-primary">{formatIdr(selectedVariant.price_idr)}</p>
-                )}
             </div>
         );
     }
@@ -80,8 +75,8 @@ export function VariantSelector({ variants, selectedId, onChange }: VariantSelec
                                         onClick={() => matchingVariant && onChange(matchingVariant.id)}
                                         className={`rounded border px-3 py-1 text-sm transition-colors
                                             ${isSelected
-                                                ? 'border-primary bg-primary text-primary-foreground'
-                                                : 'bg-white text-slate-900 border-slate-300 hover:border-primary'}
+                                                ? 'border-blue-600 bg-blue-600 text-white'
+                                                : 'bg-white text-slate-900 border-slate-300 hover:border-blue-600'}
                                             ${!matchingVariant ? 'cursor-not-allowed opacity-40' : ''}`.trim()}
                                     >
                                         {av.value}
@@ -92,9 +87,6 @@ export function VariantSelector({ variants, selectedId, onChange }: VariantSelec
                     </div>
                 );
             })}
-            {selectedVariant?.price_idr != null && (
-                <p className="font-bold text-primary text-lg">{formatIdr(selectedVariant.price_idr)}</p>
-            )}
         </div>
     );
 }
