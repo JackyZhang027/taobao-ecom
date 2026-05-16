@@ -12,6 +12,7 @@ use Modules\Catalog\Models\Product;
 use Modules\Currency\Services\CurrencyService;
 use Modules\Ordering\Models\Order;
 use Modules\Ordering\Models\OrderLine;
+use Modules\Ordering\Models\OrderStatusHistory;
 use Modules\Ordering\Services\ShippingService;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -29,28 +30,52 @@ class OrderController extends Controller
 
     public function datatable(): JsonResponse
     {
-        $query = Order::with('user')->select('orders.*');
+        $query = Order::with('user', 'payment')->select('orders.*');
 
         return DataTables::of($query)
             ->addColumn('customer_name', fn ($o) => $o->user?->name ?? '—')
             ->addColumn('total', fn ($o) => 'Rp ' . number_format($o->grand_total_idr, 0, ',', '.'))
+            ->addColumn('payment_status', fn ($o) => $o->payment?->status ?? 'unpaid')
             ->make(true);
     }
 
     public function show(Order $order)
     {
         return Inertia::render('admin/orders/show', [
-            'order' => $order->load('user', 'lines', 'payment'),
+            'order' => $order->load('user', 'lines', 'payment', 'statusHistories.changer'),
         ]);
     }
 
-    public function updateStatus(Request $request, Order $order)
-    {
-        $allowed = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
-        $request->validate(['status' => 'required|in:' . implode(',', $allowed)]);
-        $order->update(['status' => $request->status]);
+    private const TRANSITIONS = [
+        'pending'    => ['cancelled'],
+        'confirmed'  => ['processing', 'cancelled'],
+        'processing' => ['shipped', 'cancelled'],
+    ];
 
-        return back();
+    public function transition(Request $request, Order $order)
+    {
+        $allowed = self::TRANSITIONS[$order->status] ?? [];
+
+        $request->validate([
+            'status'          => 'required|in:' . implode(',', $allowed),
+            'courier'         => 'required_if:status,shipped|nullable|string|max:100',
+            'tracking_number' => 'required_if:status,shipped|nullable|string|max:100',
+        ]);
+
+        $fields = ['status' => $request->status];
+        if ($request->status === 'shipped') {
+            $fields['courier']         = $request->courier;
+            $fields['tracking_number'] = $request->tracking_number;
+        }
+        $order->update($fields);
+
+        OrderStatusHistory::create([
+            'order_id'   => $order->id,
+            'status'     => $request->status,
+            'changed_by' => auth()->id(),
+        ]);
+
+        return back()->with('success', 'Order status updated.');
     }
 
     public function create()
@@ -175,6 +200,12 @@ class OrderController extends Controller
             foreach ($lines as $line) {
                 OrderLine::create(['order_id' => $order->id, ...$line]);
             }
+
+            OrderStatusHistory::create([
+                'order_id'   => $order->id,
+                'status'     => 'pending',
+                'changed_by' => auth()->id(),
+            ]);
 
             return $order;
         });

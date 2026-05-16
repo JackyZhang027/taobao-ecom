@@ -80,7 +80,13 @@
         "status_processing": "Processing",
         "status_shipped": "Shipped",
         "status_delivered": "Delivered",
-        "status_cancelled": "Cancelled"
+        "status_cancelled": "Cancelled",
+        "courier": "Courier",
+        "tracking_number": "Tracking Number (Resi)",
+        "tracking_info": "Your order is on its way!",
+        "confirmReceipt": "Confirm Receipt",
+        "confirmReceiptPrompt": "Have you received your order?",
+        "confirmReceiptMessage": "Are you sure you have received this order? This cannot be undone."
     },
     "admin": {
         "dashboard": "Dashboard",

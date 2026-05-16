@@ -1,3 +1,12 @@
+export type OrderStatusHistory = {
+    id: number;
+    order_id: number;
+    status: OrderStatus | 'cancelled';
+    changed_by: number | null;
+    changer?: { id: number; name: string };
+    created_at: string;
+};
+
 export type OrderStatus =
     | 'pending'
     | 'confirmed'
@@ -20,6 +29,7 @@ export type OrderLine = {
 
 export type Order = {
     id: number;
+    order_number: string | null;
     user_id: number;
     status: OrderStatus;
     subtotal_idr: number;
@@ -33,12 +43,25 @@ export type Order = {
     province: string | null;
     postal_code: string | null;
     notes: string | null;
+    courier: string | null;
+    tracking_number: string | null;
     created_at: string;
     updated_at: string;
     lines?: OrderLine[];
+    status_histories?: OrderStatusHistory[];
     payment?: {
         id: number;
         status: string;
         snap_token: string | null;
+        amount: number | null;
+        updated_at: string | null;
+        gateway_response: {
+            payment_type?: string;
+            transaction_time?: string;
+            settlement_time?: string;
+            bank?: string;
+            card_type?: string;
+            gross_amount?: string;
+        } | null;
     };
 };

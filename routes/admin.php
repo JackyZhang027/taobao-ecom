@@ -69,7 +69,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'permiss
     Route::post('orders', [OrderController::class, 'store'])->name('orders.store')->middleware('permission:orders.create');
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index')->middleware('permission:orders.view');
     Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show')->middleware('permission:orders.view');
-    Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status')->middleware('permission:orders.edit');
+    Route::post('orders/{order}/transition', [OrderController::class, 'transition'])->name('orders.transition')->middleware('permission:orders.edit');
 
     // --- Exchange Rates ---
     Route::get('exchange-rates/datatable', [ExchangeRateController::class, 'datatable'])->name('exchange-rates.datatable')->middleware('permission:exchange_rates.view');

@@ -2,7 +2,16 @@ import { Head, Link } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { useCurrency } from '@/hooks/use-currency';
 import CustomerLayout from '@/layouts/customer-layout';
-import type { Order } from '@/types/order';
+import type { Order, OrderStatus } from '@/types/order';
+
+const STATUS_COLORS: Record<OrderStatus, string> = {
+    pending: 'bg-yellow-100 text-yellow-700',
+    confirmed: 'bg-blue-100 text-blue-700',
+    processing: 'bg-indigo-100 text-indigo-700',
+    shipped: 'bg-purple-100 text-purple-700',
+    delivered: 'bg-green-100 text-green-700',
+    cancelled: 'bg-red-100 text-red-700',
+};
 
 interface OrdersProps {
     orders: {
@@ -26,12 +35,9 @@ export default function OrdersIndex({ orders }: OrdersProps) {
                 {orders.data.map((order) => (
                     <div key={order.id} className="rounded-lg border p-4 flex items-center justify-between">
                         <div>
-                            <p className="font-medium">{t('orders.order_number')}{order.id}</p>
+                            <p className="font-medium">{order.order_number ?? `#${order.id}`}</p>
                             <p className="text-sm text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</p>
-                            <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium
-                                ${order.status === 'delivered' ? 'bg-green-100 text-green-700' :
-                                  order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
-                                  'bg-blue-100 text-blue-700'}`}>
+                            <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[order.status] ?? 'bg-gray-100 text-gray-700'}`}>
                                 {t(`orders.status_${order.status}`)}
                             </span>
                         </div>

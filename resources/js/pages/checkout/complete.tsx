@@ -56,14 +56,14 @@ export default function CheckoutComplete({ order, snapToken, clientKey, isProduc
 
     return (
         <CustomerLayout>
-            <Head title={`Order #${order.id}`} />
+            <Head title={order.order_number ?? `Order #${order.id}`} />
             <div className="max-w-2xl">
                 {/* Status banner */}
                 <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
                     <p className="font-semibold text-blue-800">
                         {snapOpened ? 'Payment window opened — complete your payment above.' : 'Preparing payment…'}
                     </p>
-                    <p className="text-sm text-blue-700">Order #{order.id} has been created.</p>
+                    <p className="text-sm text-blue-700">Order {order.order_number ?? `#${order.id}`} has been created.</p>
                 </div>
 
                 {/* Shipping info */}

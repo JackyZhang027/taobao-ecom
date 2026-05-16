@@ -32,6 +32,7 @@ Route::middleware(['auth', 'verified', 'role:customer|admin'])->group(function (
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{order}/confirm-payment', [OrderController::class, 'confirmPayment'])->name('orders.confirm-payment')->middleware('throttle:5,1');
+    Route::post('/orders/{order}/confirm-receipt', [OrderController::class, 'confirmReceipt'])->name('orders.confirm-receipt');
 
     Route::get('/profile', [CustomerProfileController::class, 'edit'])->name('customer.profile.edit');
     Route::patch('/profile', [CustomerProfileController::class, 'update'])->name('customer.profile.update');

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Modules\Ordering\Models\OrderStatusHistory;
 use Modules\Payment\Models\Payment;
 
 class Order extends Model
@@ -25,7 +26,23 @@ class Order extends Model
         'province',
         'postal_code',
         'notes',
+        'courier',
+        'tracking_number',
+        'order_number',
     ];
+
+    protected static function booted(): void
+    {
+        static::created(function (Order $order) {
+            $order->updateQuietly([
+                'order_number' => sprintf(
+                    'OR-%s-%05d',
+                    $order->created_at->format('Ymd'),
+                    $order->id,
+                ),
+            ]);
+        });
+    }
 
     protected $casts = [
         'subtotal_idr' => 'float',
@@ -47,5 +64,10 @@ class Order extends Model
     public function payment(): HasOne
     {
         return $this->hasOne(Payment::class)->latestOfMany('id');
+    }
+
+    public function statusHistories(): HasMany
+    {
+        return $this->hasMany(OrderStatusHistory::class)->orderBy('created_at');
     }
 }

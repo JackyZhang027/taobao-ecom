@@ -6,6 +6,7 @@ use Midtrans\Config;
 use Midtrans\Snap;
 use Midtrans\Transaction;
 use Modules\Ordering\Models\Order;
+use Modules\Ordering\Models\OrderStatusHistory;
 use Modules\Payment\Models\Payment;
 
 class PaymentService
@@ -120,8 +121,8 @@ class PaymentService
         }
 
         match ($transactionStatus) {
-            'settlement', 'capture' => $order->update(['status' => 'confirmed']),
-            'cancel', 'expire', 'deny' => $order->update(['status' => 'cancelled']),
+            'settlement', 'capture' => $this->transitionOrder($order, 'confirmed'),
+            'cancel', 'expire', 'deny' => $this->transitionOrder($order, 'cancelled'),
             default => null,
         };
     }
@@ -138,7 +139,17 @@ class PaymentService
             return 'no_payment';
         }
 
-        $status = Transaction::status($payment->midtrans_order_id);
+        try {
+            $status = Transaction::status($payment->midtrans_order_id);
+        } catch (\Throwable $e) {
+            \Log::error('Midtrans Transaction::status() failed', [
+                'order_id' => $order->id,
+                'midtrans_order_id' => $payment->midtrans_order_id,
+                'error' => $e->getMessage(),
+            ]);
+            return 'error';
+        }
+
         $transactionStatus = $status->transaction_status;
 
         $payment->update([
@@ -147,11 +158,26 @@ class PaymentService
         ]);
 
         match ($transactionStatus) {
-            'settlement', 'capture' => $order->update(['status' => 'confirmed']),
-            'cancel', 'expire', 'deny' => $order->update(['status' => 'cancelled']),
+            'settlement', 'capture' => $this->transitionOrder($order, 'confirmed'),
+            'cancel', 'expire', 'deny' => $this->transitionOrder($order, 'cancelled'),
             default => null,
         };
 
         return $transactionStatus;
+    }
+
+    private function transitionOrder(Order $order, string $newStatus): void
+    {
+        if ($order->status === $newStatus) {
+            return;
+        }
+
+        $order->update(['status' => $newStatus]);
+
+        OrderStatusHistory::create([
+            'order_id'   => $order->id,
+            'status'     => $newStatus,
+            'changed_by' => null,
+        ]);
     }
 }

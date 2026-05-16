@@ -12,6 +12,7 @@ use Modules\Ordering\Models\CartItem;
 use Modules\Payment\Models\Payment;
 use Modules\Ordering\Models\Order;
 use Modules\Ordering\Models\OrderLine;
+use Modules\Ordering\Models\OrderStatusHistory;
 use Modules\Ordering\Services\CartService;
 use Modules\Ordering\Services\ShippingService;
 use Modules\Payment\Services\PaymentService;
@@ -155,6 +156,12 @@ class CheckoutController extends Controller
             }
 
             CartItem::where('cart_id', $cart->id)->delete();
+
+            OrderStatusHistory::create([
+                'order_id'   => $order->id,
+                'status'     => 'pending',
+                'changed_by' => $request->user()->id,
+            ]);
 
             return $order;
         });

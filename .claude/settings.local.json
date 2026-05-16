@@ -71,7 +71,11 @@
       "Bash(php artisan *)",
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\user\\\\Herd\\\\taobao\" -Recurse -Name -Include \"*.tsx\", \"*.ts\", \"*.php\")",
       "Bash(Select-Object -First 50)",
-      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\user\\\\Herd\\\\taobao\\\\resources\\\\js\\\\pages\\\\admin\" -Recurse -Filter \"*variant*\" -ErrorAction SilentlyContinue)"
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\user\\\\Herd\\\\taobao\\\\resources\\\\js\\\\pages\\\\admin\" -Recurse -Filter \"*variant*\" -ErrorAction SilentlyContinue)",
+      "WebSearch",
+      "WebFetch(domain:seller.shopee.sg)",
+      "WebFetch(domain:www.laurensiusleonardy.com)",
+      "Bash(git -C \"c:\\\\Users\\\\user\\\\Herd\\\\taobao\" diff HEAD~1 HEAD -- resources/js/actions/)"
     ],
     "additionalDirectories": [
       "c:\\Users\\user\\.claude\\plans"

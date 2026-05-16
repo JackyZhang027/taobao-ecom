@@ -80,7 +80,13 @@
         "status_processing": "Diproses",
         "status_shipped": "Dikirim",
         "status_delivered": "Diterima",
-        "status_cancelled": "Dibatalkan"
+        "status_cancelled": "Dibatalkan",
+        "courier": "Kurir",
+        "tracking_number": "Nomor Resi",
+        "tracking_info": "Pesanan Anda sedang dalam perjalanan!",
+        "confirmReceipt": "Konfirmasi Penerimaan",
+        "confirmReceiptPrompt": "Apakah pesanan Anda sudah diterima?",
+        "confirmReceiptMessage": "Apakah Anda yakin telah menerima pesanan ini? Tindakan ini tidak dapat dibatalkan."
     },
     "admin": {
         "dashboard": "Dashboard",
