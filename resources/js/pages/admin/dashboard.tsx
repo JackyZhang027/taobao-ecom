@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { useCurrency } from '@/hooks/use-currency';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, ShoppingCart, Users, Package } from 'lucide-react';
 
@@ -20,10 +21,7 @@ export default function AdminDashboard({ stats }: DashboardProps) {
     return (
         <AdminLayout>
             <Head title="Admin Dashboard" />
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold">Dashboard</h1>
-                <p className="text-muted-foreground text-sm mt-1">Overview of your store performance</p>
-            </div>
+            <AdminPageHeader title="Dashboard" subtitle="Overview of your store performance" />
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">

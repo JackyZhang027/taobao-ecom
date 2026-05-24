@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { AccountSelect } from '@/components/accounting/account-select';
 import { NumberInput } from '@/components/ui/number-input';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import type { Account } from '@/types';
 
 interface Props {
@@ -83,9 +84,7 @@ export default function JournalCreate({ accounts, reference }: Props) {
     return (
         <AdminLayout>
             <Head title="New Journal Entry" />
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold">New Journal Entry</h1>
-            </div>
+            <AdminPageHeader title="New Journal Entry" />
 
             <form onSubmit={submit} className="space-y-6">
                 {/* Header */}

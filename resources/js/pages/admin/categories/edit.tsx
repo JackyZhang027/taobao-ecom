@@ -2,6 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -102,20 +103,20 @@ export default function AdminCategoryEdit({ category, categories, image: initial
         <AdminLayout>
             <Head title={`Edit Category: ${category.name}`} />
             <form onSubmit={submit}>
-                <div className="mb-6 flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold">Edit Category</h1>
-                        <p className="text-sm text-muted-foreground mt-1">Update category details</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Button type="button" variant="outline" onClick={() => history.back()}>
-                            Cancel
-                        </Button>
-                        <Button type="submit" disabled={processing}>
-                            {processing ? 'Saving...' : 'Save Changes'}
-                        </Button>
-                    </div>
-                </div>
+                <AdminPageHeader
+                    title="Edit Category"
+                    subtitle="Update category details"
+                    actions={
+                        <>
+                            <Button type="button" variant="outline" onClick={() => history.back()}>
+                                Cancel
+                            </Button>
+                            <Button type="submit" disabled={processing}>
+                                {processing ? 'Saving...' : 'Save Changes'}
+                            </Button>
+                        </>
+                    }
+                />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2">

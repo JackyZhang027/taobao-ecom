@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AccountSelect } from '@/components/accounting/account-select';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import type { Account, AccountType } from '@/types';
 
 interface Props {
@@ -48,18 +49,18 @@ export default function AccountEdit({ account, accounts, types }: Props) {
         <AdminLayout>
             <Head title={`Edit Account — ${account.code}`} />
             <form onSubmit={submit}>
-                <div className="mb-6 flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold">Edit Account</h1>
-                        <p className="text-sm text-muted-foreground mt-1">Update account details in the chart of accounts</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Button type="button" variant="outline" onClick={() => history.back()}>Cancel</Button>
-                        <Button type="submit" disabled={processing}>
-                            {processing ? 'Updating...' : 'Update Account'}
-                        </Button>
-                    </div>
-                </div>
+                <AdminPageHeader
+                    title="Edit Account"
+                    subtitle="Update account details in the chart of accounts"
+                    actions={
+                        <>
+                            <Button type="button" variant="outline" onClick={() => history.back()}>Cancel</Button>
+                            <Button type="submit" disabled={processing}>
+                                {processing ? 'Updating...' : 'Update Account'}
+                            </Button>
+                        </>
+                    }
+                />
 
                 <div className="grid gap-6 lg:grid-cols-3">
                     <div className="lg:col-span-2">

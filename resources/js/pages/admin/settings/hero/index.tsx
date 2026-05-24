@@ -1,6 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { toast } from 'sonner';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminDataTable } from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
@@ -44,18 +45,18 @@ export default function AdminHeroSettingsIndex() {
         <AdminLayout breadcrumbs={[{ title: 'Settings', href: '/admin/settings/shop' }, { title: 'Hero Slides', href: '' }]}>
             <Head title="Hero Slides Settings" />
 
-            <div className="flex items-center justify-between mb-6">
-                <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Hero Slides</h2>
-                    <p className="text-muted-foreground">Manage the homepage hero banners.</p>
-                </div>
-                <Button asChild>
-                    <Link href="/admin/settings/hero/create">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Hero Slide
-                    </Link>
-                </Button>
-            </div>
+            <AdminPageHeader
+                title="Hero Slides"
+                subtitle="Manage the homepage hero banners."
+                actions={
+                    <Button asChild>
+                        <Link href="/admin/settings/hero/create">
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add Hero Slide
+                        </Link>
+                    </Button>
+                }
+            />
 
             <AdminDataTable
                 url="/admin/settings/hero/datatable"

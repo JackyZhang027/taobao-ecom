@@ -2,6 +2,7 @@ import { Head, useForm } from '@inertiajs/react';
 import { useRef } from 'react';
 import { toast } from 'sonner';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminDataTable, type AdminDataTableRef } from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,9 +51,7 @@ export default function AdminExchangeRates() {
     return (
         <AdminLayout>
             <Head title="Exchange Rates" />
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold">Exchange Rates</h1>
-            </div>
+            <AdminPageHeader title="Exchange Rates" />
             <div className="grid gap-6 lg:grid-cols-3">
                 <Card className="lg:col-span-1 h-fit">
                     <CardHeader>

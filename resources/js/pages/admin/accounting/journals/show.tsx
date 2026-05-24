@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import type { JournalEntry } from '@/types';
 
 interface Props {
@@ -41,12 +42,14 @@ export default function JournalShow({ entry }: Props) {
     return (
         <AdminLayout>
             <Head title={`Journal ${entry.reference_number}`} />
-            <div className="mb-6 flex items-center gap-3">
-                <h1 className="text-2xl font-bold">{entry.reference_number}</h1>
-                <Badge variant={statusVariant[entry.status] ?? 'secondary'} className="capitalize">
-                    {entry.status}
-                </Badge>
-            </div>
+            <AdminPageHeader
+                title={entry.reference_number}
+                actions={
+                    <Badge variant={statusVariant[entry.status] ?? 'secondary'} className="capitalize">
+                        {entry.status}
+                    </Badge>
+                }
+            />
 
             <div className="grid gap-6 lg:grid-cols-3">
                 <div className="lg:col-span-2 space-y-6">
@@ -55,6 +58,7 @@ export default function JournalShow({ entry }: Props) {
                             <CardTitle>Journal Lines</CardTitle>
                         </CardHeader>
                         <CardContent className="p-0">
+                            <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                                 <thead className="border-b bg-muted/50">
                                     <tr>
@@ -91,6 +95,7 @@ export default function JournalShow({ entry }: Props) {
                                     </tr>
                                 </tfoot>
                             </table>
+                            </div>
                         </CardContent>
                     </Card>
                 </div>

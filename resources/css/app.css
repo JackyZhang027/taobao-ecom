@@ -169,6 +169,10 @@
 }
 
 /* DataTables overrides to match shadcn/ui style */
+.dt-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
 .dt-wrapper .dt-layout-row {
     display: flex;
     align-items: center;

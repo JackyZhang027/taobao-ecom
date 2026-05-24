@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AccountSelect } from '@/components/accounting/account-select';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import type { Account, LedgerData } from '@/types';
 
 interface Props {
@@ -37,9 +38,7 @@ export default function LedgerIndex({ accounts, ledger, filters }: Props) {
     return (
         <AdminLayout>
             <Head title="General Ledger" />
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold">General Ledger</h1>
-            </div>
+            <AdminPageHeader title="General Ledger" />
 
             <div className="grid gap-6 lg:grid-cols-4">
                 {/* Filter Panel */}
@@ -82,6 +81,7 @@ export default function LedgerIndex({ accounts, ledger, filters }: Props) {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="p-0">
+                                <div className="overflow-x-auto">
                                 <table className="w-full text-sm">
                                     <thead className="border-b bg-muted/50">
                                         <tr>
@@ -132,6 +132,7 @@ export default function LedgerIndex({ accounts, ledger, filters }: Props) {
                                         </tr>
                                     </tfoot>
                                 </table>
+                                </div>
                             </CardContent>
                         </Card>
                     ) : (

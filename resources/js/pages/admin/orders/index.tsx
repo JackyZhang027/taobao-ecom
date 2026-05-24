@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminDataTable } from '@/components/admin/data-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -47,9 +48,7 @@ export default function AdminOrdersIndex() {
     return (
         <AdminLayout>
             <Head title="Orders" />
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold">Orders</h1>
-            </div>
+            <AdminPageHeader title="Orders" />
             <Card>
                 <CardHeader>
                     <CardTitle>All Orders</CardTitle>

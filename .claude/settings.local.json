@@ -75,7 +75,10 @@
       "WebSearch",
       "WebFetch(domain:seller.shopee.sg)",
       "WebFetch(domain:www.laurensiusleonardy.com)",
-      "Bash(git -C \"c:\\\\Users\\\\user\\\\Herd\\\\taobao\" diff HEAD~1 HEAD -- resources/js/actions/)"
+      "Bash(git -C \"c:\\\\Users\\\\user\\\\Herd\\\\taobao\" diff HEAD~1 HEAD -- resources/js/actions/)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\user\\\\Herd\\\\taobao\\\\resources\\\\js\\\\pages\" -Recurse -Force)",
+      "Bash(Select-Object -First 100)",
+      "PowerShell(head -50)"
     ],
     "additionalDirectories": [
       "c:\\Users\\user\\.claude\\plans"

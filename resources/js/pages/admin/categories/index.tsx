@@ -1,6 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { toast } from 'sonner';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminDataTable } from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,15 +39,17 @@ export default function AdminCategoriesIndex() {
     return (
         <AdminLayout>
             <Head title="Categories" />
-            <div className="mb-6 flex items-center justify-between">
-                <h1 className="text-2xl font-bold">Categories</h1>
-                <Button asChild>
-                    <a href="/admin/categories/create">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Create Category
-                    </a>
-                </Button>
-            </div>
+            <AdminPageHeader
+                title="Categories"
+                actions={
+                    <Button asChild>
+                        <a href="/admin/categories/create">
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create Category
+                        </a>
+                    </Button>
+                }
+            />
             <Card>
                 <CardHeader>
                     <CardTitle>All Categories</CardTitle>

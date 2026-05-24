@@ -1,6 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { toast } from 'sonner';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminDataTable } from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -55,15 +56,17 @@ export default function AdminProductsIndex() {
     return (
         <AdminLayout>
             <Head title="Products" />
-            <div className="mb-6 flex items-center justify-between">
-                <h1 className="text-2xl font-bold">Products</h1>
-                <Button asChild>
-                    <a href="/admin/products/create">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Create Product
-                    </a>
-                </Button>
-            </div>
+            <AdminPageHeader
+                title="Products"
+                actions={
+                    <Button asChild>
+                        <a href="/admin/products/create">
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create Product
+                        </a>
+                    </Button>
+                }
+            />
             <Card>
                 <CardHeader>
                     <CardTitle>All Products</CardTitle>

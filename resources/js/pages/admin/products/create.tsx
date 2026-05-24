@@ -2,6 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NumberInput } from '@/components/ui/number-input';
@@ -240,21 +241,20 @@ export default function AdminProductCreate({ categories, attributeTypes, exchang
         <AdminLayout>
             <Head title="Create Product" />
             <form onSubmit={submit}>
-                {/* Page Header with buttons */}
-                <div className="mb-6 flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold">Create Product</h1>
-                        <p className="text-sm text-muted-foreground mt-1">Add a new product to your catalog</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Button type="button" variant="outline" onClick={() => history.back()}>
-                            Cancel
-                        </Button>
-                        <Button type="submit" disabled={processing}>
-                            {processing ? 'Creating...' : 'Create Product'}
-                        </Button>
-                    </div>
-                </div>
+                <AdminPageHeader
+                    title="Create Product"
+                    subtitle="Add a new product to your catalog"
+                    actions={
+                        <>
+                            <Button type="button" variant="outline" onClick={() => history.back()}>
+                                Cancel
+                            </Button>
+                            <Button type="submit" disabled={processing}>
+                                {processing ? 'Creating...' : 'Create Product'}
+                            </Button>
+                        </>
+                    }
+                />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* LEFT COLUMN — Content & Variants (2/3 width) */}

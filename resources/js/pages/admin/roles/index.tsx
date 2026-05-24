@@ -1,6 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { toast } from 'sonner';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminDataTable } from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,15 +40,17 @@ export default function RolesIndex() {
     return (
         <AdminLayout>
             <Head title="Roles" />
-            <div className="mb-6 flex items-center justify-between">
-                <h1 className="text-2xl font-bold">Roles</h1>
-                <Button asChild>
-                    <a href="/admin/roles/create">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Create Role
-                    </a>
-                </Button>
-            </div>
+            <AdminPageHeader
+                title="Roles"
+                actions={
+                    <Button asChild>
+                        <a href="/admin/roles/create">
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create Role
+                        </a>
+                    </Button>
+                }
+            />
             <Card>
                 <CardHeader>
                     <CardTitle>All Roles</CardTitle>

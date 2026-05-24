@@ -1,6 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { toast } from 'sonner';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminDataTable } from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,15 +39,17 @@ export default function AdminUsersIndex() {
     return (
         <AdminLayout>
             <Head title="Users" />
-            <div className="mb-6 flex items-center justify-between">
-                <h1 className="text-2xl font-bold">Users</h1>
-                <Button asChild>
-                    <a href="/admin/users/create">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Create User
-                    </a>
-                </Button>
-            </div>
+            <AdminPageHeader
+                title="Users"
+                actions={
+                    <Button asChild>
+                        <a href="/admin/users/create">
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create User
+                        </a>
+                    </Button>
+                }
+            />
             <Card>
                 <CardHeader>
                     <CardTitle>All Users</CardTitle>

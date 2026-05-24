@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import type { BalanceSheetData, TrialBalanceRow } from '@/types';
 
 interface Props {
@@ -52,9 +53,7 @@ export default function BalanceSheet({ report, filters }: Props) {
     return (
         <AdminLayout>
             <Head title="Balance Sheet" />
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold">Balance Sheet</h1>
-            </div>
+            <AdminPageHeader title="Balance Sheet" />
 
             <Card className="mb-6">
                 <CardContent className="pt-6">

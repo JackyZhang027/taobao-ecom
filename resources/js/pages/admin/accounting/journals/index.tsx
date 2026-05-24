@@ -4,6 +4,7 @@ import { AdminDataTable } from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 
 const statusColors: Record<string, string> = {
     draft:   'bg-gray-100 text-gray-600',
@@ -39,15 +40,17 @@ export default function JournalsIndex() {
     return (
         <AdminLayout>
             <Head title="Journal Entries" />
-            <div className="mb-6 flex items-center justify-between">
-                <h1 className="text-2xl font-bold">Journal Entries</h1>
-                <Button asChild>
-                    <a href="/admin/accounting/journals/create">
-                        <Plus className="mr-2 h-4 w-4" />
-                        New Entry
-                    </a>
-                </Button>
-            </div>
+            <AdminPageHeader
+                title="Journal Entries"
+                actions={
+                    <Button asChild>
+                        <a href="/admin/accounting/journals/create">
+                            <Plus className="mr-2 h-4 w-4" />
+                            New Entry
+                        </a>
+                    </Button>
+                }
+            />
             <Card>
                 <CardHeader>
                     <CardTitle>All Journal Entries</CardTitle>

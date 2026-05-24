@@ -2,6 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -56,20 +57,20 @@ export default function AdminUserEdit({ user, userRole, roles }: Props) {
         <AdminLayout>
             <Head title="Edit Admin User" />
             <form onSubmit={submit}>
-                <div className="mb-6 flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold">Edit Admin User</h1>
-                        <p className="text-sm text-muted-foreground mt-1">Update administrator account details</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Button type="button" variant="outline" onClick={() => history.back()}>
-                            Cancel
-                        </Button>
-                        <Button type="submit" disabled={processing}>
-                            {processing ? 'Saving...' : 'Save Changes'}
-                        </Button>
-                    </div>
-                </div>
+                <AdminPageHeader
+                    title="Edit Admin User"
+                    subtitle="Update administrator account details"
+                    actions={
+                        <>
+                            <Button type="button" variant="outline" onClick={() => history.back()}>
+                                Cancel
+                            </Button>
+                            <Button type="submit" disabled={processing}>
+                                {processing ? 'Saving...' : 'Save Changes'}
+                            </Button>
+                        </>
+                    }
+                />
 
                 <div className="max-w-lg">
                     <Card>

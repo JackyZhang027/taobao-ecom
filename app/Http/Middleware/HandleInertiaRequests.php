@@ -45,7 +45,7 @@ class HandleInertiaRequests extends Middleware
                 'permissions' => fn () => $user ? $user->getAllPermissions()->pluck('name')->toArray() : [],
                 'roles'       => fn () => $user ? $user->getRoleNames()->toArray() : [],
             ],
-            'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'sidebarOpen' => $request->hasCookie('sidebar_state') && $request->cookie('sidebar_state') === 'true',
             'cartCount' => $this->resolveCartCount($request),
             'exchangeRate' => app(\Modules\Currency\Services\CurrencyService::class)->getActiveRate(),
             'shopSettings' => \Modules\Admin\Models\ShopSetting::all()->pluck('value', 'key'),

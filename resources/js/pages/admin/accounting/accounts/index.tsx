@@ -5,6 +5,7 @@ import { AdminDataTable } from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 
 const columns = [
     { data: 'code', title: 'Code', width: '100px' },
@@ -64,15 +65,17 @@ export default function AccountsIndex() {
     return (
         <AdminLayout>
             <Head title="Chart of Accounts" />
-            <div className="mb-6 flex items-center justify-between">
-                <h1 className="text-2xl font-bold">Chart of Accounts</h1>
-                <Button asChild>
-                    <a href="/admin/accounting/accounts/create">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Create Account
-                    </a>
-                </Button>
-            </div>
+            <AdminPageHeader
+                title="Chart of Accounts"
+                actions={
+                    <Button asChild>
+                        <a href="/admin/accounting/accounts/create">
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create Account
+                        </a>
+                    </Button>
+                }
+            />
             <Card>
                 <CardHeader>
                     <CardTitle>All Accounts</CardTitle>

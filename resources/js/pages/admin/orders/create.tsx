@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Plus, Trash2 } from 'lucide-react';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { Button } from '@/components/ui/button';
 import { NumberInput } from '@/components/ui/number-input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -133,9 +134,7 @@ export default function AdminOrderCreate({ customers, products, exchangeRate }: 
     return (
         <AdminLayout>
             <Head title="Create Order" />
-            <div className="mb-6 flex items-center justify-between">
-                <h1 className="text-2xl font-bold">Create Manual Order</h1>
-            </div>
+            <AdminPageHeader title="Create Manual Order" />
 
             <form onSubmit={submit}>
                 <div className="grid gap-6 lg:grid-cols-3">
@@ -169,7 +168,7 @@ export default function AdminOrderCreate({ customers, products, exchangeRate }: 
                                 {items.map((item, idx) => {
                                     const product = products.find((p) => p.id === item.product_id);
                                     return (
-                                        <div key={idx} className="grid grid-cols-[2fr_1fr_auto_auto] gap-2 items-end">
+                                        <div key={idx} className="grid grid-cols-1 gap-2 items-end sm:grid-cols-[2fr_1fr_auto_auto]">
                                             <div>
                                                 <label className="block text-xs font-medium mb-1">Product</label>
                                                 <select
@@ -231,7 +230,7 @@ export default function AdminOrderCreate({ customers, products, exchangeRate }: 
                         <Card>
                             <CardHeader><CardTitle>Shipping Address</CardTitle></CardHeader>
                             <CardContent className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                     <div>
                                         <label className="block text-sm font-medium mb-1">Recipient Name *</label>
                                         <input type="text" value={data.recipient_name} onChange={(e) => setData('recipient_name', e.target.value)}
@@ -251,7 +250,7 @@ export default function AdminOrderCreate({ customers, products, exchangeRate }: 
                                         className="w-full border rounded px-3 py-2 text-sm" required />
                                     {errors.street_address && <p className="text-xs text-red-500 mt-1">{errors.street_address}</p>}
                                 </div>
-                                <div className="grid grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                                     <div>
                                         <label className="block text-sm font-medium mb-1">City * <span className="text-xs text-slate-400">(free text)</span></label>
                                         <input type="text" value={city} onChange={(e) => setCity(e.target.value)}

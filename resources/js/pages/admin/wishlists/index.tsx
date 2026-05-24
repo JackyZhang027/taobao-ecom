@@ -1,6 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { toast } from 'sonner';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminDataTable } from '@/components/admin/data-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -36,9 +37,7 @@ export default function AdminWishlistsIndex() {
     return (
         <AdminLayout>
             <Head title="Wishlists" />
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold">Wishlists</h1>
-            </div>
+            <AdminPageHeader title="Wishlists" />
             <Card>
                 <CardHeader>
                     <CardTitle>All Wishlists</CardTitle>

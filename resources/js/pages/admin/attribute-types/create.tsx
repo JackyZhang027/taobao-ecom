@@ -2,6 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -60,20 +61,20 @@ export default function AdminAttributeTypeCreate() {
         <AdminLayout>
             <Head title="Create Attribute Type" />
             <form onSubmit={submit}>
-                <div className="mb-6 flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold">Create Attribute Type</h1>
-                        <p className="text-sm text-muted-foreground mt-1">Define a new attribute with its values</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Button type="button" variant="outline" onClick={() => history.back()}>
-                            Cancel
-                        </Button>
-                        <Button type="submit" disabled={processing}>
-                            {processing ? 'Creating...' : 'Create Attribute'}
-                        </Button>
-                    </div>
-                </div>
+                <AdminPageHeader
+                    title="Create Attribute Type"
+                    subtitle="Define a new attribute with its values"
+                    actions={
+                        <>
+                            <Button type="button" variant="outline" onClick={() => history.back()}>
+                                Cancel
+                            </Button>
+                            <Button type="submit" disabled={processing}>
+                                {processing ? 'Creating...' : 'Create Attribute'}
+                            </Button>
+                        </>
+                    }
+                />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left — Values */}

@@ -475,6 +475,7 @@ export default function AdminOrderShow({ order }: OrderShowProps) {
                             </div>
                         </CardHeader>
                         <CardContent className="p-0 mt-4">
+                            <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-y bg-muted/40">
@@ -505,6 +506,7 @@ export default function AdminOrderShow({ order }: OrderShowProps) {
                                     ))}
                                 </tbody>
                             </table>
+                            </div>
 
                             {/* Totals */}
                             <div className="border-t px-5 py-4 space-y-2">

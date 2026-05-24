@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { toast } from 'sonner';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -63,12 +64,14 @@ export default function RolesEdit({ role, permissions, rolePermissions }: Props)
     return (
         <AdminLayout>
             <Head title={`Edit Role: ${role.name}`} />
-            <div className="mb-6 flex items-center justify-between">
-                <h1 className="text-2xl font-bold">Edit Role: {role.name}</h1>
-                <Button variant="outline" asChild>
-                    <a href="/admin/roles">Back</a>
-                </Button>
-            </div>
+            <AdminPageHeader
+                title={`Edit Role: ${role.name}`}
+                actions={
+                    <Button variant="outline" asChild>
+                        <a href="/admin/roles">Back</a>
+                    </Button>
+                }
+            />
 
             <form onSubmit={handleSubmit} className="space-y-6">
                 <Card>

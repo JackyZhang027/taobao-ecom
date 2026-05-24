@@ -2,6 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NumberInput } from '@/components/ui/number-input';
@@ -288,21 +289,20 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
         <AdminLayout>
             <Head title={`Edit: ${product.slug}`} />
             <form onSubmit={submit}>
-                {/* Page Header with buttons */}
-                <div className="mb-6 flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold">Edit Product</h1>
-                        <p className="text-sm text-muted-foreground mt-1">{product.slug}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Button type="button" variant="outline" onClick={() => history.back()}>
-                            Cancel
-                        </Button>
-                        <Button type="submit" disabled={processing}>
-                            {processing ? 'Saving...' : 'Save Changes'}
-                        </Button>
-                    </div>
-                </div>
+                <AdminPageHeader
+                    title="Edit Product"
+                    subtitle={product.slug}
+                    actions={
+                        <>
+                            <Button type="button" variant="outline" onClick={() => history.back()}>
+                                Cancel
+                            </Button>
+                            <Button type="submit" disabled={processing}>
+                                {processing ? 'Saving...' : 'Save Changes'}
+                            </Button>
+                        </>
+                    }
+                />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* LEFT COLUMN — Content & Variants (2/3 width) */}

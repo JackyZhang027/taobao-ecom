@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import type { TrialBalanceRow } from '@/types';
 
 interface Props {
@@ -40,9 +41,7 @@ export default function TrialBalance({ rows, filters }: Props) {
     return (
         <AdminLayout>
             <Head title="Trial Balance" />
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold">Trial Balance</h1>
-            </div>
+            <AdminPageHeader title="Trial Balance" />
 
             <Card className="mb-6">
                 <CardContent className="pt-6">
@@ -68,6 +67,7 @@ export default function TrialBalance({ rows, filters }: Props) {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
+                    <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                         <thead className="border-b bg-muted/50">
                             <tr>
@@ -104,6 +104,7 @@ export default function TrialBalance({ rows, filters }: Props) {
                             </tr>
                         </tfoot>
                     </table>
+                    </div>
                 </CardContent>
             </Card>
         </AdminLayout>

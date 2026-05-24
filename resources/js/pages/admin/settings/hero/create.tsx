@@ -2,6 +2,7 @@ import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -52,20 +53,20 @@ export default function AdminHeroSlideCreate() {
             <Head title="Create Hero Slide" />
 
             <form onSubmit={submit}>
-                <div className="mb-6 flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold">Create Hero Slide</h1>
-                        <p className="text-sm text-muted-foreground mt-1">Add a new banner to the homepage hero section.</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Button type="button" variant="outline" onClick={() => history.back()}>
-                            Cancel
-                        </Button>
-                        <Button type="submit" disabled={processing}>
-                            {processing ? 'Creating...' : 'Create Slide'}
-                        </Button>
-                    </div>
-                </div>
+                <AdminPageHeader
+                    title="Create Hero Slide"
+                    subtitle="Add a new banner to the homepage hero section."
+                    actions={
+                        <>
+                            <Button type="button" variant="outline" onClick={() => history.back()}>
+                                Cancel
+                            </Button>
+                            <Button type="submit" disabled={processing}>
+                                {processing ? 'Creating...' : 'Create Slide'}
+                            </Button>
+                        </>
+                    }
+                />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2">
@@ -102,7 +103,7 @@ export default function AdminHeroSlideCreate() {
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                     <div className="space-y-1">
                                         <Label htmlFor="cta_text">Button Text</Label>
                                         <Input
@@ -122,7 +123,7 @@ export default function AdminHeroSlideCreate() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                     <div className="space-y-1">
                                         <Label htmlFor="sort_order">Sort Order</Label>
                                         <Input

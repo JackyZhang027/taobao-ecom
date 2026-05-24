@@ -1,4 +1,5 @@
 import { Head, useForm, router } from '@inertiajs/react';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { toast } from 'sonner';
 import AdminLayout from '@/layouts/admin-layout';
 import { Button } from '@/components/ui/button';
@@ -77,17 +78,15 @@ export default function AdminAttributeTypeEdit({ attributeType }: EditProps) {
     return (
         <AdminLayout>
             <Head title={`Edit: ${attributeType.name}`} />
-            <div className="mb-6 flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold">Edit Attribute Type</h1>
-                    <p className="text-sm text-muted-foreground mt-1">{attributeType.name}</p>
-                </div>
-                <div className="flex items-center gap-2">
+            <AdminPageHeader
+                title="Edit Attribute Type"
+                subtitle={attributeType.name}
+                actions={
                     <Button type="button" variant="outline" onClick={() => router.visit('/admin/attribute-types')}>
                         Back to List
                     </Button>
-                </div>
-            </div>
+                }
+            />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Left — Values */}

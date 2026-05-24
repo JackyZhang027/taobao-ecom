@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import type { IncomeStatementData, TrialBalanceRow } from '@/types';
 
 interface Props {
@@ -57,9 +58,7 @@ export default function IncomeStatement({ report, filters }: Props) {
     return (
         <AdminLayout>
             <Head title="Income Statement" />
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold">Income Statement</h1>
-            </div>
+            <AdminPageHeader title="Income Statement" />
 
             <Card className="mb-6">
                 <CardContent className="pt-6">
