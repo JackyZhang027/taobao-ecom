@@ -8,38 +8,46 @@ export type Category = {
     image_url?: string;
 };
 
-export type AttributeType = {
+// Product-scoped variant group/option types
+export type VariantGroup = {
     id: number;
     name: string;
-    name_id: string | null;
     sort_order: number;
-    values?: AttributeValue[];
+    has_images: boolean;
+    options: VariantOption[];
 };
 
-export type AttributeValue = {
+export type VariantOption = {
     id: number;
-    attribute_type_id: number;
+    group_id: number;
     value: string;
-    value_id: string | null;
     sort_order: number;
-    type?: AttributeType;
+    image_url?: string | null;
+};
+
+// Denormalized option shape used in storefront variant display
+export type VariantOptionDisplay = {
+    id: number;
+    value: string;
+    group_id: number;
+    group_name: string;
 };
 
 export type ProductVariant = {
     id: number;
     product_id: number;
     sku: string | null;
+    // Absolute RMB price (not additive on top of product.price)
     price: number;
     price_idr?: number;
     compare_price: number | null;
     compare_price_idr?: number | null;
-    stock: number;
     is_active: boolean;
     sort_order: number;
     image_url?: string | null;
-    attributes?: AttributeValue[];
-    attribute_values?: AttributeValue[]; // from Laravel JSON serialization
-    attributeValues?: AttributeValue[];
+    option_key?: string;
+    options?: VariantOptionDisplay[];
+    options_data?: VariantOptionDisplay[];
     product?: Product;
 };
 
@@ -81,6 +89,7 @@ export type Product = {
     total_jakarta_idr?: number | null;
     is_wishlisted?: boolean;
     variants?: ProductVariant[];
+    variantGroups?: VariantGroup[];
     categories?: Category[];
     translations?: ProductTranslation[];
     media?: ProductMedia[];

@@ -4,6 +4,7 @@ namespace Modules\Ordering\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Modules\Currency\Services\CurrencyService;
 use Modules\Ordering\Models\CartItem;
@@ -35,19 +36,21 @@ class CartController extends Controller
             'user_id' => $cart->user_id,
             'items' => $cart->items->map(function ($item) use ($locale) {
                 $variant = $item->variant;
+                $isUnavailable = $variant && $variant->trashed();
                 // For variant items: product comes from variant; for product items: direct product relation
                 $product = $variant?->product ?? $item->product;
                 $translation = $product?->translations->firstWhere('locale', $locale)
                     ?? $product?->translations->firstWhere('locale', 'en');
                 $thumbnail = $product?->thumbnail
                     ?? ($product?->getFirstMediaUrl('images', 'thumb') ?: $product?->getFirstMediaUrl('images') ?: null);
-                $priceRmb = ($product?->price ?? 0) + ($variant?->price ?? 0);
+                $priceRmb = $variant ? $variant->price : ($product?->price ?? 0);
 
                 return [
                     'id' => $item->id,
                     'cart_id' => $item->cart_id,
                     'product_variant_id' => $item->product_variant_id,
                     'quantity' => $item->quantity,
+                    'is_unavailable' => $isUnavailable,
                     'variant' => $variant ? [
                         'id' => $variant->id,
                         'sku' => $variant->sku,
@@ -84,7 +87,10 @@ class CartController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'product_variant_id' => 'nullable|integer|exists:product_variants,id',
+            'product_variant_id' => [
+                'nullable', 'integer',
+                Rule::exists('product_variants', 'id')->whereNull('deleted_at'),
+            ],
             'product_id' => 'nullable|integer|exists:products,id',
             'quantity' => 'integer|min:1|max:999',
         ]);

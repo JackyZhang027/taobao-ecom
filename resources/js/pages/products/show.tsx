@@ -20,9 +20,7 @@ export default function ProductShow({ product, whatsapp_number }: ShowProps) {
     const { formatIdr } = useCurrency();
     const { addItem, addProduct } = useCart();
 
-    const [selectedVariantId, setSelectedVariantId] = useState<number | null>(
-        product.variants?.[0]?.id ?? null,
-    );
+    const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
     const [qty, setQty] = useState(1);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
     const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -33,7 +31,7 @@ export default function ProductShow({ product, whatsapp_number }: ShowProps) {
 
     const selectedVariant = product.variants?.find((v) => v.id === selectedVariantId);
     const hasVariants = product.variants && product.variants.length > 0;
-    const displayPrice = hasVariants ? selectedVariant?.price_idr : product.price_idr;
+    const displayPrice = selectedVariant?.price_idr ?? product.price_idr;
     const comparePrice = hasVariants ? (selectedVariant?.compare_price_idr ?? null) : null;
 
     // Build displayable images: product media first, then any variant images not already present

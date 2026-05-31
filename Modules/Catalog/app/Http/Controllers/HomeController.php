@@ -41,11 +41,10 @@ class HomeController extends Controller
                 ->all()
         );
 
-        $categories = Cache::remember("home_top_categories_{$catV}", 3600, fn () =>
+        $categories = Cache::remember("home_all_categories_{$catV}", 3600, fn () =>
             Category::with('media')
                 ->whereNull('parent_id')
                 ->orderBy('sort_order')
-                ->take(3)
                 ->get()
                 ->map(fn ($c) => [
                     'id'        => $c->id,
@@ -100,14 +99,14 @@ class HomeController extends Controller
         $activeVariants = $product->variants->where('is_active', true);
         $minVariantPrice = $activeVariants->min('price');
         $minPriceRmb = $minVariantPrice !== null
-            ? ($product->price + $minVariantPrice)
+            ? $minVariantPrice
             : ($product->price ?? 0);
 
         $thumbnail = $product->thumbnail
             ?? ($product->getFirstMediaUrl('images', 'thumb') ?: $product->getFirstMediaUrl('images') ?: null);
 
-        $deliveryBatamRmb = (float) ($product->delivery_charge_batam ?: $product->delivery_charge);
-        $deliveryJakartaRmb = (float) ($product->delivery_charge_jakarta ?: $product->delivery_charge);
+        $deliveryBatamIdr = (float) ($product->delivery_charge_batam ?: $product->delivery_charge);
+        $deliveryJakartaIdr = (float) ($product->delivery_charge_jakarta ?: $product->delivery_charge);
 
         return [
             'id'                => $product->id,
@@ -117,8 +116,8 @@ class HomeController extends Controller
             'description'       => $translation?->description,
             'price_idr'         => $this->currency->rmbToIdr($minPriceRmb),
             'price_rmb'         => $minPriceRmb,
-            'total_batam_idr'   => $deliveryBatamRmb > 0 ? $this->currency->rmbToIdr($minPriceRmb + $deliveryBatamRmb) : null,
-            'total_jakarta_idr' => $deliveryJakartaRmb > 0 ? $this->currency->rmbToIdr($minPriceRmb + $deliveryJakartaRmb) : null,
+            'total_batam_idr'   => $deliveryBatamIdr > 0 ? $this->currency->rmbToIdr($minPriceRmb) + $deliveryBatamIdr : null,
+            'total_jakarta_idr' => $deliveryJakartaIdr > 0 ? $this->currency->rmbToIdr($minPriceRmb) + $deliveryJakartaIdr : null,
             'is_wishlisted'     => $wishlistProductIds ? $wishlistProductIds->has($product->id) : false,
         ];
     }

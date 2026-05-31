@@ -59,9 +59,11 @@ class CartService
         $cart->load('items.variant.product', 'items.product');
 
         $subtotalRmb = $cart->items->sum(function ($item) {
-            $product = $item->variant?->product ?? $item->product;
+            $priceRmb = $item->variant
+                ? $item->variant->price
+                : ($item->product?->price ?? 0);
 
-            return (($product?->price ?? 0) + ($item->variant?->price ?? 0)) * $item->quantity;
+            return $priceRmb * $item->quantity;
         });
         $subtotalIdr = $currency->rmbToIdr($subtotalRmb);
         $shippingBatamIdr = $shipping->calculateShippingIdr($cart, 'Batam');

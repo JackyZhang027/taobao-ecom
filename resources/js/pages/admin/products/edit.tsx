@@ -11,20 +11,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import RichTextEditor from '@/components/ui/rich-text-editor';
-import { Trash2, Plus, Upload, X, ImageIcon } from 'lucide-react';
-import type { AttributeType, Category, Product, ProductMedia } from '@/types/product';
-
-interface VariantRow {
-    id?: number;
-    sku: string;
-    price: string;
-    is_active: boolean;
-    sort_order: string;
-    attribute_value_ids: number[];
-    existingImageUrl?: string | null;
-    imageFile?: File | null;
-    imagePreview?: string | null;
-}
+import { Upload, X, ImageIcon } from 'lucide-react';
+import VariantBuilder, { hasMissingOptionImages, type BuilderGroup, type VariantRow } from '@/components/variant-builder';
+import type { Category, Product, ProductMedia, VariantGroup } from '@/types/product';
 
 interface TranslationData {
     name: string;
@@ -37,7 +26,7 @@ interface TranslationData {
 interface EditProps {
     product: Product;
     categories: Category[];
-    attributeTypes: AttributeType[];
+    variantGroups: VariantGroup[];
     productMedia: ProductMedia[];
     exchangeRate: number;
 }
@@ -47,28 +36,13 @@ const LOCALES = [
     { key: 'id', label: 'Bahasa Indonesia', flag: 'ID' },
 ] as const;
 
-const formatRmb = (amount: number) => `¥${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const formatIdr = (amount: number) => `Rp ${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const formatIdr = (amount: number) =>
+    `Rp ${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-export default function AdminProductEdit({ product, categories, attributeTypes, productMedia, exchangeRate }: EditProps) {
+export default function AdminProductEdit({ product, categories, variantGroups, productMedia, exchangeRate }: EditProps) {
     const enTranslation = product.translations?.find((t) => t.locale === 'en');
     const idTranslation = product.translations?.find((t) => t.locale === 'id');
 
-    const initialVariants: VariantRow[] =
-        product.variants?.map((v) => ({
-            id: v.id,
-            sku: v.sku ?? '',
-            price: String(v.price ?? 0),
-            is_active: v.is_active ?? true,
-            sort_order: String(v.sort_order ?? 0),
-            attribute_value_ids: (v.attribute_values || v.attributeValues)?.map((av: any) => av.id) ?? [],
-            existingImageUrl: v.image_url ?? null,
-            imageFile: null,
-            imagePreview: null,
-        })) ?? [];
-
-    const [slugManuallyEdited, setSlugManuallyEdited] = useState(true);
-    const [variants, setVariants] = useState<VariantRow[]>(initialVariants);
     const [processing, setProcessing] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
@@ -76,6 +50,10 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
     const [existingMedia, setExistingMedia] = useState<ProductMedia[]>(productMedia ?? []);
     const [deletedImageIds, setDeletedImageIds] = useState<number[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // VariantBuilder state
+    const [builderGroups, setBuilderGroups] = useState<BuilderGroup[]>([]);
+    const [variantRows, setVariantRows] = useState<VariantRow[]>([]);
 
     const [formData, setFormData] = useState({
         slug: product.slug,
@@ -104,23 +82,12 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
         } as Record<string, TranslationData>,
     });
 
-    // Computed final price
     const priceRmb = parseFloat(formData.price) || 0;
     const deliveryChargeBatamIdr = parseFloat(formData.delivery_charge_batam) || 0;
     const deliveryChargeJakartaIdr = parseFloat(formData.delivery_charge_jakarta) || 0;
     const priceIdr = priceRmb * exchangeRate;
     const finalPriceBatamIdr = priceIdr + deliveryChargeBatamIdr;
     const finalPriceJakartaIdr = priceIdr + deliveryChargeJakartaIdr;
-
-    useEffect(() => {
-        if (!slugManuallyEdited && formData.translations.en.name) {
-            const slug = formData.translations.en.name
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-|-$/g, '');
-            setFormData((prev) => ({ ...prev, slug }));
-        }
-    }, [formData.translations.en.name, slugManuallyEdited]);
 
     const updateTranslation = (locale: string, field: keyof TranslationData, value: string) => {
         setFormData((prev) => ({
@@ -132,43 +99,9 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
         }));
     };
 
-    const addVariant = () => {
-        setVariants((prev) => [
-            ...prev,
-            { sku: '', price: '0', is_active: true, sort_order: '0', attribute_value_ids: [], existingImageUrl: null, imageFile: null, imagePreview: null },
-        ]);
-    };
-
-    const handleVariantImageChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0] ?? null;
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            setVariants((prev) => prev.map((v, i) =>
-                i === index ? { ...v, imageFile: file, imagePreview: ev.target?.result as string } : v
-            ));
-        };
-        reader.readAsDataURL(file);
-    };
-
-    const updateVariant = (index: number, field: keyof VariantRow, value: any) => {
-        setVariants((prev) => prev.map((v, i) => (i === index ? { ...v, [field]: value } : v)));
-    };
-
-    const removeVariant = (index: number) => {
-        setVariants((prev) => prev.filter((_, i) => i !== index));
-    };
-
-    const selectAttributeValue = (variantIndex: number, attributeType: AttributeType, valueId: number) => {
-        const allValueIdsForType = (attributeType.values ?? []).map((v) => v.id);
-        const current = variants[variantIndex].attribute_value_ids.filter((id) => !allValueIdsForType.includes(id));
-        updateVariant(variantIndex, 'attribute_value_ids', [...current, valueId]);
-    };
-
     const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files ?? []);
         if (files.length === 0) return;
-
         setNewImageFiles((prev) => [...prev, ...files]);
         files.forEach((file) => {
             const reader = new FileReader();
@@ -177,7 +110,6 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
             };
             reader.readAsDataURL(file);
         });
-
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
@@ -195,7 +127,6 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
         e.preventDefault();
         const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith('image/'));
         if (files.length === 0) return;
-
         setNewImageFiles((prev) => [...prev, ...files]);
         files.forEach((file) => {
             const reader = new FileReader();
@@ -208,27 +139,13 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (hasMissingOptionImages(builderGroups)) {
+            toast.error('All options in the image group must have an image uploaded.');
+            return;
+        }
+
         setProcessing(true);
-
-        // Validate: each variant must have at least one attribute selected
-        if (variants.length > 0 && attributeTypes.length > 0) {
-            const invalid = variants.some((v) => v.attribute_value_ids.length === 0);
-            if (invalid) {
-                setErrors({ variants: 'Each variant must have at least one attribute selected.' });
-                setProcessing(false);
-                return;
-            }
-        }
-
-        // Validate: each variant must have an image (existing or newly uploaded)
-        if (variants.length > 0) {
-            const missingImage = variants.some((v) => !v.existingImageUrl && !v.imageFile);
-            if (missingImage) {
-                setErrors({ variants_image: 'Each variant must have an image.' });
-                setProcessing(false);
-                return;
-            }
-        }
 
         const fd = new FormData();
         fd.append('_method', 'PUT');
@@ -248,29 +165,27 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
             });
         });
 
-        variants.forEach((variant, vi) => {
-            if (variant.id) {
-                fd.append(`variants[${vi}][id]`, String(variant.id));
-            }
-            Object.entries(variant).forEach(([field, value]) => {
-                if (field === 'id') return;
-                if (field === 'attribute_value_ids') {
-                    (value as number[]).forEach((id) => fd.append(`variants[${vi}][attribute_value_ids][]`, String(id)));
-                } else if (field === 'is_active') {
-                    fd.append(`variants[${vi}][${field}]`, value ? '1' : '0');
-                } else {
-                    fd.append(`variants[${vi}][${field}]`, String(value));
+        deletedImageIds.forEach((id) => fd.append('deleted_images[]', String(id)));
+        newImageFiles.forEach((file) => fd.append('images[]', file));
+
+        // Variant groups (structure + per-option images for the image group)
+        builderGroups.forEach((group, gi) => {
+            fd.append(`variant_groups[${gi}][name]`, group.name);
+            fd.append(`variant_groups[${gi}][has_images]`, group.has_images ? '1' : '0');
+            group.options.forEach((opt, oi) => {
+                fd.append(`variant_groups[${gi}][options][${oi}]`, opt.value);
+                if (group.has_images && opt.imageFile) {
+                    fd.append(`group_option_images[${gi}][${oi}]`, opt.imageFile);
                 }
             });
         });
 
-        deletedImageIds.forEach((id) => fd.append('deleted_images[]', String(id)));
-        newImageFiles.forEach((file) => fd.append('images[]', file));
-
-        variants.forEach((variant, vi) => {
-            if (variant.imageFile) {
-                fd.append(`variants[${vi}][image]`, variant.imageFile);
-            }
+        // Variant overrides (per-row price/sku/active — no per-row images)
+        variantRows.forEach((row, ri) => {
+            if (row.variant_id) fd.append(`variant_overrides[${ri}][id]`, String(row.variant_id));
+            fd.append(`variant_overrides[${ri}][price]`, row.price);
+            fd.append(`variant_overrides[${ri}][sku]`, row.sku);
+            fd.append(`variant_overrides[${ri}][is_active]`, row.is_active ? '1' : '0');
         });
 
         router.post(`/admin/products/${product.id}`, fd, {
@@ -343,12 +258,8 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
                                                     onChange={(html) => updateTranslation(locale.key, 'description', html)}
                                                     placeholder={`Product description in ${locale.label}...`}
                                                 />
-                                                {errors[`translations.${locale.key}.description`] && (
-                                                    <p className="text-xs text-destructive mt-1">{errors[`translations.${locale.key}.description`]}</p>
-                                                )}
                                             </div>
 
-                                            {/* SEO Meta Section */}
                                             <div className="rounded-lg border border-dashed border-muted-foreground/30 p-4 space-y-3 mt-4">
                                                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                                     🔍 SEO Meta — {locale.label}
@@ -360,14 +271,10 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
                                                         onChange={(e) => updateTranslation(locale.key, 'meta_title', e.target.value)}
                                                         placeholder="SEO title (max 60 chars recommended)"
                                                         maxLength={255}
-                                                        className={errors[`translations.${locale.key}.meta_title`] ? 'border-destructive' : ''}
                                                     />
                                                     <p className="text-xs text-muted-foreground text-right">
                                                         {formData.translations[locale.key].meta_title.length}/60
                                                     </p>
-                                                    {errors[`translations.${locale.key}.meta_title`] && (
-                                                        <p className="text-xs text-destructive mt-1">{errors[`translations.${locale.key}.meta_title`]}</p>
-                                                    )}
                                                 </div>
                                                 <div className="space-y-1">
                                                     <Label className="text-xs">Meta Description</Label>
@@ -377,14 +284,11 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
                                                         onChange={(e) => updateTranslation(locale.key, 'meta_description', e.target.value)}
                                                         placeholder="SEO description (max 160 chars recommended)"
                                                         maxLength={500}
-                                                        className={errors[`translations.${locale.key}.meta_description`] ? 'border-destructive w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring' : 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring'}
+                                                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                                                     />
                                                     <p className="text-xs text-muted-foreground text-right">
                                                         {formData.translations[locale.key].meta_description.length}/160
                                                     </p>
-                                                    {errors[`translations.${locale.key}.meta_description`] && (
-                                                        <p className="text-xs text-destructive mt-1">{errors[`translations.${locale.key}.meta_description`]}</p>
-                                                    )}
                                                 </div>
                                                 <div className="space-y-1">
                                                     <Label className="text-xs">Meta Keywords</Label>
@@ -393,14 +297,9 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
                                                         onChange={(e) => updateTranslation(locale.key, 'meta_keywords', e.target.value)}
                                                         placeholder="keyword1, keyword2, keyword3"
                                                         maxLength={255}
-                                                        className={errors[`translations.${locale.key}.meta_keywords`] ? 'border-destructive' : ''}
                                                     />
-                                                    {errors[`translations.${locale.key}.meta_keywords`] && (
-                                                        <p className="text-xs text-destructive mt-1">{errors[`translations.${locale.key}.meta_keywords`]}</p>
-                                                    )}
                                                 </div>
                                             </div>
-                                            {/* General Translation Errors */}
                                             {errors.translations && (
                                                 <p className="text-sm text-destructive mt-4">{errors.translations}</p>
                                             )}
@@ -410,118 +309,24 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
                             </CardContent>
                         </Card>
 
-                        {/* Variants */}
+                        {/* Variants — Shopee-style builder */}
                         <Card>
-                            <CardHeader className="flex flex-row items-center justify-between">
+                            <CardHeader>
                                 <CardTitle>Variants</CardTitle>
-                                <Button type="button" variant="outline" size="sm" onClick={addVariant}>
-                                    <Plus className="mr-1 h-4 w-4" /> Add Variant
-                                </Button>
                             </CardHeader>
-                            <CardContent className="space-y-4">
-                                {variants.length === 0 && (
-                                    <p className="text-sm text-muted-foreground">No variants yet. Click &quot;Add Variant&quot; to add one.</p>
+                            <CardContent>
+                                <VariantBuilder
+                                    initialGroups={variantGroups}
+                                    initialVariants={product.variants ?? []}
+                                    productSlug={product.slug}
+                                    onChange={(groups, rows) => {
+                                        setBuilderGroups(groups);
+                                        setVariantRows(rows);
+                                    }}
+                                />
+                                {errors.variant_groups && (
+                                    <p className="text-sm text-destructive mt-2">{errors.variant_groups}</p>
                                 )}
-                                {variants.map((variant, index) => (
-                                    <div key={index} className="rounded-lg border p-4 space-y-3">
-                                        <div className="flex items-center justify-between">
-                                            <h4 className="font-medium text-sm">Variant {index + 1}</h4>
-                                            <Button type="button" variant="ghost" size="sm" onClick={() => removeVariant(index)}>
-                                                <Trash2 className="h-4 w-4 text-destructive" />
-                                            </Button>
-                                        </div>
-                                        {/* Variant image upload */}
-                                        <div className="space-y-1">
-                                            <Label>
-                                                Variant Image <span className="text-destructive">*</span>
-                                            </Label>
-                                            <div className="flex items-center gap-3">
-                                                {(variant.imagePreview || variant.existingImageUrl) && (
-                                                    <img
-                                                        src={variant.imagePreview ?? variant.existingImageUrl!}
-                                                        alt="Variant"
-                                                        className="h-16 w-16 rounded object-cover border"
-                                                    />
-                                                )}
-                                                <label className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-muted-foreground/40 px-3 py-2 text-sm hover:border-primary/50 hover:bg-muted/50 transition-colors">
-                                                    <Upload className="h-4 w-4 text-muted-foreground" />
-                                                    {variant.existingImageUrl || variant.imagePreview ? 'Replace image' : 'Upload image'}
-                                                    <input
-                                                        type="file"
-                                                        accept="image/*"
-                                                        className="hidden"
-                                                        onChange={(e) => handleVariantImageChange(index, e)}
-                                                    />
-                                                </label>
-                                            </div>
-                                            {errors.variants_image && !variant.existingImageUrl && !variant.imageFile && (
-                                                <p className="text-xs text-destructive">{errors.variants_image}</p>
-                                            )}
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div className="space-y-1">
-                                                <Label>SKU</Label>
-                                                <Input
-                                                    value={variant.sku}
-                                                    onChange={(e) => updateVariant(index, 'sku', e.target.value)}
-                                                    className={errors[`variants.${index}.sku`] ? 'border-destructive' : ''}
-                                                />
-                                                {errors[`variants.${index}.sku`] && (
-                                                    <p className="text-xs text-destructive">{errors[`variants.${index}.sku`]}</p>
-                                                )}
-                                            </div>
-                                            <div className="space-y-1">
-                                                <Label>Additional Price (RMB)</Label>
-                                                <NumberInput
-                                                    value={variant.price}
-                                                    onChange={(v) => updateVariant(index, 'price', v)}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Checkbox
-                                                checked={variant.is_active}
-                                                onCheckedChange={(checked) => updateVariant(index, 'is_active', !!checked)}
-                                                id={`variant-active-${index}`}
-                                            />
-                                            <Label htmlFor={`variant-active-${index}`}>Active</Label>
-                                        </div>
-                                        {attributeTypes.length > 0 && (
-                                            <div className="space-y-2">
-                                                <p className="text-xs font-medium text-muted-foreground uppercase">Attributes</p>
-                                                {errors.variants && (
-                                                    <p className="text-sm text-destructive">{errors.variants}</p>
-                                                )}
-                                                <div className="flex flex-wrap gap-4">
-                                                    {attributeTypes.map((at) => (
-                                                        <div key={at.id}>
-                                                            <p className="text-xs font-medium mb-1">{at.name}</p>
-                                                            <div className="flex flex-wrap gap-2">
-                                                                {at.values && at.values.length > 0 ? (
-                                                                    at.values.map((v) => (
-                                                                        <label key={v.id} className="flex items-center gap-1.5 text-xs cursor-pointer">
-                                                                            <input
-                                                                                type="radio"
-                                                                                name={`variant-${index}-attr-${at.id}`}
-                                                                                checked={variant.attribute_value_ids.includes(v.id)}
-                                                                                onChange={() => selectAttributeValue(index, at, v.id)}
-                                                                                className="accent-primary h-3.5 w-3.5"
-                                                                            />
-                                                                            {v.value}
-                                                                        </label>
-                                                                    ))
-                                                                ) : (
-                                                                    <span className="text-xs text-muted-foreground italic">No values defined</span>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
                             </CardContent>
                         </Card>
                     </div>
@@ -539,22 +344,20 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
                                     <Input
                                         id="slug"
                                         value={formData.slug}
-                                        onChange={(e) => {
-                                            setSlugManuallyEdited(true);
-                                            setFormData((prev) => ({ ...prev, slug: e.target.value }));
-                                        }}
+                                        onChange={(e) => setFormData((prev) => ({ ...prev, slug: e.target.value }))}
                                         required
                                     />
                                     {errors.slug && <p className="text-sm text-destructive">{errors.slug}</p>}
                                 </div>
                                 <div className="space-y-1">
-                                    <Label htmlFor="price">Price (RMB) <span className="text-destructive">*</span></Label>
+                                    <Label htmlFor="price">Base Price (RMB) <span className="text-destructive">*</span></Label>
                                     <NumberInput
                                         id="price"
                                         value={formData.price}
                                         onChange={(v) => setFormData((prev) => ({ ...prev, price: v }))}
                                         required
                                     />
+                                    <p className="text-xs text-muted-foreground">Used when no variants are configured</p>
                                     {errors.price && <p className="text-sm text-destructive">{errors.price}</p>}
                                 </div>
                                 <div className="space-y-1">
@@ -588,7 +391,6 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
                                         <span className="text-xs text-muted-foreground">Price (IDR)</span>
                                         <span className="text-sm font-medium">{formatIdr(priceIdr)}</span>
                                     </div>
-                                    {/* Batam */}
                                     <div className="space-y-0.5">
                                         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Batam</p>
                                         <div className="flex items-baseline justify-between">
@@ -600,7 +402,6 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
                                             <span className="font-bold text-sm text-primary">{formatIdr(finalPriceBatamIdr)}</span>
                                         </div>
                                     </div>
-                                    {/* Jakarta */}
                                     <div className="space-y-0.5 border-t border-muted pt-1.5">
                                         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Jakarta</p>
                                         <div className="flex items-baseline justify-between">
@@ -640,7 +441,6 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
                                 <CardTitle>Product Images</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                {/* Existing images */}
                                 {existingMedia.length > 0 && (
                                     <div>
                                         <p className="text-xs font-medium text-muted-foreground uppercase mb-2">Current Images ({existingMedia.length})</p>
@@ -661,7 +461,6 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
                                     </div>
                                 )}
 
-                                {/* Upload area */}
                                 <div
                                     onDrop={handleDrop}
                                     onDragOver={(e) => e.preventDefault()}
@@ -681,7 +480,6 @@ export default function AdminProductEdit({ product, categories, attributeTypes, 
                                     />
                                 </div>
 
-                                {/* New image previews */}
                                 {newImagePreviews.length > 0 && (
                                     <div>
                                         <p className="text-xs font-medium text-muted-foreground uppercase mb-2">New Images ({newImagePreviews.length})</p>

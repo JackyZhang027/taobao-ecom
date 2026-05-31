@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('orders:auto-deliver')->daily();
+Schedule::command('queue:work --stop-when-empty')->everyMinute()->withoutOverlapping();

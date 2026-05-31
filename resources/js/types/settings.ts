@@ -8,6 +8,15 @@ export type ShopSetting = {
     contact_phone?: string;
 };
 
+export type SocialLink = {
+    id: number;
+    name: string;
+    icon: string;
+    url: string;
+    is_active: boolean;
+    sort_order: number;
+};
+
 export type HeroSlide = {
     id: number;
     title: string | null;

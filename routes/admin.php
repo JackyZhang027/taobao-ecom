@@ -3,14 +3,12 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Admin\Http\Controllers\DashboardController;
 use Modules\Admin\Http\Controllers\ProductController;
-use Modules\Admin\Http\Controllers\VariantController;
 use Modules\Admin\Http\Controllers\OrderController;
 use Modules\Admin\Http\Controllers\ExchangeRateController;
-use Modules\Admin\Http\Controllers\AttributeTypeController;
-use Modules\Admin\Http\Controllers\AttributeValueController;
 use Modules\Admin\Http\Controllers\CategoryController;
 use Modules\Admin\Http\Controllers\ShopSettingController;
 use Modules\Admin\Http\Controllers\HeroSlideController;
+use Modules\Admin\Http\Controllers\SocialLinkController;
 use Modules\Admin\Http\Controllers\WishlistController as AdminWishlistController;
 use Modules\Accounting\Http\Controllers\AccountController;
 use Modules\Accounting\Http\Controllers\JournalEntryController;
@@ -37,16 +35,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'permiss
         'update'  => 'permission:products.edit',
         'destroy' => 'permission:products.delete',
     ]);
-    Route::resource('products.variants', VariantController::class)->shallow()->middleware([
-        'index'   => 'permission:products.view',
-        'show'    => 'permission:products.view',
-        'create'  => 'permission:products.create',
-        'store'   => 'permission:products.create',
-        'edit'    => 'permission:products.edit',
-        'update'  => 'permission:products.edit',
-        'destroy' => 'permission:products.delete',
-    ]);
-
     // --- Categories ---
     Route::get('categories/datatable', [CategoryController::class, 'datatable'])->name('categories.datatable')->middleware('permission:categories.view');
     Route::resource('categories', CategoryController::class)->except(['show'])->middleware([
@@ -76,30 +64,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'permiss
     Route::get('exchange-rates', [ExchangeRateController::class, 'index'])->name('exchange-rates.index')->middleware('permission:exchange_rates.view');
     Route::post('exchange-rates', [ExchangeRateController::class, 'store'])->name('exchange-rates.store')->middleware('permission:exchange_rates.create');
 
-    // --- Attributes ---
-    Route::get('attribute-types/datatable', [AttributeTypeController::class, 'datatable'])->name('attribute-types.datatable')->middleware('permission:attributes.view');
-    Route::resource('attribute-types', AttributeTypeController::class)
-        ->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])
-        ->middleware([
-            'index'   => 'permission:attributes.view',
-            'create'  => 'permission:attributes.create',
-            'store'   => 'permission:attributes.create',
-            'edit'    => 'permission:attributes.edit',
-            'update'  => 'permission:attributes.edit',
-            'destroy' => 'permission:attributes.delete',
-        ]);
-    Route::resource('attribute-types.values', AttributeValueController::class)
-        ->shallow()->only(['store', 'update', 'destroy'])
-        ->parameters(['values' => 'attributeValue'])
-        ->middleware([
-            'store'   => 'permission:attributes.create',
-            'update'  => 'permission:attributes.edit',
-            'destroy' => 'permission:attributes.delete',
-        ]);
-
     // --- Customers ---
     Route::get('customers/datatable', [CustomerController::class, 'datatable'])->name('customers.datatable')->middleware('permission:customers.view');
     Route::get('customers', [CustomerController::class, 'index'])->name('customers.index')->middleware('permission:customers.view');
+    Route::post('customers/{user}/reset-password', [CustomerController::class, 'resetPassword'])->name('customers.reset-password')->middleware('permission:customers.edit');
 
     // --- Users ---
     Route::get('users/datatable', [AdminUserController::class, 'datatable'])->name('users.datatable')->middleware('permission:users.view');
@@ -135,6 +103,17 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'permiss
         'edit'    => 'permission:hero_slides.edit',
         'update'  => 'permission:hero_slides.edit',
         'destroy' => 'permission:hero_slides.delete',
+    ]);
+
+    // --- Social Links ---
+    Route::get('settings/social-links/datatable', [SocialLinkController::class, 'datatable'])->name('settings.social-links.datatable')->middleware('permission:social_links.view');
+    Route::resource('settings/social-links', SocialLinkController::class)->names('settings.social-links')->middleware([
+        'index'   => 'permission:social_links.view',
+        'create'  => 'permission:social_links.create',
+        'store'   => 'permission:social_links.create',
+        'edit'    => 'permission:social_links.edit',
+        'update'  => 'permission:social_links.edit',
+        'destroy' => 'permission:social_links.delete',
     ]);
 
     // --- Accounting ---

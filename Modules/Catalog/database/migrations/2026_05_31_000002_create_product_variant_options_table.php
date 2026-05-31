@@ -8,18 +8,22 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('attribute_values', function (Blueprint $table) {
+        Schema::create('product_variant_options', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('attribute_type_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('group_id')
+                ->references('id')
+                ->on('product_variant_groups')
+                ->cascadeOnDelete();
             $table->string('value');
-            $table->string('value_id')->nullable();
             $table->unsignedSmallInteger('sort_order')->default(0);
             $table->timestamps();
+
+            $table->index('group_id');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('attribute_values');
+        Schema::dropIfExists('product_variant_options');
     }
 };

@@ -49,11 +49,7 @@ export default function CheckoutIndex({ cart, totals, whatsapp_number }: Checkou
 
     const canDeliver = data.city === 'Jakarta' ? totals.can_deliver_jakarta : totals.can_deliver_batam;
 
-    // Per-item price for order summary sidebar
-    const itemPrice = (item: Cart['items'][0]) => {
-        const productPrice = item.variant?.product?.price_idr ?? item.product?.price_idr ?? 0;
-        return productPrice + (item.variant?.price_idr ?? 0);
-    };
+    const itemPrice = (item: Cart['items'][0]) => item.variant?.price_idr ?? 0;
 
     return (
         <CustomerLayout fullWidth>

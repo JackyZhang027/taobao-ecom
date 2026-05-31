@@ -7,7 +7,6 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Modules\Admin\Models\ShopSetting;
-use Modules\Catalog\Models\AttributeType;
 use Modules\Catalog\Models\Category;
 use Modules\Catalog\Models\Product;
 use Modules\Catalog\Models\Wishlist;
@@ -31,26 +30,14 @@ class ProductController extends Controller
             $query->whereHas('translations', fn ($q) => $q->where('name', 'like', "%{$search}%"));
         }
 
-        if ($attrIds = $request->input('attributes')) {
-            $ids = array_filter((array) $attrIds, fn ($v) => is_numeric($v));
-            if (! empty($ids)) {
-                $query->whereHas('variants.attributeValues', fn ($q) => $q->whereIn('attribute_values.id', $ids));
-            }
-        }
-
         $user = $request->user();
 
         $catV      = Cache::get('cache_ver_categories', 0);
-        $attrV     = Cache::get('cache_ver_attributes', 0);
         $settingsV = Cache::get('cache_ver_settings', 0);
         $productV  = Cache::get('cache_ver_products', 0);
 
         $categories = Cache::remember("shop_all_categories_{$catV}", 3600, fn () =>
             Category::orderBy('sort_order')->get()
-        );
-
-        $attributeTypes = Cache::remember("shop_attribute_types_{$attrV}", 3600, fn () =>
-            AttributeType::with('values')->orderBy('sort_order')->get()
         );
 
         $shopSettings = Cache::remember("shop_settings_{$settingsV}", 3600, fn () =>
@@ -73,19 +60,15 @@ class ProductController extends Controller
         }
 
         $activeFilters = array_filter([
-            'search'     => $request->input('search') ?: null,
-            'attributes' => $request->input('attributes')
-                ? array_values(array_map('intval', (array) $request->input('attributes')))
-                : null,
+            'search' => $request->input('search') ?: null,
         ]);
 
         return Inertia::render('shop', [
-            'products'         => $paginatedData,
-            'categories'       => $categories,
-            'currentCategory'  => $request->category,
-            'attributeTypes'   => $attributeTypes,
-            'activeFilters'    => empty($activeFilters) ? (object) [] : $activeFilters,
-            'whatsapp_number'  => $shopSettings->get('whatsapp_number', ''),
+            'products'        => $paginatedData,
+            'categories'      => $categories,
+            'currentCategory' => $request->category,
+            'activeFilters'   => empty($activeFilters) ? (object) [] : $activeFilters,
+            'whatsapp_number' => $shopSettings->get('whatsapp_number', ''),
         ]);
     }
 
@@ -93,7 +76,13 @@ class ProductController extends Controller
     {
         $productV = Cache::get('cache_ver_products', 0);
         $productData = Cache::remember("product_show_{$slug}_{$productV}", 3600, function () use ($slug) {
-            $product = Product::with(['translations', 'variants.attributeValues.type', 'variants.media', 'categories', 'media'])
+            $product = Product::with([
+                'translations',
+                'variants.options.group',
+                'variants.media',
+                'categories',
+                'media',
+            ])
                 ->where('slug', $slug)
                 ->where('is_active', true)
                 ->firstOrFail();
@@ -105,18 +94,17 @@ class ProductController extends Controller
             $variants = $product->variants->where('is_active', true)->map(fn ($v) => [
                 'id'                => $v->id,
                 'sku'               => $v->sku,
-                'price_rmb'         => $product->price + $v->price,
-                'price_idr'         => $this->currency->rmbToIdr($product->price + $v->price),
-                'compare_price_idr' => $v->compare_price ? $this->currency->rmbToIdr($product->price + $v->compare_price) : null,
-                'stock'             => $v->stock,
+                'price_rmb'         => $v->price,
+                'price_idr'         => $this->currency->rmbToIdr($v->price),
+                'compare_price_idr' => $v->compare_price ? $this->currency->rmbToIdr($v->compare_price) : null,
                 'is_active'         => $v->is_active,
                 'sort_order'        => $v->sort_order,
                 'image_url'         => $v->getFirstMediaUrl('image') ?: null,
-                'attributes'        => $v->attributeValues->map(fn ($av) => [
-                    'id'       => $av->id,
-                    'value'    => $av->value,
-                    'value_id' => $av->value_id,
-                    'type'     => ['id' => $av->type->id, 'name' => $av->type->name, 'name_id' => $av->type->name_id],
+                'options'           => $v->options->map(fn ($o) => [
+                    'id'         => $o->id,
+                    'value'      => $o->value,
+                    'group_id'   => $o->group_id,
+                    'group_name' => $o->group?->name,
                 ]),
             ]);
 
@@ -171,7 +159,7 @@ class ProductController extends Controller
         $activeVariants = $product->variants->where('is_active', true);
         $minVariantPrice = $activeVariants->min('price');
         $minPriceRmb = $minVariantPrice !== null
-            ? ($product->price + $minVariantPrice)
+            ? $minVariantPrice
             : ($product->price ?? 0);
 
         $thumbnail = $product->thumbnail

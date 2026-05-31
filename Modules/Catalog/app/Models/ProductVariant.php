@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -39,8 +40,19 @@ class ProductVariant extends Model implements HasMedia
         return $this->belongsTo(Product::class);
     }
 
-    public function attributeValues(): BelongsToMany
+    public function options(): BelongsToMany
     {
-        return $this->belongsToMany(AttributeValue::class, 'product_variant_attribute_values');
+        return $this->belongsToMany(
+            ProductVariantOption::class,
+            'product_variant_option_assignments',
+            'product_variant_id',
+            'option_id'
+        )->with('group');
+    }
+
+    public function getOptionKeyAttribute(): string
+    {
+        $ids = $this->options->pluck('id')->sort()->values()->toArray();
+        return implode('|', $ids);
     }
 }

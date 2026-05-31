@@ -70,6 +70,11 @@ class Product extends Model implements HasMedia
         return $this->belongsToMany(Category::class);
     }
 
+    public function variantGroups(): HasMany
+    {
+        return $this->hasMany(ProductVariantGroup::class)->orderBy('sort_order');
+    }
+
     public function getNameAttribute(): string
     {
         $locale = app()->getLocale();

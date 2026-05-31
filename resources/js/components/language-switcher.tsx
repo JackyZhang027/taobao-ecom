@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
-export function LanguageSwitcher() {
+export function LanguageSwitcher({ className = '' }: { className?: string }) {
     const { i18n } = useTranslation();
 
     const toggleLanguage = () => {
@@ -11,7 +11,7 @@ export function LanguageSwitcher() {
     return (
         <button
             onClick={toggleLanguage}
-            className="rounded px-2 py-1 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+            className={`rounded px-2 py-1 text-sm font-medium transition-colors cursor-pointer ${className}`}
         >
             {i18n.language === 'en' ? 'EN' : 'ID'}
         </button>

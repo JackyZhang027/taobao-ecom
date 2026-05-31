@@ -44,18 +44,20 @@ class CheckoutController extends Controller
             'user_id' => $cart->user_id,
             'items' => $cart->items->map(function ($item) use ($locale) {
                 $variant = $item->variant;
+                $isUnavailable = $variant && $variant->trashed();
                 $product = $variant?->product ?? $item->product;
                 $translation = $product?->translations->firstWhere('locale', $locale)
                     ?? $product?->translations->firstWhere('locale', 'en');
                 $thumbnail = $product?->thumbnail
                     ?? ($product?->getFirstMediaUrl('images', 'thumb') ?: $product?->getFirstMediaUrl('images') ?: null);
-                $priceRmb = ($product?->price ?? 0) + ($variant?->price ?? 0);
+                $priceRmb = $variant ? $variant->price : ($product?->price ?? 0);
 
                 return [
                     'id' => $item->id,
                     'cart_id' => $item->cart_id,
                     'product_variant_id' => $item->product_variant_id,
                     'quantity' => $item->quantity,
+                    'is_unavailable' => $isUnavailable,
                     'variant' => $variant ? [
                         'id' => $variant->id,
                         'sku' => $variant->sku,
@@ -101,7 +103,14 @@ class CheckoutController extends Controller
         ]);
 
         $cart = $this->cartService->resolveCart($request);
-        $cart->load('items.variant.product.translations', 'items.product.translations');
+        $cart->load('items.variant.options', 'items.variant.product.translations', 'items.product.translations');
+
+        $hasUnavailable = $cart->items->contains(
+            fn ($item) => $item->product_variant_id && $item->variant?->trashed()
+        );
+        if ($hasUnavailable) {
+            return back()->withErrors(['cart' => 'Some items in your cart are no longer available. Please remove them before proceeding.']);
+        }
 
         $city = $request->city;
         $totals = $this->cartService->computeTotals($cart, $this->currency, $this->shipping, $city);
@@ -139,15 +148,18 @@ class CheckoutController extends Controller
                 $product = $variant?->product ?? $item->product;
                 $translation = $product?->translations->firstWhere('locale', $locale)
                     ?? $product?->translations->firstWhere('locale', 'en');
-                $priceRmb = ($product?->price ?? 0) + ($variant?->price ?? 0);
+                $priceRmb = $variant ? $variant->price : ($product?->price ?? 0);
                 $unitPriceIdr = $this->currency->rmbToIdr($priceRmb);
+
+                $variantName = $variant?->options?->map(fn ($o) => $o->value)->implode(' / ')
+                    ?: $variant?->sku;
 
                 OrderLine::create([
                     'order_id' => $order->id,
                     'product_id' => $product?->id,
                     'product_variant_id' => $variant?->id,
                     'product_name' => $translation?->name ?? $product?->slug,
-                    'variant_name' => $variant?->sku,
+                    'variant_name' => $variantName,
                     'sku' => $variant?->sku ?? $product?->slug ?? '-',
                     'unit_price_idr' => $unitPriceIdr,
                     'quantity' => $item->quantity,

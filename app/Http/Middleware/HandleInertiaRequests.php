@@ -49,6 +49,11 @@ class HandleInertiaRequests extends Middleware
             'cartCount' => $this->resolveCartCount($request),
             'exchangeRate' => app(\Modules\Currency\Services\CurrencyService::class)->getActiveRate(),
             'shopSettings' => \Modules\Admin\Models\ShopSetting::all()->pluck('value', 'key'),
+            'socialLinks' => fn () => \Illuminate\Support\Facades\Cache::remember(
+                'social_links_active_' . (\Illuminate\Support\Facades\Cache::get('cache_ver_social_links', 0)),
+                3600,
+                fn () => \Modules\Admin\Models\SocialLink::active()->get(['id', 'name', 'icon', 'url'])
+            ),
         ];
     }
 

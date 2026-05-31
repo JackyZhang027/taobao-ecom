@@ -13,6 +13,9 @@ class ShopSettingController extends Controller
     private const ALLOWED_SETTING_KEYS = [
         'shop_name',
         'shop_email',
+        'description',
+        'contact_email',
+        'contact_phone',
         'whatsapp_number',
         'address',
         'tagline',

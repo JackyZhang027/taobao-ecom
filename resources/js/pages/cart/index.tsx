@@ -16,6 +16,8 @@ export default function CartIndex({ cart, totals }: CartIndexProps) {
     const { formatIdr } = useCurrency();
     const { updateItem, removeItem } = useCart();
 
+    const hasUnavailableItems = cart.items.some((i) => i.is_unavailable);
+
     if (cart.items.length === 0) {
         return (
             <CustomerLayout fullWidth>
@@ -70,20 +72,24 @@ export default function CartIndex({ cart, totals }: CartIndexProps) {
                             <span>Subtotal</span>
                         </div>
 
+                        {/* Unavailable items warning */}
+                        {hasUnavailableItems && (
+                            <div className="mb-4 rounded-sm border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                {t('cart.has_unavailable_items')}
+                            </div>
+                        )}
+
                         {/* Cart Items */}
                         <div className="space-y-3">
                             {cart.items.map((item) => {
-                                // Full item price = product base price + variant addon price
-                                const productPrice = (item.variant?.product?.price_idr ?? item.product?.price_idr ?? 0);
-                                const variantAddon = item.variant?.price_idr ?? 0;
-                                const price = productPrice + variantAddon;
+                                const price = item.variant?.price_idr ?? 0;
                                 const subtotal = price * item.quantity;
                                 const productName = item.variant?.product?.name ?? item.product?.name;
                                 const thumbnail = item.variant?.product?.thumbnail ?? item.product?.thumbnail;
                                 return (
                                     <div
                                         key={item.id}
-                                        className="bg-white border rounded-sm px-4 py-4 md:px-6 grid md:grid-cols-[2fr_1fr_1fr_auto] gap-4 items-center"
+                                        className={`bg-white border rounded-sm px-4 py-4 md:px-6 grid md:grid-cols-[2fr_1fr_1fr_auto] gap-4 items-center${item.is_unavailable ? ' border-red-300 bg-red-50/30' : ''}`}
                                     >
                                         {/* Product */}
                                         <div className="flex items-center gap-4">
@@ -104,6 +110,11 @@ export default function CartIndex({ cart, totals }: CartIndexProps) {
                                                 </p>
                                                 {item.variant?.sku && (
                                                     <p className="text-xs text-slate-400 mt-0.5">SKU: {item.variant.sku}</p>
+                                                )}
+                                                {item.is_unavailable && (
+                                                    <span className="inline-block mt-1 rounded-sm bg-red-100 px-2 py-0.5 text-xs font-medium text-red-600">
+                                                        {t('cart.item_unavailable')}
+                                                    </span>
                                                 )}
                                             </div>
                                         </div>
@@ -180,12 +191,18 @@ export default function CartIndex({ cart, totals }: CartIndexProps) {
                             </div>
                         </div>
 
-                        <Link
-                            href="/checkout"
-                            className="mt-7 block w-full bg-slate-900 hover:bg-slate-800 text-white text-center py-4 font-semibold text-sm uppercase tracking-widest transition-colors rounded-sm"
-                        >
-                            {t('cart.checkout')}
-                        </Link>
+                        {hasUnavailableItems ? (
+                            <span className="mt-7 block w-full cursor-not-allowed bg-slate-300 text-white text-center py-4 font-semibold text-sm uppercase tracking-widest rounded-sm select-none">
+                                {t('cart.checkout')}
+                            </span>
+                        ) : (
+                            <Link
+                                href="/checkout"
+                                className="mt-7 block w-full bg-slate-900 hover:bg-slate-800 text-white text-center py-4 font-semibold text-sm uppercase tracking-widest transition-colors rounded-sm"
+                            >
+                                {t('cart.checkout')}
+                            </Link>
+                        )}
                     </div>
                 </div>
             </div>

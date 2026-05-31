@@ -55,7 +55,9 @@
         "continue_shopping": "Lanjut Belanja",
         "quantity": "Qty",
         "remove": "Hapus",
-        "added": "Ditambahkan ke keranjang"
+        "added": "Ditambahkan ke keranjang",
+        "item_unavailable": "Tidak Tersedia",
+        "has_unavailable_items": "Beberapa item di keranjang Anda sudah tidak tersedia. Hapus item tersebut untuk melanjutkan ke checkout."
     },
     "checkout": {
         "title": "Pembayaran",
@@ -113,6 +115,7 @@
         "featured_products": "Produk Unggulan",
         "featured_products_desc": "Produk pilihan, kualitas terjamin.",
         "view_all": "Lihat Semua Produk",
+        "view_all_categories": "Lihat Semua Kategori",
         "limited_offer": "Penawaran Terbatas",
         "promo_title": "Produk Berkualitas, Untuk Semua",
         "promo_desc": "Jelajahi katalog lengkap kami dan temukan yang Anda cari.",
@@ -137,6 +140,12 @@
         "my_orders": "Pesanan Saya",
         "all_rights": "Hak cipta dilindungi.",
         "trusted": "Belanja terpercaya, setiap saat."
+    },
+    "categories": {
+        "title": "Semua Kategori",
+        "search_placeholder": "Cari kategori...",
+        "no_results": "Kategori tidak ditemukan",
+        "clear_search": "Hapus pencarian"
     },
     "common": {
         "save": "Simpan",

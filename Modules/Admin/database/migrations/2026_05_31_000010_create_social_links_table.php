@@ -8,17 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('attribute_types', function (Blueprint $table) {
+        Schema::create('social_links', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('name_id')->nullable();
-            $table->unsignedSmallInteger('sort_order')->default(0);
+            $table->string('icon');
+            $table->string('url');
+            $table->boolean('is_active')->default(true);
+            $table->integer('sort_order')->default(0);
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('attribute_types');
+        Schema::dropIfExists('social_links');
     }
 };

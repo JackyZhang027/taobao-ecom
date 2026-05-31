@@ -3,21 +3,27 @@
 namespace Modules\Admin\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
-use Modules\Catalog\Models\AttributeType;
+use Modules\Admin\Http\Requests\StoreProductRequest;
+use Modules\Admin\Http\Requests\UpdateProductRequest;
 use Modules\Catalog\Models\Category;
 use Modules\Catalog\Models\Product;
 use Modules\Catalog\Models\ProductTranslation;
-use Modules\Catalog\Models\ProductVariant;
+use Modules\Catalog\Services\ProductVariantService;
+use Modules\Catalog\Services\VariantGeneratorService;
 use Modules\Currency\Services\CurrencyService;
 use Yajra\DataTables\Facades\DataTables;
 
 class ProductController extends Controller
 {
-    public function __construct(private CurrencyService $currency) {}
+    public function __construct(
+        private CurrencyService $currency,
+        private VariantGeneratorService $variantGenerator,
+        private ProductVariantService $variantService,
+    ) {}
 
     public function index()
     {
@@ -51,80 +57,62 @@ class ProductController extends Controller
     public function create()
     {
         return Inertia::render('admin/products/create', [
-            'categories' => Category::all(),
-            'attributeTypes' => AttributeType::with('values')->get(),
+            'categories'   => Category::all(),
+            'variantGroups' => [],
             'exchangeRate' => $this->currency->getActiveRate(),
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreProductRequest $request)
     {
-        // Filter out empty translations to avoid validation errors for optional languages
+        // Filter out empty translations
         $translations = array_filter($request->input('translations', []), fn ($t) => ! empty($t['name']));
-        $request->merge(['translations' => $translations]);
 
-        $request->validate([
-            'slug' => 'required|string|unique:products,slug',
-            'price' => 'required|numeric|min:0.01',
-            'delivery_charge' => 'numeric|min:0',
-            'delivery_charge_batam' => 'nullable|numeric|min:0',
-            'delivery_charge_jakarta' => 'nullable|numeric|min:0',
-            'categories' => 'required|array|min:1',
-            'translations' => 'required|array|min:1',
-            'translations.*.name' => 'required|string|max:255',
-            'variants' => 'nullable|array',
-            'variants.*.sku' => 'required_with:variants|string|max:255',
-            'translations.*.meta_title' => 'nullable|string|max:255',
-            'translations.*.meta_description' => 'nullable|string|max:500',
-            'translations.*.meta_keywords' => 'nullable|string|max:255',
-            'images' => 'nullable|array',
-            'images.*' => 'image|max:10240',
-            'variants.*.image' => 'required_with:variants|image|max:5120',
-        ], [
-            'translations.required' => 'At least one translation with a product name is required.',
-            'translations.min' => 'At least one translation with a product name is required.',
-            'variants.*.image.required_with' => 'Each variant must have an image.',
-        ]);
+        $product = DB::transaction(function () use ($request, $translations) {
+            $product = Product::create(array_merge(
+                $request->only(['slug', 'thumbnail', 'price', 'delivery_charge', 'is_active', 'sort_order']),
+                [
+                    'delivery_charge_batam'   => $request->input('delivery_charge_batam') ?? 0,
+                    'delivery_charge_jakarta' => $request->input('delivery_charge_jakarta') ?? 0,
+                ]
+            ));
 
-        $product = Product::create(array_merge(
-            $request->only(['slug', 'thumbnail', 'price', 'delivery_charge', 'is_active', 'sort_order']),
-            [
-                'delivery_charge_batam' => $request->input('delivery_charge_batam') ?? 0,
-                'delivery_charge_jakarta' => $request->input('delivery_charge_jakarta') ?? 0,
-            ]
-        ));
-
-        foreach ($request->translations as $locale => $data) {
-            ProductTranslation::create(['product_id' => $product->id, 'locale' => $locale, ...$data]);
-        }
-
-        if ($request->categories) {
-            $product->categories()->sync($request->categories);
-        }
-
-        // Handle image uploads
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $product->addMedia($image)->toMediaCollection('images');
+            foreach ($translations as $locale => $data) {
+                ProductTranslation::create(['product_id' => $product->id, 'locale' => $locale, ...$data]);
             }
-        }
 
-        foreach ($request->variants ?? [] as $vi => $variantData) {
-            $variant = $product->variants()->create([
-                'sku' => $variantData['sku'] ?? null,
-                'price' => $variantData['price'] ?? 0,
-                'compare_price' => $variantData['compare_price'] ?? null,
-                'stock' => $variantData['stock'] ?? 0,
-                'is_active' => $variantData['is_active'] ?? true,
-                'sort_order' => $variantData['sort_order'] ?? 0,
-            ]);
-            if (! empty($variantData['attribute_value_ids'])) {
-                $variant->attributeValues()->sync($variantData['attribute_value_ids']);
+            if ($request->has('categories')) {
+                $product->categories()->sync($request->input('categories', []));
             }
-            if ($request->hasFile("variants.{$vi}.image")) {
-                $variant->addMediaFromRequest("variants.{$vi}.image")->toMediaCollection('image');
+
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $image) {
+                    $product->addMedia($image)->toMediaCollection('images');
+                }
             }
-        }
+
+            if ($request->filled('variant_groups')) {
+                $this->variantGenerator->sync($product, $request->input('variant_groups'));
+            }
+
+            if ($request->filled('variant_overrides')) {
+                $this->variantService->bulkUpdate(
+                    $product,
+                    $request->input('variant_overrides'),
+                    $request->file('variant_images', [])
+                );
+            }
+
+            if ($request->hasFile('group_option_images')) {
+                $this->variantService->syncOptionImages(
+                    $product,
+                    $request->input('variant_groups', []),
+                    $request->file('group_option_images', [])
+                );
+            }
+
+            return $product;
+        });
 
         Cache::forever('cache_ver_products', microtime(true));
 
@@ -133,125 +121,118 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
-        $product->load(['translations', 'variants.attributeValues', 'variants.media', 'categories', 'media']);
+        $product->load([
+            'translations',
+            'variantGroups.options.media',
+            'variants.options.group',
+            'variants.media',
+            'categories',
+            'media',
+        ]);
 
         $media = $product->getMedia('images')->map(fn ($m) => [
-            'id' => $m->id,
-            'url' => parse_url($m->getUrl(), PHP_URL_PATH),
+            'id'    => $m->id,
+            'url'   => parse_url($m->getUrl(), PHP_URL_PATH),
             'thumb' => parse_url($m->getUrl('thumb'), PHP_URL_PATH),
         ]);
 
         $product->variants->transform(function ($variant) {
             $variant->image_url = $variant->getFirstMediaUrl('image') ?: null;
+            $variant->option_key = $variant->option_key;
+            $variant->options_data = $variant->options->map(fn ($o) => [
+                'id'         => $o->id,
+                'value'      => $o->value,
+                'group_id'   => $o->group_id,
+                'group_name' => $o->group?->name,
+            ]);
 
             return $variant;
         });
 
+        $variantGroups = $product->variantGroups->map(function ($group) {
+            return [
+                'id'         => $group->id,
+                'name'       => $group->name,
+                'sort_order' => $group->sort_order,
+                'has_images' => (bool) $group->has_images,
+                'options'    => $group->options->map(fn ($o) => [
+                    'id'        => $o->id,
+                    'group_id'  => $o->group_id,
+                    'value'     => $o->value,
+                    'sort_order' => $o->sort_order,
+                    'image_url' => $o->getFirstMediaUrl('image') ?: null,
+                ]),
+            ];
+        });
+
         return Inertia::render('admin/products/edit', [
-            'product' => $product,
-            'categories' => Category::all(),
-            'attributeTypes' => AttributeType::with('values')->get(),
-            'productMedia' => $media,
-            'exchangeRate' => $this->currency->getActiveRate(),
+            'product'       => $product,
+            'categories'    => Category::all(),
+            'variantGroups' => $variantGroups,
+            'productMedia'  => $media,
+            'exchangeRate'  => $this->currency->getActiveRate(),
         ]);
     }
 
-    public function update(Request $request, Product $product)
+    public function update(UpdateProductRequest $request, Product $product)
     {
         // Filter out empty translations
         $translations = array_filter($request->input('translations', []), fn ($t) => ! empty($t['name']));
-        $request->merge(['translations' => $translations]);
 
-        $request->validate([
-            'slug' => 'required|string|unique:products,slug,'.$product->id,
-            'price' => 'required|numeric|min:0.01',
-            'delivery_charge' => 'numeric|min:0',
-            'delivery_charge_batam' => 'nullable|numeric|min:0',
-            'delivery_charge_jakarta' => 'nullable|numeric|min:0',
-            'categories' => 'required|array|min:1',
-            'variants' => 'nullable|array',
-            'variants.*.sku' => 'required_with:variants|string|max:255',
-            'translations' => 'required|array|min:1',
-            'translations.*.name' => 'required|string|max:255',
-            'translations.*.meta_title' => 'nullable|string|max:255',
-            'translations.*.meta_description' => 'nullable|string|max:500',
-            'translations.*.meta_keywords' => 'nullable|string|max:255',
-            'images' => 'nullable|array',
-            'images.*' => 'image|max:10240',
-        ], [
-            'translations.required' => 'At least one translation with a product name is required.',
-            'translations.min' => 'At least one translation with a product name is required.',
-        ]);
+        DB::transaction(function () use ($request, $product, $translations) {
+            $product->update(array_merge(
+                $request->only(['slug', 'thumbnail', 'price', 'delivery_charge', 'is_active', 'sort_order']),
+                [
+                    'delivery_charge_batam'   => $request->input('delivery_charge_batam') ?? 0,
+                    'delivery_charge_jakarta' => $request->input('delivery_charge_jakarta') ?? 0,
+                ]
+            ));
 
-        $product->update(array_merge(
-            $request->only(['slug', 'thumbnail', 'price', 'delivery_charge', 'is_active', 'sort_order']),
-            [
-                'delivery_charge_batam' => $request->input('delivery_charge_batam') ?? 0,
-                'delivery_charge_jakarta' => $request->input('delivery_charge_jakarta') ?? 0,
-            ]
-        ));
-
-        foreach ($request->translations ?? [] as $locale => $data) {
-            ProductTranslation::updateOrCreate(
-                ['product_id' => $product->id, 'locale' => $locale],
-                $data
-            );
-        }
-
-        if ($request->has('categories')) {
-            $product->categories()->sync($request->categories);
-        }
-
-        // Handle image deletion
-        if ($request->deleted_images) {
-            $product->media()->whereIn('id', $request->deleted_images)->each(fn ($m) => $m->delete());
-        }
-
-        // Handle new image uploads
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $product->addMedia($image)->toMediaCollection('images');
+            foreach ($translations as $locale => $data) {
+                ProductTranslation::updateOrCreate(
+                    ['product_id' => $product->id, 'locale' => $locale],
+                    $data
+                );
             }
-        }
 
-        // Handle variants: upsert existing, create new, delete removed
-        $incomingIds = [];
-        foreach ($request->variants ?? [] as $vi => $variantData) {
-            $variantFields = [
-                'sku' => $variantData['sku'] ?? null,
-                'price' => $variantData['price'] ?? 0,
-                'compare_price' => $variantData['compare_price'] ?? null,
-                'stock' => $variantData['stock'] ?? 0,
-                'is_active' => $variantData['is_active'] ?? true,
-                'sort_order' => $variantData['sort_order'] ?? 0,
-            ];
-            if (! empty($variantData['id'])) {
-                $variant = ProductVariant::find($variantData['id']);
-                if ($variant && $variant->product_id === $product->id) {
-                    $variant->update($variantFields);
-                    $incomingIds[] = $variant->id;
+            if ($request->has('categories')) {
+                $product->categories()->sync($request->input('categories', []));
+            }
+
+            // Delete removed product images
+            if ($request->filled('deleted_images')) {
+                $product->media()->whereIn('id', $request->input('deleted_images'))->each(fn ($m) => $m->delete());
+            }
+
+            // Upload new product images
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $image) {
+                    $product->addMedia($image)->toMediaCollection('images');
                 }
-            } else {
-                $variant = $product->variants()->create($variantFields);
-                $incomingIds[] = $variant->id;
             }
-            if (! empty($variantData['attribute_value_ids'])) {
-                $variant->attributeValues()->sync($variantData['attribute_value_ids']);
-            } else {
-                $variant->attributeValues()->detach();
-            }
-            if ($request->hasFile("variants.{$vi}.image")) {
-                $variant->clearMediaCollection('image');
-                $variant->addMediaFromRequest("variants.{$vi}.image")->toMediaCollection('image');
-            }
-        }
 
-        // Delete variants not in the incoming list
-        if (! empty($incomingIds)) {
-            $product->variants()->whereNotIn('id', $incomingIds)->delete();
-        } elseif ($request->has('variants')) {
-            $product->variants()->delete();
-        }
+            // Sync variant groups/combinations
+            if ($request->filled('variant_groups')) {
+                $this->variantGenerator->sync($product, $request->input('variant_groups'));
+            }
+
+            // Apply per-variant price/stock/SKU overrides
+            if ($request->filled('variant_overrides')) {
+                $this->variantService->bulkUpdate(
+                    $product,
+                    $request->input('variant_overrides'),
+                    $request->file('variant_images', [])
+                );
+            }
+
+            if ($request->hasFile('group_option_images')) {
+                $this->variantService->syncOptionImages(
+                    $product,
+                    $request->input('variant_groups', []),
+                    $request->file('group_option_images', [])
+                );
+            }
+        });
 
         Cache::forever('cache_ver_products', microtime(true));
 

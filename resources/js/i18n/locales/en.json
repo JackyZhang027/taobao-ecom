@@ -55,7 +55,9 @@
         "continue_shopping": "Continue Shopping",
         "quantity": "Qty",
         "remove": "Remove",
-        "added": "Added to cart"
+        "added": "Added to cart",
+        "item_unavailable": "Unavailable",
+        "has_unavailable_items": "Some items in your cart are no longer available. Please remove them to proceed to checkout."
     },
     "checkout": {
         "title": "Checkout",
@@ -113,6 +115,7 @@
         "featured_products": "Featured Products",
         "featured_products_desc": "Handpicked products, quality guaranteed.",
         "view_all": "View All Products",
+        "view_all_categories": "View All Categories",
         "limited_offer": "Limited Time Offer",
         "promo_title": "Quality Products, For Everyone",
         "promo_desc": "Explore our full catalog and find exactly what you're looking for.",
@@ -137,6 +140,12 @@
         "my_orders": "My Orders",
         "all_rights": "All rights reserved.",
         "trusted": "Trusted shopping, every time."
+    },
+    "categories": {
+        "title": "All Categories",
+        "search_placeholder": "Search categories...",
+        "no_results": "No categories found",
+        "clear_search": "Clear search"
     },
     "common": {
         "save": "Save",

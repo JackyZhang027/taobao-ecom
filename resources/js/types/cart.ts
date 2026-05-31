@@ -6,6 +6,7 @@ export type CartItem = {
     product_variant_id: number | null;
     product_id?: number | null;
     quantity: number;
+    is_unavailable?: boolean;
     variant?: (Omit<ProductVariant, 'id'> & { id: number | null }) & {
         product?: {
             id: number;

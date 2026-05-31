@@ -78,7 +78,15 @@
       "Bash(git -C \"c:\\\\Users\\\\user\\\\Herd\\\\taobao\" diff HEAD~1 HEAD -- resources/js/actions/)",
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\user\\\\Herd\\\\taobao\\\\resources\\\\js\\\\pages\" -Recurse -Force)",
       "Bash(Select-Object -First 100)",
-      "PowerShell(head -50)"
+      "PowerShell(head -50)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\user\\\\Herd\\\\taobao\\\\resources\\\\js\\\\components\\\\ui\" -Name)",
+      "Bash(Sort-Object)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\user\\\\Herd\\\\taobao\\\\resources\\\\js\\\\pages\\\\auth\" -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object Name, FullName)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\user\\\\Herd\\\\taobao\\\\Modules\\\\Admin\\\\app\\\\Http\\\\Controllers\" -File)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\user\\\\Herd\\\\taobao\\\\resources\\\\js\\\\components\\\\admin\" -Recurse)",
+      "Bash(Select-Object -Property FullName)",
+      "Bash(Get-ChildItem -Path \"c:/Users/user/Herd/taobao/database/seeders\" -ErrorAction SilentlyContinue)"
     ],
     "additionalDirectories": [
       "c:\\Users\\user\\.claude\\plans"

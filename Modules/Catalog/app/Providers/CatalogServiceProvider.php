@@ -43,7 +43,7 @@ class CatalogServiceProvider extends ServiceProvider
      */
     protected function registerCommands(): void
     {
-        // $this->commands([]);
+        //
     }
 
     /**

@@ -36,11 +36,11 @@ class WishlistController extends Controller
             $activeVariants = $product->variants->where('is_active', true);
             $minVariantPrice = $activeVariants->min('price');
             $minPriceRmb = $minVariantPrice !== null
-                ? ($product->price + $minVariantPrice)
+                ? $minVariantPrice
                 : ($product->price ?? 0);
 
-            $deliveryBatamRmb = $product->delivery_charge_batam ?: $product->delivery_charge;
-            $deliveryJakartaRmb = $product->delivery_charge_jakarta ?: $product->delivery_charge;
+            $deliveryBatamIdr = (float) ($product->delivery_charge_batam ?: $product->delivery_charge);
+            $deliveryJakartaIdr = (float) ($product->delivery_charge_jakarta ?: $product->delivery_charge);
 
             $thumbnail = $product->thumbnail
                 ?? ($product->getFirstMediaUrl('images', 'thumb') ?: $product->getFirstMediaUrl('images') ?: null);
@@ -53,8 +53,8 @@ class WishlistController extends Controller
                 'description'       => $translation?->description,
                 'price_idr'         => $this->currency->rmbToIdr($minPriceRmb),
                 'price_rmb'         => $minPriceRmb,
-                'total_batam_idr'   => $this->currency->rmbToIdr($minPriceRmb + $deliveryBatamRmb),
-                'total_jakarta_idr' => $this->currency->rmbToIdr($minPriceRmb + $deliveryJakartaRmb),
+                'total_batam_idr'   => $deliveryBatamIdr > 0 ? $this->currency->rmbToIdr($minPriceRmb) + $deliveryBatamIdr : null,
+                'total_jakarta_idr' => $deliveryJakartaIdr > 0 ? $this->currency->rmbToIdr($minPriceRmb) + $deliveryJakartaIdr : null,
                 'is_wishlisted'     => true,
             ];
         })->filter()->values();

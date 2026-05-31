@@ -5,9 +5,8 @@ import { useState } from 'react';
 import { ProductCard } from '@/components/product-card';
 import CustomerLayout from '@/layouts/customer-layout';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import type { Category, Product, AttributeType } from '@/types/product';
+import type { Category, Product } from '@/types/product';
 
 interface ShopProps {
     products: {
@@ -18,53 +17,33 @@ interface ShopProps {
         next_page_url: string | null;
     };
     categories: Category[];
-    attributeTypes: AttributeType[];
     currentCategory?: string;
-    activeFilters: { search?: string; attributes?: number[] };
+    activeFilters: { search?: string };
     whatsapp_number?: string;
 }
 
-export default function Shop({ products, categories, attributeTypes, currentCategory, activeFilters, whatsapp_number }: ShopProps) {
+export default function Shop({ products, categories, currentCategory, activeFilters, whatsapp_number }: ShopProps) {
     const [filterOpen, setFilterOpen] = useState(false);
     const [draftSearch, setDraftSearch] = useState(activeFilters.search ?? '');
-    const [draftAttributes, setDraftAttributes] = useState<number[]>(activeFilters.attributes ?? []);
     const [draftCategory, setDraftCategory] = useState(currentCategory ?? '');
 
     const activeCategory = categories.find((c) => c.slug === currentCategory);
 
-    const totalActiveFilters =
-        (activeFilters.search ? 1 : 0) + (activeFilters.attributes?.length ?? 0) + (currentCategory ? 1 : 0);
+    const totalActiveFilters = (activeFilters.search ? 1 : 0) + (currentCategory ? 1 : 0);
 
     function applyFilters() {
-        const params: Record<string, string | number | number[]> = {};
+        const params: Record<string, string> = {};
         if (draftCategory) params.category = draftCategory;
         if (draftSearch.trim()) params.search = draftSearch.trim();
-        if (draftAttributes.length > 0) params.attributes = draftAttributes;
         router.get('/shop', params, { preserveState: false });
         setFilterOpen(false);
     }
 
-    function removeFilter(type: 'search' | 'attribute' | 'category', id?: number) {
-        const params: Record<string, string | number | number[]> = {};
+    function removeFilter(type: 'search' | 'category') {
+        const params: Record<string, string> = {};
         if (type !== 'category' && currentCategory) params.category = currentCategory;
-        if (type === 'search') {
-            if (activeFilters.attributes?.length) params.attributes = activeFilters.attributes;
-        } else if (type === 'attribute') {
-            const remaining = (activeFilters.attributes ?? []).filter((a) => a !== id);
-            if (activeFilters.search) params.search = activeFilters.search;
-            if (remaining.length) params.attributes = remaining;
-        } else {
-            // remove category
-            if (activeFilters.search) params.search = activeFilters.search;
-            if (activeFilters.attributes?.length) params.attributes = activeFilters.attributes;
-        }
+        if (type !== 'search' && activeFilters.search) params.search = activeFilters.search;
         router.get('/shop', params, { preserveState: false });
-    }
-
-    function toggleAttribute(id: number) {
-        setDraftAttributes((prev) =>
-            prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id],
-        );
     }
 
     return (
@@ -72,7 +51,7 @@ export default function Shop({ products, categories, attributeTypes, currentCate
             <Head title="Shop" />
 
             {/* Page Header Banner */}
-            <div className="bg-[#F8FAFC] py-14 text-center">
+            <div className="py-14 text-center">
                 <h1 className="text-4xl font-bold text-slate-900">Shop</h1>
                 <p className="text-sm text-slate-400 mt-3 flex items-center justify-center gap-1">
                     <Link href="/" className="font-medium text-slate-900 hover:text-blue-600">Home</Link>
@@ -82,7 +61,7 @@ export default function Shop({ products, categories, attributeTypes, currentCate
             </div>
 
             {/* Filter Bar */}
-            <div className="bg-[#F1F5F9] border-y border-slate-200">
+            <div className="bg-[#EFE9DF] border-y border-[#DDD6CB]">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-6">
                         <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
@@ -149,25 +128,6 @@ export default function Shop({ products, categories, attributeTypes, currentCate
                                         </div>
                                     </div>
 
-                                    {/* Attribute groups */}
-                                    {attributeTypes.filter((atType) => atType.values && atType.values.length > 0).map((atType) => (
-                                        <div key={atType.id}>
-                                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">
-                                                {atType.name}
-                                            </p>
-                                            <div className="space-y-2">
-                                                {(atType.values ?? []).map((av) => (
-                                                    <label key={av.id} className="flex items-center gap-2.5 cursor-pointer">
-                                                        <Checkbox
-                                                            checked={draftAttributes.includes(av.id)}
-                                                            onCheckedChange={() => toggleAttribute(av.id)}
-                                                        />
-                                                        <span className="text-sm text-slate-700">{av.value}</span>
-                                                    </label>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ))}
                                 </div>
 
                                 {/* Footer actions */}
@@ -175,7 +135,6 @@ export default function Shop({ products, categories, attributeTypes, currentCate
                                     <button
                                         onClick={() => {
                                             setDraftSearch('');
-                                            setDraftAttributes([]);
                                             setDraftCategory('');
                                         }}
                                         className="flex-1 border border-slate-300 text-slate-700 text-sm py-2.5 rounded hover:bg-slate-50 transition-colors"
@@ -206,7 +165,7 @@ export default function Shop({ products, categories, attributeTypes, currentCate
             </div>
 
             {/* Active Filter Tags */}
-            {(activeFilters.search || (activeFilters.attributes?.length ?? 0) > 0 || currentCategory) && (
+            {(activeFilters.search || currentCategory) && (
                 <div className="border-b border-slate-100">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap gap-2">
                         {currentCategory && activeCategory && (
@@ -225,19 +184,6 @@ export default function Shop({ products, categories, attributeTypes, currentCate
                                 </button>
                             </span>
                         )}
-                        {(activeFilters.attributes ?? []).map((attrId) => {
-                            const label = attributeTypes
-                                .flatMap((at) => at.values ?? [])
-                                .find((av) => av.id === attrId)?.value ?? String(attrId);
-                            return (
-                                <span key={attrId} className="inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 text-xs px-3 py-1.5 rounded-full">
-                                    {label}
-                                    <button onClick={() => removeFilter('attribute', attrId)} className="hover:text-slate-900 ml-0.5">
-                                        <X className="h-3 w-3" />
-                                    </button>
-                                </span>
-                            );
-                        })}
                     </div>
                 </div>
             )}

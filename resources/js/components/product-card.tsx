@@ -47,7 +47,7 @@ export function ProductCard({ product, whatsappNumber }: ProductCardProps) {
     const hasDualPrices = hasBatam || hasJakarta;
 
     return (
-        <div className="relative flex flex-col bg-white border border-slate-200 overflow-hidden rounded-sm">
+        <div className="relative flex flex-col bg-white border border-[#E8E2D9] overflow-hidden rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
             {/* Image */}
             <div
                 className="relative overflow-hidden"
@@ -62,7 +62,7 @@ export function ProductCard({ product, whatsappNumber }: ProductCardProps) {
                             className={`w-full aspect-square object-cover transition-transform duration-500 ${hovered ? 'scale-105' : ''}`}
                         />
                     ) : (
-                        <div className="w-full aspect-square bg-slate-200 flex items-center justify-center">
+                        <div className="w-full aspect-square bg-[#EFE9DF] flex items-center justify-center">
                             <span className="text-slate-400 text-sm">{t('product.no_image')}</span>
                         </div>
                     )}
@@ -127,6 +127,8 @@ export function ProductCard({ product, whatsappNumber }: ProductCardProps) {
                                 </div>
                             )}
                         </div>
+                    ) : product.price_idr != null ? (
+                        <span className="font-bold text-slate-900 text-sm">{formatIdr(product.price_idr)}</span>
                     ) : null}
                 </div>
 

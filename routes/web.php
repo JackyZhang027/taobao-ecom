@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Customer\ProfileController as CustomerProfileController;
+use App\Http\Controllers\ChangePasswordController;
 use Illuminate\Support\Facades\Route;
+use Modules\Catalog\Http\Controllers\CategoryController;
 use Modules\Catalog\Http\Controllers\HomeController;
 use Modules\Catalog\Http\Controllers\ProductController;
 use Modules\Catalog\Http\Controllers\WishlistController;
@@ -13,6 +15,7 @@ use Modules\Payment\Http\Controllers\WebhookController;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::get('/shop', [ProductController::class, 'index'])->name('shop.index');
+Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
@@ -20,6 +23,11 @@ Route::middleware('throttle:60,1')->group(function () {
     Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
     Route::patch('/cart/{cartItem}', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/{cartItem}', [CartController::class, 'destroy'])->name('cart.destroy');
+});
+
+Route::middleware(['auth', 'role:customer'])->group(function () {
+    Route::get('/change-password', [ChangePasswordController::class, 'show'])->name('change-password.show');
+    Route::post('/change-password', [ChangePasswordController::class, 'update'])->name('change-password.update');
 });
 
 Route::middleware(['auth', 'verified', 'role:customer|admin'])->group(function () {

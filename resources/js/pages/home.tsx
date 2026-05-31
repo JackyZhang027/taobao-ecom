@@ -21,6 +21,15 @@ export default function Home({ heroSlides, categories, shopSettings, products, w
     const [currentSlide, setCurrentSlide] = useState(0);
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+    const catScrollRef = useRef<HTMLDivElement>(null);
+
+    const scrollCats = (dir: 'left' | 'right') => {
+        const container = catScrollRef.current;
+        if (!container) return;
+        const itemWidth = (container.querySelector('a') as HTMLElement | null)?.clientWidth ?? 300;
+        container.scrollBy({ left: dir === 'right' ? itemWidth : -itemWidth, behavior: 'smooth' });
+    };
+
     const resetTimeout = () => {
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
@@ -158,33 +167,72 @@ export default function Home({ heroSlides, categories, shopSettings, products, w
                         <h2 className="text-3xl font-bold text-slate-900">{t('home.browse_category')}</h2>
                         <p className="text-slate-400 mt-2 text-sm">{t('home.browse_category_desc')}</p>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                        {categories.map((category) => (
-                            <Link key={category.id} href={`/shop?category=${category.slug}`} className="group cursor-pointer text-center">
-                                <div className="w-full aspect-[4/5] mb-4 overflow-hidden rounded-sm bg-[#F1F5F9] relative">
-                                    {category.image_url ? (
-                                        <img
-                                            src={category.image_url}
-                                            alt={category.name}
-                                            className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
-                                        />
-                                    ) : (
-                                        <div className="flex bg-slate-200 items-center justify-center w-full h-full text-5xl font-bold text-slate-300">
-                                            {category.name.charAt(0)}
-                                        </div>
-                                    )}
-                                </div>
-                                <h3 className="font-semibold text-lg text-slate-900 group-hover:text-blue-600 transition-colors">
-                                    {category.name}
-                                </h3>
-                            </Link>
-                        ))}
+                    <div className="relative">
+                        {categories.length > 1 && (
+                            <button
+                                type="button"
+                                onClick={() => scrollCats('left')}
+                                className="absolute -left-4 top-[40%] -translate-y-1/2 z-10 bg-[#F8F5EF] border border-[#DDD6CB] shadow-sm hover:bg-[#EFE9DF] text-slate-900 p-2.5 transition-all cursor-pointer rounded-sm"
+                                aria-label="Previous categories"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
+                        )}
+                        <div
+                            ref={catScrollRef}
+                            className="flex gap-6 overflow-x-auto scroll-smooth scrollbar-hide"
+                            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                        >
+                            {categories.map((category) => (
+                                <Link
+                                    key={category.id}
+                                    href={`/shop?category=${category.slug}`}
+                                    className="group cursor-pointer text-center flex-shrink-0 w-full sm:w-[calc(50%-12px)] md:w-[calc(33.333%-16px)]"
+                                >
+                                    <div className="w-full aspect-[4/5] mb-4 overflow-hidden rounded-sm bg-[#EFE9DF] relative">
+                                        {category.image_url ? (
+                                            <img
+                                                src={category.image_url}
+                                                alt={category.name}
+                                                className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                                            />
+                                        ) : (
+                                            <div className="flex bg-slate-200 items-center justify-center w-full h-full text-5xl font-bold text-slate-300">
+                                                {category.name.charAt(0)}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <h3 className="font-semibold text-lg text-slate-900 group-hover:text-blue-600 transition-colors">
+                                        {category.name}
+                                    </h3>
+                                </Link>
+                            ))}
+                        </div>
+                        {categories.length > 1 && (
+                            <button
+                                type="button"
+                                onClick={() => scrollCats('right')}
+                                className="absolute -right-4 top-[40%] -translate-y-1/2 z-10 bg-[#F8F5EF] border border-[#DDD6CB] shadow-sm hover:bg-[#EFE9DF] text-slate-900 p-2.5 transition-all cursor-pointer rounded-sm"
+                                aria-label="Next categories"
+                            >
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
+                        )}
+                    </div>
+                    <div className="mt-10 flex justify-center">
+                        <Button
+                            variant="outline"
+                            className="bg-white border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white px-12 py-3 rounded-none uppercase tracking-wider text-sm font-semibold transition-colors"
+                            asChild
+                        >
+                            <Link href="/categories">{t('home.view_all_categories')}</Link>
+                        </Button>
                     </div>
                 </section>
             )}
 
             {/* ── Featured Products ── */}
-            <section className="bg-white py-16">
+            <section className="py-16 border-t border-[#DDD6CB]">
                 <div className="mx-auto max-w-7xl px-4 md:px-8">
                     <div className="text-center mb-10">
                         <h2 className="text-3xl font-bold text-slate-900">{t('home.featured_products')}</h2>
@@ -208,7 +256,7 @@ export default function Home({ heroSlides, categories, shopSettings, products, w
             </section>
 
             {/* ── Promo Banner ── */}
-            <section className="bg-[#F1F5F9] py-16">
+            <section className="bg-[#EFE9DF] py-16">
                 <div className="mx-auto max-w-7xl px-4 md:px-8">
                     <div className="grid md:grid-cols-2 gap-8 items-center">
                         <div>
@@ -248,7 +296,7 @@ export default function Home({ heroSlides, categories, shopSettings, products, w
             </section>
 
             {/* ── Features Bar ── */}
-            <section className="bg-[#F8FAFC] py-12 border-t border-slate-100">
+            <section className="bg-[#EFE9DF] py-12 border-t border-[#DDD6CB]">
                 <div className="mx-auto max-w-7xl px-4 md:px-8">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                         {[

@@ -1,85 +1,79 @@
-import type { AttributeType, ProductVariant } from '@/types/product';
+import { useState } from 'react';
+import type { ProductVariant } from '@/types/product';
 
 interface VariantSelectorProps {
     variants: ProductVariant[];
     selectedId: number | null;
-    onChange: (id: number) => void;
+    onChange: (id: number | null) => void;
 }
 
 export function VariantSelector({ variants, selectedId, onChange }: VariantSelectorProps) {
-
-    // Collect all attribute types present across variants
-    const attributeTypeMap = new Map<number, AttributeType>();
+    const groupMap = new Map<number, { id: number; name: string; options: Map<number, string> }>();
     variants.forEach((v) => {
-        (v.attributes ?? []).forEach((av) => {
-            if (av.type && !attributeTypeMap.has(av.type.id)) {
-                attributeTypeMap.set(av.type.id, av.type);
+        (v.options ?? []).forEach((o) => {
+            if (!groupMap.has(o.group_id)) {
+                groupMap.set(o.group_id, { id: o.group_id, name: o.group_name, options: new Map() });
             }
+            groupMap.get(o.group_id)!.options.set(o.id, o.value);
         });
     });
-    const attributeTypes = Array.from(attributeTypeMap.values());
+    const groups = Array.from(groupMap.values());
 
-    const selectedVariant = variants.find((v) => v.id === selectedId);
+    const [selectedOptions, setSelectedOptions] = useState<Record<number, number>>(() => {
+        const initial = variants.find((v) => v.id === selectedId);
+        if (!initial) return {};
+        return Object.fromEntries((initial.options ?? []).map((o) => [o.group_id, o.id]));
+    });
 
-    if (attributeTypes.length === 0) {
-        // Flat pill list
-        return (
-            <div className="space-y-2">
-                <div className="flex flex-wrap gap-2">
-                    {variants.map((v) => (
-                        <button
-                            key={v.id}
-                            disabled={!v.is_active}
-                            onClick={() => onChange(v.id)}
-                            className={`rounded border px-3 py-1 text-sm transition-colors
-                                ${selectedId === v.id
-                                    ? 'border-blue-600 bg-blue-600 text-white'
-                                    : 'bg-white text-slate-900 border-slate-300 hover:border-blue-600'}
-                                ${!v.is_active ? 'cursor-not-allowed opacity-40' : ''}`}
-                        >
-                            {v.sku}
-                        </button>
-                    ))}
-                </div>
-            </div>
+    function variantMatchesHypothesis(variant: ProductVariant, hypothesis: Record<number, number>): boolean {
+        return Object.entries(hypothesis).every(([gId, oId]) =>
+            (variant.options ?? []).some((o) => o.group_id === Number(gId) && o.id === oId),
         );
     }
 
+    function isOptionAvailable(groupId: number, optionId: number): boolean {
+        const hypothesis = { ...selectedOptions, [groupId]: optionId };
+        return variants.some(
+            (v) => v.is_active && variantMatchesHypothesis(v, hypothesis),
+        );
+    }
+
+    function selectOption(groupId: number, optionId: number) {
+        const next = { ...selectedOptions, [groupId]: optionId };
+        setSelectedOptions(next);
+        if (Object.keys(next).length === groups.length) {
+            const matched = variants.find((v) => v.is_active && variantMatchesHypothesis(v, next));
+            onChange(matched?.id ?? null);
+        } else {
+            onChange(null);
+        }
+    }
+
+    if (groups.length === 0) return null;
+
     return (
         <div className="space-y-4">
-            {attributeTypes.map((atType) => {
-                // Collect unique values for this attribute type
-                const valueMap = new Map<number, { id: number; value: string }>();
-                variants.forEach((v) => {
-                    (v.attributes ?? [])
-                        .filter((av) => av.type?.id === atType.id)
-                        .forEach((av) => valueMap.set(av.id, { id: av.id, value: av.value }));
-                });
-                const values = Array.from(valueMap.values());
-
+            {groups.map((group) => {
+                const options = Array.from(group.options.entries()).map(([id, value]) => ({ id, value }));
                 return (
-                    <div key={atType.id}>
-                        <p className="mb-2 text-sm font-medium">{atType.name}</p>
+                    <div key={group.id}>
+                        <p className="mb-2 text-sm font-medium">{group.name}</p>
                         <div className="flex flex-wrap gap-2">
-                            {values.map((av) => {
-                                // Is there an active variant that includes this value?
-                                const matchingVariant = variants.find(
-                                    (v) => v.is_active && (v.attributes ?? []).some((a) => a.id === av.id),
-                                );
-                                const isSelected = (selectedVariant?.attributes ?? []).some((a) => a.id === av.id);
-
+                            {options.map((opt) => {
+                                const available = isOptionAvailable(group.id, opt.id);
+                                const isSelected = selectedOptions[group.id] === opt.id;
                                 return (
                                     <button
-                                        key={av.id}
-                                        disabled={!matchingVariant}
-                                        onClick={() => matchingVariant && onChange(matchingVariant.id)}
+                                        key={opt.id}
+                                        disabled={!available}
+                                        onClick={() => available && selectOption(group.id, opt.id)}
                                         className={`rounded border px-3 py-1 text-sm transition-colors
                                             ${isSelected
                                                 ? 'border-blue-600 bg-blue-600 text-white'
                                                 : 'bg-white text-slate-900 border-slate-300 hover:border-blue-600'}
-                                            ${!matchingVariant ? 'cursor-not-allowed opacity-40' : ''}`.trim()}
+                                            ${!available ? 'cursor-not-allowed opacity-40 line-through' : ''}`.trim()}
                                     >
-                                        {av.value}
+                                        {opt.value}
                                     </button>
                                 );
                             })}
