@@ -17,7 +17,6 @@ export default function ForgotPassword({ status }: { status?: string }) {
             description="Enter your email to receive a password reset link"
         >
             <Head title="Forgot password" />
-
             {status && (
                 <div className="mb-4 text-center text-sm font-medium text-green-600">
                     {status}

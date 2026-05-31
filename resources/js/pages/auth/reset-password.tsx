@@ -19,7 +19,6 @@ export default function ResetPassword({ token, email }: Props) {
             description="Please enter your new password below"
         >
             <Head title="Reset password" />
-
             <Form
                 {...update.form()}
                 transform={(data) => ({ ...data, token, email })}

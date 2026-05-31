@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Modules\Admin\Services\ShopSettingService;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -36,21 +37,22 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
+        $settings = app(ShopSettingService::class)->all();
 
         return [
             ...parent::share($request),
-            'name' => \Modules\Admin\Models\ShopSetting::get('shop_name', config('app.name')),
+            'name' => $settings->get('shop_name') ?? config('app.name') ?? 'Shop',
             'auth' => [
-                'user'        => $user,
+                'user' => $user,
                 'permissions' => fn () => $user ? $user->getAllPermissions()->pluck('name')->toArray() : [],
-                'roles'       => fn () => $user ? $user->getRoleNames()->toArray() : [],
+                'roles' => fn () => $user ? $user->getRoleNames()->toArray() : [],
             ],
             'sidebarOpen' => $request->hasCookie('sidebar_state') && $request->cookie('sidebar_state') === 'true',
             'cartCount' => $this->resolveCartCount($request),
             'exchangeRate' => app(\Modules\Currency\Services\CurrencyService::class)->getActiveRate(),
-            'shopSettings' => \Modules\Admin\Models\ShopSetting::all()->pluck('value', 'key'),
+            'shopSettings' => $settings,
             'socialLinks' => fn () => \Illuminate\Support\Facades\Cache::remember(
-                'social_links_active_' . (\Illuminate\Support\Facades\Cache::get('cache_ver_social_links', 0)),
+                'social_links_active_'.(\Illuminate\Support\Facades\Cache::get('cache_ver_social_links', 0)),
                 3600,
                 fn () => \Modules\Admin\Models\SocialLink::active()->get(['id', 'name', 'icon', 'url'])
             ),

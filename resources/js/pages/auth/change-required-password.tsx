@@ -1,4 +1,4 @@
-import { useForm, Head } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,7 +28,6 @@ export default function ChangeRequiredPassword() {
             description="An administrator has reset your password. Please set a new password to continue."
         >
             <Head title="Change Password" />
-
             <form onSubmit={submit} className="flex flex-col gap-6">
                 <div className="grid gap-6">
                     <div className="grid gap-2">

@@ -28,7 +28,6 @@ export default function Login({
             description="Enter your email and password below to log in"
         >
             <Head title="Log in" />
-
             {status && (
                 <div className="mb-4 text-center text-sm font-medium text-green-600">
                     {status}

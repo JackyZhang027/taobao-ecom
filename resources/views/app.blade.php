@@ -30,7 +30,7 @@
             }
         </style>
 
-        <title inertia>{{ $page['props']['name'] ?? $page['props']['shopSettings']['name'] ?? config('app.name', 'Laravel') }}</title>
+        <title inertia>{{ $page['props']['name'] ?? config('app.name', 'Shop') }}</title>
 
         @php
             $favicon = $page['props']['shopSettings']['favicon'] ?? '/favicon.ico';

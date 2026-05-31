@@ -51,7 +51,6 @@ export default function TwoFactorChallenge() {
             description={authConfigContent.description}
         >
             <Head title="Two-factor authentication" />
-
             <div className="space-y-6">
                 <Form
                     {...store.form()}
