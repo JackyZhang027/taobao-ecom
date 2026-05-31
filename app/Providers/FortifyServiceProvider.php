@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
+use Laravel\Fortify\Contracts\VerifyEmailResponse as VerifyEmailResponseContract;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
 
@@ -33,6 +34,10 @@ class FortifyServiceProvider extends ServiceProvider
                     return redirect()->intended('/admin');
                 }
 
+                if (! $request->user()->hasVerifiedEmail()) {
+                    return redirect()->route('verification.notice');
+                }
+
                 // For customers, discard any intended URL pointing to the admin panel
                 $intended = session()->pull('url.intended');
 
@@ -45,7 +50,20 @@ class FortifyServiceProvider extends ServiceProvider
             {
                 return $request->wantsJson()
                     ? new \Illuminate\Http\JsonResponse('', 201)
-                    : redirect('/shop');
+                    : redirect()->route('verification.notice');
+            }
+        });
+
+        $this->app->instance(VerifyEmailResponseContract::class, new class implements VerifyEmailResponseContract {
+            public function toResponse($request)
+            {
+                if ($request->wantsJson()) {
+                    return new \Illuminate\Http\JsonResponse('', 200);
+                }
+
+                $home = $request->user()->hasRole('customer') ? '/shop' : '/admin';
+
+                return redirect()->intended($home . '?verified=1');
             }
         });
     }
@@ -98,8 +116,6 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::twoFactorChallengeView(fn () => Inertia::render('auth/two-factor-challenge'));
 
         Fortify::confirmPasswordView(fn () => Inertia::render('auth/confirm-password'));
-
-        Fortify::redirects('register', '/shop');
     }
 
     /**

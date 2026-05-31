@@ -11,7 +11,7 @@ export default function VerifyEmail({ status }: { status?: string }) {
     return (
         <AuthLayout
             title="Verify email"
-            description="Please verify your email address by clicking on the link we just emailed to you."
+            description="Please check your email and click the verification link to activate your account. If you don't see it, check your spam or junk folder."
         >
             <Head title="Email verification" />
             {status === 'verification-link-sent' && (
