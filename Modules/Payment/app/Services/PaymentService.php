@@ -2,6 +2,7 @@
 
 namespace Modules\Payment\Services;
 
+use Illuminate\Support\Facades\DB;
 use Midtrans\Config;
 use Midtrans\Snap;
 use Midtrans\Transaction;
@@ -75,10 +76,52 @@ class PaymentService
         return $snapToken;
     }
 
+    private const TERMINAL_STATUSES = ['cancelled', 'delivered'];
+
+    private const CANCELLABLE_PAYMENT_STATUSES = ['pending', 'authorize'];
+
     private const ALLOWED_STATUSES = [
         'pending', 'settlement', 'capture', 'authorize',
         'cancel', 'expire', 'deny', 'refund', 'partial_refund',
     ];
+
+    /**
+     * Cancel the Midtrans transaction for an order. Graceful — never throws.
+     * Safe to call even if no payment exists or the transaction is not cancellable.
+     */
+    public function cancelTransaction(Order $order): void
+    {
+        $payment = $order->payment;
+
+        if (! $payment) {
+            \Log::info('cancelTransaction: no payment found for order', ['order_id' => $order->id]);
+            return;
+        }
+
+        if (! in_array($payment->status, self::CANCELLABLE_PAYMENT_STATUSES, true)) {
+            \Log::info('cancelTransaction: payment not in cancellable state — skipping Midtrans call', [
+                'order_id'       => $order->id,
+                'payment_status' => $payment->status,
+            ]);
+            return;
+        }
+
+        try {
+            $response = Transaction::cancel($payment->midtrans_order_id);
+            \Log::info('cancelTransaction: Midtrans cancel successful', [
+                'order_id'          => $order->id,
+                'midtrans_order_id' => $payment->midtrans_order_id,
+                'response'          => $response,
+            ]);
+        } catch (\Throwable $e) {
+            // Swallowed intentionally — local cancellation must always proceed regardless.
+            \Log::warning('cancelTransaction: Midtrans cancel failed (local cancel will still proceed)', [
+                'order_id'          => $order->id,
+                'midtrans_order_id' => $payment->midtrans_order_id,
+                'error'             => $e->getMessage(),
+            ]);
+        }
+    }
 
     public function handleWebhook(array $payload): void
     {
@@ -109,22 +152,43 @@ class PaymentService
             return;
         }
 
-        $payment->update([
-            'status' => $transactionStatus,
-            'gateway_response' => $payload,
-        ]);
-
         $order = $payment->order;
 
         if (! $order) {
             return;
         }
 
-        match ($transactionStatus) {
-            'settlement', 'capture' => $this->transitionOrder($order, 'confirmed'),
-            'cancel', 'expire', 'deny' => $this->transitionOrder($order, 'cancelled'),
-            default => null,
-        };
+        // Early exit before acquiring the DB lock (avoids unnecessary locking overhead).
+        if (in_array($order->status, self::TERMINAL_STATUSES, true)) {
+            \Log::warning('Midtrans webhook ignored: order is in terminal state', [
+                'midtrans_order_id'  => $payload['order_id'],
+                'order_id'           => $order->id,
+                'order_status'       => $order->status,
+                'transaction_status' => $transactionStatus,
+            ]);
+            return;
+        }
+
+        DB::transaction(function () use ($payment, $order, $transactionStatus, $payload) {
+            // Re-fetch with exclusive lock to prevent concurrent state changes.
+            $order = Order::lockForUpdate()->find($order->id);
+
+            // Double-check inside the lock (double-checked locking pattern).
+            if (in_array($order->status, self::TERMINAL_STATUSES, true)) {
+                return;
+            }
+
+            $payment->update([
+                'status' => $transactionStatus,
+                'gateway_response' => $payload,
+            ]);
+
+            match ($transactionStatus) {
+                'settlement', 'capture' => $this->transitionOrder($order, 'confirmed'),
+                'cancel', 'expire', 'deny' => $this->transitionOrder($order, 'cancelled'),
+                default => null,
+            };
+        });
     }
 
     /**
@@ -152,22 +216,45 @@ class PaymentService
 
         $transactionStatus = $status->transaction_status;
 
-        $payment->update([
-            'status' => $transactionStatus,
-            'gateway_response' => (array) $status,
-        ]);
+        return DB::transaction(function () use ($order, $payment, $transactionStatus, $status) {
+            $order = Order::lockForUpdate()->find($order->id);
 
-        match ($transactionStatus) {
-            'settlement', 'capture' => $this->transitionOrder($order, 'confirmed'),
-            'cancel', 'expire', 'deny' => $this->transitionOrder($order, 'cancelled'),
-            default => null,
-        };
+            if (in_array($order->status, self::TERMINAL_STATUSES, true)) {
+                \Log::info('confirmFromTransaction: skipping transition — order is in terminal state', [
+                    'order_id'           => $order->id,
+                    'order_status'       => $order->status,
+                    'transaction_status' => $transactionStatus,
+                ]);
+                return $transactionStatus;
+            }
 
-        return $transactionStatus;
+            $payment->update([
+                'status' => $transactionStatus,
+                'gateway_response' => (array) $status,
+            ]);
+
+            match ($transactionStatus) {
+                'settlement', 'capture' => $this->transitionOrder($order, 'confirmed'),
+                'cancel', 'expire', 'deny' => $this->transitionOrder($order, 'cancelled'),
+                default => null,
+            };
+
+            return $transactionStatus;
+        });
     }
 
     private function transitionOrder(Order $order, string $newStatus): void
     {
+        // Never transition out of terminal states (last line of defence).
+        if (in_array($order->status, self::TERMINAL_STATUSES, true)) {
+            \Log::info('transitionOrder skipped: order is in terminal state', [
+                'order_id'   => $order->id,
+                'status'     => $order->status,
+                'new_status' => $newStatus,
+            ]);
+            return;
+        }
+
         if ($order->status === $newStatus) {
             return;
         }

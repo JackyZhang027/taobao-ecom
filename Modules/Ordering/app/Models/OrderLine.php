@@ -2,6 +2,7 @@
 
 namespace Modules\Ordering\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\Catalog\Models\Product;
@@ -9,6 +10,13 @@ use Modules\Catalog\Models\ProductVariant;
 
 class OrderLine extends Model
 {
+    use HasFactory;
+
+    protected static function newFactory()
+    {
+        return \Database\Factories\OrderLineFactory::new();
+    }
+
     protected $fillable = [
         'order_id',
         'product_id',

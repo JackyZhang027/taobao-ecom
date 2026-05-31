@@ -14,6 +14,7 @@ use Modules\Ordering\Models\Order;
 use Modules\Ordering\Models\OrderLine;
 use Modules\Ordering\Models\OrderStatusHistory;
 use Modules\Ordering\Services\ShippingService;
+use Modules\Payment\Services\PaymentService;
 use Yajra\DataTables\Facades\DataTables;
 
 class OrderController extends Controller
@@ -21,6 +22,7 @@ class OrderController extends Controller
     public function __construct(
         private CurrencyService $currency,
         private ShippingService $shipping,
+        private PaymentService $paymentService,
     ) {}
 
     public function index(Request $request)
@@ -78,18 +80,42 @@ class OrderController extends Controller
             'tracking_number' => 'required_if:status,shipped|nullable|string|max:100',
         ]);
 
-        $fields = ['status' => $request->status];
-        if ($request->status === 'shipped') {
-            $fields['courier']         = $request->courier;
-            $fields['tracking_number'] = $request->tracking_number;
+        // Attempt Midtrans cancellation BEFORE acquiring the DB lock so we never
+        // hold a row lock while waiting on an external HTTP call. Graceful — failure
+        // never blocks the local status change.
+        if ($request->status === 'cancelled') {
+            $this->paymentService->cancelTransaction($order);
         }
-        $order->update($fields);
 
-        OrderStatusHistory::create([
-            'order_id'   => $order->id,
-            'status'     => $request->status,
-            'changed_by' => auth()->id(),
-        ]);
+        DB::transaction(function () use ($request, $order) {
+            // Re-fetch with exclusive lock to prevent concurrent state changes.
+            $freshOrder = Order::lockForUpdate()->find($order->id);
+
+            // Idempotent: if a concurrent process already moved this order to a
+            // terminal state, skip quietly rather than raising an error.
+            if (in_array($freshOrder->status, ['cancelled', 'delivered'], true)) {
+                return;
+            }
+
+            // Re-validate: the order's status may have changed since the request arrived.
+            $allowed = self::TRANSITIONS[$freshOrder->status] ?? [];
+            if (! in_array($request->status, $allowed, true)) {
+                abort(409, 'Order status changed concurrently. Please refresh and try again.');
+            }
+
+            $fields = ['status' => $request->status];
+            if ($request->status === 'shipped') {
+                $fields['courier']         = $request->courier;
+                $fields['tracking_number'] = $request->tracking_number;
+            }
+            $freshOrder->update($fields);
+
+            OrderStatusHistory::create([
+                'order_id'   => $freshOrder->id,
+                'status'     => $request->status,
+                'changed_by' => auth()->id(),
+            ]);
+        });
 
         return back()->with('success', 'Order status updated.');
     }
