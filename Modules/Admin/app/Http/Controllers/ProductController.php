@@ -93,6 +93,15 @@ class ProductController extends Controller
 
             if ($request->filled('variant_groups')) {
                 $this->variantGenerator->sync($product, $request->input('variant_groups'));
+
+                // syncOptionImages is always called when variant groups are present;
+                // the service skips gracefully when no files were uploaded.
+                // Note: $request->hasFile() returns false for nested 2D file arrays.
+                $this->variantService->syncOptionImages(
+                    $product,
+                    $request->input('variant_groups', []),
+                    $request->file('group_option_images', [])
+                );
             }
 
             if ($request->filled('variant_overrides')) {
@@ -100,14 +109,6 @@ class ProductController extends Controller
                     $product,
                     $request->input('variant_overrides'),
                     $request->file('variant_images', [])
-                );
-            }
-
-            if ($request->hasFile('group_option_images')) {
-                $this->variantService->syncOptionImages(
-                    $product,
-                    $request->input('variant_groups', []),
-                    $request->file('group_option_images', [])
                 );
             }
 
@@ -214,6 +215,12 @@ class ProductController extends Controller
             // Sync variant groups/combinations
             if ($request->filled('variant_groups')) {
                 $this->variantGenerator->sync($product, $request->input('variant_groups'));
+
+                $this->variantService->syncOptionImages(
+                    $product,
+                    $request->input('variant_groups', []),
+                    $request->file('group_option_images', [])
+                );
             }
 
             // Apply per-variant price/stock/SKU overrides
@@ -222,14 +229,6 @@ class ProductController extends Controller
                     $product,
                     $request->input('variant_overrides'),
                     $request->file('variant_images', [])
-                );
-            }
-
-            if ($request->hasFile('group_option_images')) {
-                $this->variantService->syncOptionImages(
-                    $product,
-                    $request->input('variant_groups', []),
-                    $request->file('group_option_images', [])
                 );
             }
         });

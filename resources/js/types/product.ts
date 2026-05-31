@@ -31,6 +31,7 @@ export type VariantOptionDisplay = {
     value: string;
     group_id: number;
     group_name: string;
+    image_url?: string | null;
 };
 
 export type ProductVariant = {

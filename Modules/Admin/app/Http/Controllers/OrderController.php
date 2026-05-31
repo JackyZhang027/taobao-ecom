@@ -41,8 +41,24 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
+        $order->load(['user', 'lines.variant.media', 'lines.product.media', 'payment', 'statusHistories.changer']);
+
+        $order->lines->each(function ($line) {
+            $variant = $line->variant;
+            $product = $line->product;
+
+            if ($variant && $variant->hasMedia('image')) {
+                $line->image_url = $variant->getFirstMediaUrl('image');
+            } elseif ($product) {
+                $line->image_url = $product->thumbnail
+                    ?? ($product->getFirstMediaUrl('images', 'thumb') ?: $product->getFirstMediaUrl('images') ?: null);
+            } else {
+                $line->image_url = null;
+            }
+        });
+
         return Inertia::render('admin/orders/show', [
-            'order' => $order->load('user', 'lines', 'payment', 'statusHistories.changer'),
+            'order' => $order,
         ]);
     }
 

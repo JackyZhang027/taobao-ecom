@@ -5,9 +5,11 @@ interface VariantSelectorProps {
     variants: ProductVariant[];
     selectedId: number | null;
     onChange: (id: number | null) => void;
+    /** Fired immediately when any option button is clicked, before a full variant match. */
+    onOptionSelect?: (groupId: number, optionId: number) => void;
 }
 
-export function VariantSelector({ variants, selectedId, onChange }: VariantSelectorProps) {
+export function VariantSelector({ variants, selectedId, onChange, onOptionSelect }: VariantSelectorProps) {
     const groupMap = new Map<number, { id: number; name: string; options: Map<number, string> }>();
     variants.forEach((v) => {
         (v.options ?? []).forEach((o) => {
@@ -41,6 +43,11 @@ export function VariantSelector({ variants, selectedId, onChange }: VariantSelec
     function selectOption(groupId: number, optionId: number) {
         const next = { ...selectedOptions, [groupId]: optionId };
         setSelectedOptions(next);
+
+        // Fire immediately so the gallery can switch to the option's image
+        // even before a full variant combination is matched.
+        onOptionSelect?.(groupId, optionId);
+
         if (Object.keys(next).length === groups.length) {
             const matched = variants.find((v) => v.is_active && variantMatchesHypothesis(v, next));
             onChange(matched?.id ?? null);

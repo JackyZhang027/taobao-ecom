@@ -25,6 +25,7 @@ export type OrderLine = {
     unit_price_idr: number;
     quantity: number;
     subtotal_idr: number;
+    image_url?: string | null;
 };
 
 export type Order = {

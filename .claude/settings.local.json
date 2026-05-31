@@ -86,7 +86,9 @@
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\user\\\\Herd\\\\taobao\\\\Modules\\\\Admin\\\\app\\\\Http\\\\Controllers\" -File)",
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\user\\\\Herd\\\\taobao\\\\resources\\\\js\\\\components\\\\admin\" -Recurse)",
       "Bash(Select-Object -Property FullName)",
-      "Bash(Get-ChildItem -Path \"c:/Users/user/Herd/taobao/database/seeders\" -ErrorAction SilentlyContinue)"
+      "Bash(Get-ChildItem -Path \"c:/Users/user/Herd/taobao/database/seeders\" -ErrorAction SilentlyContinue)",
+      "Bash(grep -v \"^\\\\s*//\")",
+      "Bash(php --ini)"
     ],
     "additionalDirectories": [
       "c:\\Users\\user\\.claude\\plans"

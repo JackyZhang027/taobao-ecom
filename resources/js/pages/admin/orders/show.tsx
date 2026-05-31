@@ -489,11 +489,26 @@ export default function AdminOrderShow({ order }: OrderShowProps) {
                                     {order.lines?.map((line) => (
                                         <tr key={line.id} className="hover:bg-muted/20 transition-colors">
                                             <td className="px-5 py-4">
-                                                <p className="font-medium leading-snug">{line.product_name}</p>
-                                                {line.variant_name && (
-                                                    <p className="mt-0.5 text-xs text-muted-foreground">{line.variant_name}</p>
-                                                )}
-                                                <p className="mt-0.5 text-xs text-muted-foreground font-mono">{line.sku}</p>
+                                                <div className="flex items-center gap-3">
+                                                    {line.image_url ? (
+                                                        <img
+                                                            src={line.image_url}
+                                                            alt={line.product_name}
+                                                            className="h-12 w-12 shrink-0 rounded-md border object-cover bg-muted"
+                                                        />
+                                                    ) : (
+                                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md border bg-muted">
+                                                            <Package className="h-5 w-5 text-muted-foreground" />
+                                                        </div>
+                                                    )}
+                                                    <div>
+                                                        <p className="font-medium leading-snug">{line.product_name}</p>
+                                                        {line.variant_name && (
+                                                            <p className="mt-0.5 text-xs text-muted-foreground">{line.variant_name}</p>
+                                                        )}
+                                                        <p className="mt-0.5 text-xs text-muted-foreground font-mono">{line.sku}</p>
+                                                    </div>
+                                                </div>
                                             </td>
                                             <td className="px-4 py-4 text-right tabular-nums">{formatIdr(line.unit_price_idr)}</td>
                                             <td className="px-4 py-4 text-right">

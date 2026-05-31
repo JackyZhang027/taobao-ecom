@@ -79,6 +79,7 @@ class ProductController extends Controller
             $product = Product::with([
                 'translations',
                 'variants.options.group',
+                'variants.options.media',
                 'variants.media',
                 'categories',
                 'media',
@@ -105,6 +106,7 @@ class ProductController extends Controller
                     'value'      => $o->value,
                     'group_id'   => $o->group_id,
                     'group_name' => $o->group?->name,
+                    'image_url'  => $o->getFirstMediaUrl('image') ?: null,
                 ]),
             ]);
 

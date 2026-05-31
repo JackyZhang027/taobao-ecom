@@ -31,10 +31,10 @@ export default function ProductShow({ product, whatsapp_number }: ShowProps) {
 
     const selectedVariant = product.variants?.find((v) => v.id === selectedVariantId);
     const hasVariants = product.variants && product.variants.length > 0;
-    const displayPrice = selectedVariant?.price_idr ?? product.price_idr;
+    const displayPrice = (selectedVariant?.price_idr || null) ?? product.price_idr;
     const comparePrice = hasVariants ? (selectedVariant?.compare_price_idr ?? null) : null;
 
-    // Build displayable images: product media first, then any variant images not already present
+    // Build displayable images: product media first, then per-option images not already present
     const productImages: ProductMedia[] =
         product.media && product.media.length > 0
             ? product.media
@@ -42,36 +42,37 @@ export default function ProductShow({ product, whatsapp_number }: ShowProps) {
               ? [{ id: 0, url: product.thumbnail, thumb: product.thumbnail }]
               : [];
 
-    // Map variant id → image index for two-way sync
-    const variantImageMap = new Map<number, number>();
+    // Map option id → image index for gallery switching on option select
+    const optionImageMap = new Map<number, number>();
     const images: ProductMedia[] = [...productImages];
+    const seenOptionIds = new Set<number>();
     product.variants?.forEach((variant) => {
-        if (variant.image_url) {
-            const existingIdx = images.findIndex((img) => img.url === variant.image_url);
-            if (existingIdx >= 0) {
-                variantImageMap.set(variant.id, existingIdx);
-            } else {
-                variantImageMap.set(variant.id, images.length);
-                images.push({ id: -variant.id, url: variant.image_url, thumb: variant.image_url });
+        (variant.options ?? []).forEach((opt) => {
+            if (opt.image_url && !seenOptionIds.has(opt.id)) {
+                seenOptionIds.add(opt.id);
+                const existingIdx = images.findIndex((img) => img.url === opt.image_url);
+                if (existingIdx >= 0) {
+                    optionImageMap.set(opt.id, existingIdx);
+                } else {
+                    optionImageMap.set(opt.id, images.length);
+                    images.push({ id: -(opt.id + 10000), url: opt.image_url!, thumb: opt.image_url! });
+                }
             }
-        }
+        });
     });
 
     function handleVariantChange(variantId: number | null) {
         setSelectedVariantId(variantId);
-        if (variantId !== null && variantImageMap.has(variantId)) {
-            setActiveImageIndex(variantImageMap.get(variantId)!);
+    }
+
+    function handleOptionSelect(groupId: number, optionId: number) {
+        if (optionImageMap.has(optionId)) {
+            setActiveImageIndex(optionImageMap.get(optionId)!);
         }
     }
 
     function handleImageChange(index: number) {
         setActiveImageIndex(index);
-        for (const [variantId, imgIndex] of variantImageMap.entries()) {
-            if (imgIndex === index) {
-                setSelectedVariantId(variantId);
-                break;
-            }
-        }
     }
 
     const activeImage = images[activeImageIndex];
@@ -176,7 +177,7 @@ export default function ProductShow({ product, whatsapp_number }: ShowProps) {
                                     ))}
                                 </div>
                             )}
-                            {displayPrice !== undefined && displayPrice > 0 && (
+                            {displayPrice != null && (
                                 <div className="mt-3 flex items-baseline gap-3">
                                     <span className="text-2xl font-bold text-blue-600">
                                         {formatIdr(displayPrice)}
@@ -205,6 +206,7 @@ export default function ProductShow({ product, whatsapp_number }: ShowProps) {
                                         variants={product.variants}
                                         selectedId={selectedVariantId}
                                         onChange={handleVariantChange}
+                                        onOptionSelect={handleOptionSelect}
                                     />
                                 </div>
                             )}
