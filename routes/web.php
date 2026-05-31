@@ -36,7 +36,7 @@ Route::middleware(['auth', 'verified', 'role:customer|admin'])->group(function (
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store')->middleware('throttle:10,1');
     Route::get('/checkout/complete/{order}', [CheckoutController::class, 'complete'])->name('checkout.complete');
-    Route::get('/checkout/finish', [CheckoutController::class, 'finish'])->name('checkout.finish');
+    Route::get('/checkout/finish', [CheckoutController::class, 'finish'])->name('checkout.finish')->middleware('throttle:10,1');
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{order}/confirm-payment', [OrderController::class, 'confirmPayment'])->name('orders.confirm-payment')->middleware('throttle:5,1');

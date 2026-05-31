@@ -6,6 +6,7 @@ export type ShopSetting = {
     meta_keywords?: string;
     contact_email?: string;
     contact_phone?: string;
+    whatsapp_number?: string;
 };
 
 export type SocialLink = {

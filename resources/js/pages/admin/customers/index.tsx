@@ -27,7 +27,9 @@ type PasswordMode = 'generate' | 'manual';
 
 function generatePassword(length = 12): string {
     const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$';
-    return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    const bytes = new Uint32Array(length);
+    window.crypto.getRandomValues(bytes);
+    return Array.from(bytes, (b) => chars[b % chars.length]).join('');
 }
 
 const columns = [

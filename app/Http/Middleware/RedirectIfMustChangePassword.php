@@ -15,7 +15,6 @@ class RedirectIfMustChangePassword
         if (
             $user &&
             $user->must_change_password &&
-            $user->hasRole('customer') &&
             ! $request->routeIs('change-password.*', 'logout')
         ) {
             return redirect()->route('change-password.show');

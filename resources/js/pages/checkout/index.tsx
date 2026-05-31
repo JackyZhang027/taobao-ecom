@@ -36,7 +36,7 @@ export default function CheckoutIndex({ cart, totals, whatsapp_number }: Checkou
     const handleCityChange = (city: 'Batam' | 'Jakarta') => {
         setData((prev) => ({ ...prev, city, province: cityProvinceMap[city] }));
         // Reload totals from server for the new city
-        router.reload({ data: { city }, only: ['totals'], preserveScroll: true, preserveState: true });
+        router.reload({ data: { city }, only: ['totals'] });
     };
 
     const submit = (e: React.FormEvent) => {

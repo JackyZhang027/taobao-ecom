@@ -27,7 +27,7 @@ class PaymentService
             return $existing->snap_token;
         }
 
-        $midtransOrderId = 'ORDER-' . $order->id . '-' . time();
+        $midtransOrderId = 'ORDER-' . $order->id . '-' . \Illuminate\Support\Str::ulid();
 
         $items = $order->lines->map(fn ($line) => [
             'id' => (string) $line->id,

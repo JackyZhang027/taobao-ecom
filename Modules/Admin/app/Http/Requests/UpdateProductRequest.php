@@ -16,7 +16,7 @@ class UpdateProductRequest extends FormRequest
         $productId = $this->route('product')?->id;
 
         return [
-            'slug'                              => "required|string|unique:products,slug,{$productId}",
+            'slug'                              => "required|string|alpha_dash|max:255|unique:products,slug,{$productId}",
             'price'                             => 'required|numeric|min:0.01',
             'delivery_charge'                   => 'nullable|numeric|min:0',
             'delivery_charge_batam'             => 'nullable|numeric|min:0',

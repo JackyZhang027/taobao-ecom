@@ -125,58 +125,71 @@ class CheckoutController extends Controller
 
         $exchangeRate = $this->currency->getActiveRate();
 
-        $order = DB::transaction(function () use ($request, $cart, $totals, $exchangeRate, $city) {
-            $order = Order::create([
-                'user_id' => $request->user()->id,
-                'status' => 'pending',
-                'subtotal_idr' => $totals['subtotal_idr'],
-                'shipping_idr' => $totals['shipping_idr'],
-                'grand_total_idr' => $totals['grand_total_idr'],
-                'exchange_rate_snapshot' => $exchangeRate,
-                'recipient_name' => $request->recipient_name,
-                'recipient_phone' => $request->recipient_phone,
-                'street_address' => $request->street_address,
-                'city' => $city,
-                'province' => $request->province,
-                'postal_code' => $request->postal_code,
-                'notes' => $request->notes,
-            ]);
+        try {
+            $order = DB::transaction(function () use ($request, $cart, $totals, $exchangeRate, $city) {
+                // Pessimistic lock — serialises concurrent checkout attempts for the same cart
+                $lockedCart = \Modules\Ordering\Models\Cart::lockForUpdate()->find($cart->id);
 
-            $locale = app()->getLocale();
-            foreach ($cart->items as $item) {
-                $variant = $item->variant;
-                $product = $variant?->product ?? $item->product;
-                $translation = $product?->translations->firstWhere('locale', $locale)
-                    ?? $product?->translations->firstWhere('locale', 'en');
-                $priceRmb = $variant ? $variant->price : ($product?->price ?? 0);
-                $unitPriceIdr = $this->currency->rmbToIdr($priceRmb);
+                if (! $lockedCart || $lockedCart->items()->count() === 0) {
+                    throw new \RuntimeException('Your cart is empty or has already been processed.');
+                }
 
-                $variantName = $variant?->options?->map(fn ($o) => $o->value)->implode(' / ')
-                    ?: $variant?->sku;
+                $lockedCart->load('items.variant.options', 'items.variant.product.translations', 'items.product.translations');
 
-                OrderLine::create([
-                    'order_id' => $order->id,
-                    'product_id' => $product?->id,
-                    'product_variant_id' => $variant?->id,
-                    'product_name' => $translation?->name ?? $product?->slug,
-                    'variant_name' => $variantName,
-                    'sku' => $variant?->sku ?? $product?->slug ?? '-',
-                    'unit_price_idr' => $unitPriceIdr,
-                    'quantity' => $item->quantity,
-                    'subtotal_idr' => $unitPriceIdr * $item->quantity,
+                $order = Order::create([
+                    'user_id' => $request->user()->id,
+                    'status' => 'pending',
+                    'subtotal_idr' => $totals['subtotal_idr'],
+                    'shipping_idr' => $totals['shipping_idr'],
+                    'grand_total_idr' => $totals['grand_total_idr'],
+                    'exchange_rate_snapshot' => $exchangeRate,
+                    'recipient_name' => $request->recipient_name,
+                    'recipient_phone' => $request->recipient_phone,
+                    'street_address' => $request->street_address,
+                    'city' => $city,
+                    'province' => $request->province,
+                    'postal_code' => $request->postal_code,
+                    'notes' => $request->notes,
                 ]);
-            }
 
-            CartItem::where('cart_id', $cart->id)->delete();
+                $locale = app()->getLocale();
+                foreach ($lockedCart->items as $item) {
+                    $variant = $item->variant;
+                    $product = $variant?->product ?? $item->product;
+                    $translation = $product?->translations->firstWhere('locale', $locale)
+                        ?? $product?->translations->firstWhere('locale', 'en');
+                    $priceRmb = $variant ? $variant->price : ($product?->price ?? 0);
+                    $unitPriceIdr = $this->currency->rmbToIdr($priceRmb);
 
-            OrderStatusHistory::create([
-                'order_id'   => $order->id,
-                'status'     => 'pending',
-                'changed_by' => $request->user()->id,
-            ]);
+                    $variantName = $variant?->options?->map(fn ($o) => $o->value)->implode(' / ')
+                        ?: $variant?->sku;
 
-            return $order;
-        });
+                    OrderLine::create([
+                        'order_id' => $order->id,
+                        'product_id' => $product?->id,
+                        'product_variant_id' => $variant?->id,
+                        'product_name' => $translation?->name ?? $product?->slug,
+                        'variant_name' => $variantName,
+                        'sku' => $variant?->sku ?? $product?->slug ?? '-',
+                        'unit_price_idr' => $unitPriceIdr,
+                        'quantity' => $item->quantity,
+                        'subtotal_idr' => $unitPriceIdr * $item->quantity,
+                    ]);
+                }
+
+                CartItem::where('cart_id', $lockedCart->id)->delete();
+
+                OrderStatusHistory::create([
+                    'order_id'   => $order->id,
+                    'status'     => 'pending',
+                    'changed_by' => $request->user()->id,
+                ]);
+
+                return $order;
+            });
+        } catch (\RuntimeException $e) {
+            return back()->withErrors(['cart' => $e->getMessage()]);
+        }
 
         $order->load('lines');
         $snapToken = $this->payment->createSnapToken($order);

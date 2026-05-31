@@ -1,4 +1,8 @@
 import { Head, router } from '@inertiajs/react';
+
+const escHtml = (s: string): string =>
+    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+     .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 import { toast } from 'sonner';
 import AdminLayout from '@/layouts/admin-layout';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
@@ -38,7 +42,7 @@ const columns = [
         className: 'text-right',
         render: (data: { id: number; slug: string }) =>
             `<div class="flex justify-end gap-2">
-                <a href="/products/${data.slug}" target="_blank" rel="noopener noreferrer" class="text-muted-foreground hover:underline text-sm">Preview</a>
+                <a href="/products/${escHtml(data.slug)}" target="_blank" rel="noopener noreferrer" class="text-muted-foreground hover:underline text-sm">Preview</a>
                 <a href="/admin/products/${data.id}/edit" class="text-primary hover:underline text-sm">Edit</a>
                 <button onclick="if(confirm('Delete this product?')) window._inertiaDelete('/admin/products/${data.id}')" class="text-destructive hover:underline text-sm">Delete</button>
             </div>`,
