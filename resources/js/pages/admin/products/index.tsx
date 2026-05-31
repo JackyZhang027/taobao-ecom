@@ -36,10 +36,11 @@ const columns = [
         orderable: false,
         searchable: false,
         className: 'text-right',
-        render: (id: number) =>
+        render: (data: { id: number; slug: string }) =>
             `<div class="flex justify-end gap-2">
-                <a href="/admin/products/${id}/edit" class="text-primary hover:underline text-sm">Edit</a>
-                <button onclick="if(confirm('Delete this product?')) window._inertiaDelete('/admin/products/${id}')" class="text-destructive hover:underline text-sm">Delete</button>
+                <a href="/products/${data.slug}" target="_blank" rel="noopener noreferrer" class="text-muted-foreground hover:underline text-sm">Preview</a>
+                <a href="/admin/products/${data.id}/edit" class="text-primary hover:underline text-sm">Edit</a>
+                <button onclick="if(confirm('Delete this product?')) window._inertiaDelete('/admin/products/${data.id}')" class="text-destructive hover:underline text-sm">Delete</button>
             </div>`,
     },
 ];

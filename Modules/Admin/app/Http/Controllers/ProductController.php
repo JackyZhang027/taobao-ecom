@@ -49,8 +49,8 @@ class ProductController extends Controller
             ->addColumn('final_price_idr', fn ($p) => 'Rp '.number_format($this->currency->rmbToIdr($p->price) + ($p->delivery_charge_batam ?: $p->delivery_charge), 0, '.', ','))
             ->addColumn('status', fn ($p) => $p->is_active ? 'Active' : 'Inactive')
             ->addColumn('variants_count', fn ($p) => $p->variants()->count())
-            ->addColumn('actions', fn ($p) => $p->id)
-            ->rawColumns(['image', 'status', 'actions'])
+            ->addColumn('actions', fn ($p) => ['id' => $p->id, 'slug' => $p->slug])
+            ->rawColumns(['image', 'status'])
             ->make(true);
     }
 

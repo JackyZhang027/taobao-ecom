@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import RichTextEditor from '@/components/ui/rich-text-editor';
-import { Upload, X, ImageIcon } from 'lucide-react';
+import { Upload, X, ImageIcon, ExternalLink } from 'lucide-react';
 import VariantBuilder, { hasMissingOptionImages, type BuilderGroup, type VariantRow } from '@/components/variant-builder';
 import type { Category, Product, ProductMedia, VariantGroup } from '@/types/product';
 
@@ -211,6 +211,12 @@ export default function AdminProductEdit({ product, categories, variantGroups, p
                         <>
                             <Button type="button" variant="outline" onClick={() => history.back()}>
                                 Cancel
+                            </Button>
+                            <Button type="button" variant="outline" asChild>
+                                <a href={`/products/${product.slug}`} target="_blank" rel="noopener noreferrer">
+                                    <ExternalLink className="mr-2 h-4 w-4" />
+                                    Preview
+                                </a>
                             </Button>
                             <Button type="submit" disabled={processing}>
                                 {processing ? 'Saving...' : 'Save Changes'}
