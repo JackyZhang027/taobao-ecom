@@ -71,15 +71,15 @@ export default function AdminOrderCreate({ customers, products, exchangeRate }: 
     // Sync items and city into form data
     useEffect(() => {
         setData('items', items);
-    }, [items]);
+    }, [items, setData]);
 
     useEffect(() => {
         setData('city', city);
-    }, [city]);
+    }, [city, setData]);
 
     useEffect(() => {
         setData('manual_shipping_rmb', manualShippingRmb);
-    }, [manualShippingRmb]);
+    }, [manualShippingRmb, setData]);
 
     const addItem = () => setItems([...items, { product_id: '', variant_id: null, quantity: 1 }]);
     const removeItem = (idx: number) => setItems(items.filter((_, i) => i !== idx));

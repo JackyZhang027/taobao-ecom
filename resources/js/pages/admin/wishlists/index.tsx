@@ -2,7 +2,8 @@ import { Head, router } from '@inertiajs/react';
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
-import { AdminDataTable, type AdminDataTableRef } from '@/components/admin/data-table';
+import { AdminDataTable  } from '@/components/admin/data-table';
+import type {AdminDataTableRef} from '@/components/admin/data-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AdminLayout from '@/layouts/admin-layout';
 
