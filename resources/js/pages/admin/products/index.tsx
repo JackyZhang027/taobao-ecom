@@ -1,9 +1,9 @@
 import { Head, router } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
-import { AdminDataTable } from '@/components/admin/data-table';
+import { AdminDataTable, type AdminDataTableRef } from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AdminLayout from '@/layouts/admin-layout';
@@ -50,9 +50,14 @@ const columns = [
 ];
 
 export default function AdminProductsIndex() {
+    const tableRef = useRef<AdminDataTableRef>(null);
+
     useEffect(() => {
         (window as any)._inertiaDelete = (url: string) => router.delete(url, {
-            onSuccess: () => toast.success('Product deleted successfully'),
+            onSuccess: () => {
+                toast.success('Product deleted successfully');
+                tableRef.current?.reload();
+            },
             onError: () => toast.error('Failed to delete product'),
         });
     }, []);
@@ -76,7 +81,7 @@ export default function AdminProductsIndex() {
                     <CardTitle>All Products</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <AdminDataTable url="/admin/products/datatable" columns={columns} />
+                    <AdminDataTable ref={tableRef} url="/admin/products/datatable" columns={columns} />
                 </CardContent>
             </Card>
         </AdminLayout>

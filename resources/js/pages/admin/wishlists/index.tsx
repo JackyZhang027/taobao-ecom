@@ -1,8 +1,8 @@
 import { Head, router } from '@inertiajs/react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
-import { AdminDataTable } from '@/components/admin/data-table';
+import { AdminDataTable, type AdminDataTableRef } from '@/components/admin/data-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AdminLayout from '@/layouts/admin-layout';
 
@@ -26,11 +26,16 @@ const columns = [
 ];
 
 export default function AdminWishlistsIndex() {
+    const tableRef = useRef<AdminDataTableRef>(null);
+
     useEffect(() => {
         (window as any)._inertiaDeleteWishlist = (url: string) =>
             router.delete(url, {
                 preserveScroll: true,
-                onSuccess: () => toast.success('Wishlist entry removed'),
+                onSuccess: () => {
+                    toast.success('Wishlist entry removed');
+                    tableRef.current?.reload();
+                },
                 onError: () => toast.error('Failed to remove entry'),
             });
     }, []);
@@ -44,7 +49,7 @@ export default function AdminWishlistsIndex() {
                     <CardTitle>All Wishlists</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <AdminDataTable url="/admin/wishlists/datatable" columns={columns} />
+                    <AdminDataTable ref={tableRef} url="/admin/wishlists/datatable" columns={columns} />
                 </CardContent>
             </Card>
         </AdminLayout>

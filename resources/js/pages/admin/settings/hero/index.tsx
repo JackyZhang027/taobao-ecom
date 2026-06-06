@@ -1,18 +1,23 @@
 import { Head, router } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
-import { AdminDataTable } from '@/components/admin/data-table';
+import { AdminDataTable, type AdminDataTableRef } from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
 import AdminLayout from '@/layouts/admin-layout';
 
 export default function AdminHeroSettingsIndex() {
+    const tableRef = useRef<AdminDataTableRef>(null);
+
     useEffect(() => {
         (window as any)._inertiaDelete = (url: string) => router.delete(url, {
             preserveScroll: true,
-            onSuccess: () => toast.success('Hero slide deleted successfully'),
+            onSuccess: () => {
+                toast.success('Hero slide deleted successfully');
+                tableRef.current?.reload();
+            },
             onError: () => toast.error('Failed to delete hero slide'),
         });
     }, []);
@@ -60,6 +65,7 @@ export default function AdminHeroSettingsIndex() {
             />
 
             <AdminDataTable
+                ref={tableRef}
                 url="/admin/settings/hero/datatable"
                 columns={columns}
             />
