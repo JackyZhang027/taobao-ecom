@@ -12,11 +12,11 @@ use Modules\Admin\Models\StoreFeature;
 use Modules\Catalog\Models\Category;
 use Modules\Catalog\Models\Product;
 use Modules\Catalog\Models\Wishlist;
-use Modules\Currency\Services\CurrencyService;
+use Modules\Catalog\Services\ProductTransformer;
 
 class HomeController extends Controller
 {
-    public function __construct(private CurrencyService $currency) {}
+    public function __construct(private ProductTransformer $transformer) {}
 
     public function index(Request $request)
     {
@@ -62,13 +62,14 @@ class HomeController extends Controller
             ShopSetting::all()->pluck('value', 'key')
         );
 
+        $transformer = $this->transformer;
         $products = Cache::remember("home_featured_products_{$productV}", 3600, fn () =>
             Product::with(['translations', 'variants', 'media'])
                 ->where('is_active', true)
                 ->orderBy('sort_order')
                 ->take(8)
                 ->get()
-                ->map(fn ($p) => $this->transformProduct($p, collect([])))
+                ->map(fn ($p) => $transformer->transform($p))
                 ->values()
                 ->all()
         );
@@ -97,37 +98,5 @@ class HomeController extends Controller
             'whatsapp_number' => $shopSettings->get('whatsapp_number', ''),
             'storeFeatures'   => $storeFeatures,
         ]);
-    }
-
-    private function transformProduct(Product $product, $wishlistProductIds = null): array
-    {
-        $locale = app()->getLocale();
-        $translation = $product->translations->firstWhere('locale', $locale)
-            ?? $product->translations->firstWhere('locale', 'en');
-
-        $activeVariants = $product->variants->where('is_active', true);
-        $minVariantPrice = $activeVariants->min('price');
-        $minPriceRmb = $minVariantPrice !== null
-            ? $minVariantPrice
-            : ($product->price ?? 0);
-
-        $thumbnail = $product->thumbnail
-            ?? ($product->getFirstMediaUrl('images', 'thumb') ?: $product->getFirstMediaUrl('images') ?: null);
-
-        $deliveryBatamIdr = (float) ($product->delivery_charge_batam ?: $product->delivery_charge);
-        $deliveryJakartaIdr = (float) ($product->delivery_charge_jakarta ?: $product->delivery_charge);
-
-        return [
-            'id'                => $product->id,
-            'slug'              => $product->slug,
-            'thumbnail'         => $thumbnail,
-            'name'              => $translation?->name ?? $product->slug,
-            'description'       => $translation?->description,
-            'price_idr'         => $this->currency->rmbToIdr($minPriceRmb),
-            'price_rmb'         => $minPriceRmb,
-            'total_batam_idr'   => $deliveryBatamIdr > 0 ? $this->currency->rmbToIdr($minPriceRmb) + $deliveryBatamIdr : null,
-            'total_jakarta_idr' => $deliveryJakartaIdr > 0 ? $this->currency->rmbToIdr($minPriceRmb) + $deliveryJakartaIdr : null,
-            'is_wishlisted'     => $wishlistProductIds ? $wishlistProductIds->has($product->id) : false,
-        ];
     }
 }
