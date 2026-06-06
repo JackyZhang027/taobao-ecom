@@ -86,6 +86,10 @@ class VariantGeneratorService
                 ->delete();
 
             if (empty($optionIdsByGroup)) {
+                // No groups remain — permanently remove all variant rows.
+                // Validation has already blocked removal when any variant is referenced
+                // in an order or cart, so forceDelete is safe here.
+                $product->variants()->forceDelete();
                 return;
             }
 

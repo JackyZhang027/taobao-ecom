@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Modules\Admin\Models\HeroSlide;
 use Modules\Admin\Models\ShopSetting;
+use Modules\Admin\Models\StoreFeature;
 use Modules\Catalog\Models\Category;
 use Modules\Catalog\Models\Product;
 use Modules\Catalog\Models\Wishlist;
@@ -23,6 +24,7 @@ class HomeController extends Controller
         $catV      = Cache::get('cache_ver_categories', 0);
         $settingsV = Cache::get('cache_ver_settings', 0);
         $productV  = Cache::get('cache_ver_products', 0);
+        $featV     = Cache::get('cache_ver_features', 0);
 
         $heroSlides = Cache::remember("hero_slides_{$heroV}", 3600, fn () =>
             HeroSlide::with('media')
@@ -71,6 +73,12 @@ class HomeController extends Controller
                 ->all()
         );
 
+        $storeFeatures = Cache::remember("store_features_{$featV}", 3600, fn () =>
+            StoreFeature::orderBy('sort_order')
+                ->get(['id', 'sort_order', 'icon', 'title', 'description', 'is_active'])
+                ->all()
+        );
+
         $user = $request->user();
 
         if ($user) {
@@ -87,6 +95,7 @@ class HomeController extends Controller
             'shopSettings'    => $shopSettings,
             'products'        => $products,
             'whatsapp_number' => $shopSettings->get('whatsapp_number', ''),
+            'storeFeatures'   => $storeFeatures,
         ]);
     }
 

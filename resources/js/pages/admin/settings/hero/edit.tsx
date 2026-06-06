@@ -133,7 +133,9 @@ export default function AdminHeroSlideEdit({ heroSlide, imageUrl }: { heroSlide:
                                             id="cta_link"
                                             value={data.cta_link}
                                             onChange={(e: any) => setData('cta_link', e.target.value)}
+                                            placeholder="/shop"
                                         />
+                                        {errors.cta_link && <p className="text-sm text-red-500">{errors.cta_link}</p>}
                                     </div>
                                 </div>
 

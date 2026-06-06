@@ -4,6 +4,7 @@ namespace Modules\Ordering\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Modules\Currency\Services\CurrencyService;
@@ -100,24 +101,27 @@ class CartController extends Controller
         $cart = $this->cartService->resolveCart($request);
         $quantity = $request->input('quantity', 1);
 
-        $existing = CartItem::where('cart_id', $cart->id)
-            ->when(
-                $request->product_variant_id,
-                fn ($q) => $q->where('product_variant_id', $request->product_variant_id),
-                fn ($q) => $q->whereNull('product_variant_id')->where('product_id', $request->product_id)
-            )
-            ->first();
+        DB::transaction(function () use ($cart, $request, $quantity) {
+            $existing = CartItem::where('cart_id', $cart->id)
+                ->when(
+                    $request->product_variant_id,
+                    fn ($q) => $q->where('product_variant_id', $request->product_variant_id),
+                    fn ($q) => $q->whereNull('product_variant_id')->where('product_id', $request->product_id)
+                )
+                ->lockForUpdate()
+                ->first();
 
-        if ($existing) {
-            $existing->increment('quantity', $quantity);
-        } else {
-            CartItem::create([
-                'cart_id' => $cart->id,
-                'product_id' => $request->product_variant_id ? null : $request->product_id,
-                'product_variant_id' => $request->product_variant_id,
-                'quantity' => $quantity,
-            ]);
-        }
+            if ($existing) {
+                $existing->increment('quantity', $quantity);
+            } else {
+                CartItem::create([
+                    'cart_id'            => $cart->id,
+                    'product_id'         => $request->product_variant_id ? null : $request->product_id,
+                    'product_variant_id' => $request->product_variant_id,
+                    'quantity'           => $quantity,
+                ]);
+            }
+        });
 
         return back();
     }

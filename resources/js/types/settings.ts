@@ -29,3 +29,12 @@ export type HeroSlide = {
     is_active: boolean;
     image_url?: string;
 };
+
+export type StoreFeature = {
+    id: number;
+    sort_order: number;
+    icon: string;
+    title: string;
+    description: string;
+    is_active: boolean;
+};

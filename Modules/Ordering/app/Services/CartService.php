@@ -78,12 +78,20 @@ class CartService
             fn ($item) => $item->variant?->product_id ?? ('p_' . $item->product_id)
         );
         $canDeliverBatam = $uniqueItems->every(function ($item) {
-            $product = $item->variant?->product ?? $item->product;
-            return $product && ($product->delivery_charge_batam ?: $product->delivery_charge) > 0;
+            $variant = $item->variant;
+            $product = $variant?->product ?? $item->product;
+            if ($variant && ($variant->delivery_charge_batam ?: $variant->delivery_charge_jakarta)) {
+                return true;
+            }
+            return $product && $product->delivery_charge_batam > 0;
         });
         $canDeliverJakarta = $uniqueItems->every(function ($item) {
-            $product = $item->variant?->product ?? $item->product;
-            return $product && ($product->delivery_charge_jakarta ?: $product->delivery_charge) > 0;
+            $variant = $item->variant;
+            $product = $variant?->product ?? $item->product;
+            if ($variant && ($variant->delivery_charge_jakarta ?: $variant->delivery_charge_batam)) {
+                return true;
+            }
+            return $product && $product->delivery_charge_jakarta > 0;
         });
 
         return [

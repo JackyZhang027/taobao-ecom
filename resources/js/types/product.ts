@@ -43,6 +43,8 @@ export type ProductVariant = {
     price_idr?: number;
     compare_price: number | null;
     compare_price_idr?: number | null;
+    delivery_charge_batam?: number;
+    delivery_charge_jakarta?: number;
     is_active: boolean;
     sort_order: number;
     image_url?: string | null;
@@ -74,12 +76,9 @@ export type Product = {
     slug: string;
     thumbnail: string | null;
     price?: number;
-    delivery_charge?: number;
     delivery_charge_batam?: number;
     delivery_charge_jakarta?: number;
     delivery_charge_idr?: number;
-    delivery_charge_batam_idr?: number;
-    delivery_charge_jakarta_idr?: number;
     is_active: boolean;
     sort_order: number;
     name: string;

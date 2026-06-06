@@ -19,7 +19,6 @@ class Product extends Model implements HasMedia
         'slug',
         'thumbnail',
         'price',
-        'delivery_charge',
         'delivery_charge_batam',
         'delivery_charge_jakarta',
         'is_active',
@@ -28,7 +27,6 @@ class Product extends Model implements HasMedia
 
     protected $casts = [
         'price' => 'float',
-        'delivery_charge' => 'float',
         'delivery_charge_batam' => 'float',
         'delivery_charge_jakarta' => 'float',
         'is_active' => 'boolean',

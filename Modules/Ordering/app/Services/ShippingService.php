@@ -12,19 +12,31 @@ class ShippingService
     {
         return $cart->items
             ->loadMissing('variant.product', 'product')
-            ->unique(fn ($item) => $item->variant?->product_id ?? ('p_' . $item->product_id))
             ->sum(function ($item) use ($city) {
-                $product = $item->variant?->product ?? $item->product;
+                $variant = $item->variant;
+                $product = $variant?->product ?? $item->product;
                 if (! $product) {
                     Log::warning('ShippingService: cart item has no resolvable product', ['cart_item_id' => $item->id]);
 
                     return 0;
                 }
 
-                return match (strtolower($city)) {
-                    'jakarta' => $product->delivery_charge_jakarta ?: $product->delivery_charge,
-                    default   => $product->delivery_charge_batam ?: $product->delivery_charge,
-                };
+                if ($variant) {
+                    $charge = match (strtolower($city)) {
+                        'jakarta' => $variant->delivery_charge_jakarta
+                                     ?: $variant->delivery_charge_batam
+                                     ?: $product->delivery_charge_jakarta,
+                        default   => $variant->delivery_charge_batam
+                                     ?: $product->delivery_charge_batam,
+                    };
+                } else {
+                    $charge = match (strtolower($city)) {
+                        'jakarta' => $product->delivery_charge_jakarta,
+                        default   => $product->delivery_charge_batam,
+                    };
+                }
+
+                return $charge * $item->quantity;
             });
     }
 }

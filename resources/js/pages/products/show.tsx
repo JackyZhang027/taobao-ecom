@@ -21,18 +21,47 @@ export default function ProductShow({ product, whatsapp_number }: ShowProps) {
     const { addItem, addProduct } = useCart();
 
     const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
+    const [selectedOptions, setSelectedOptions] = useState<Record<number, number>>({});
     const [qty, setQty] = useState(1);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
     const [lightboxOpen, setLightboxOpen] = useState(false);
 
-    const noDeliveryAvailable =
-        (product.delivery_charge_batam_idr ?? 0) === 0 &&
-        (product.delivery_charge_jakarta_idr ?? 0) === 0;
-
     const selectedVariant = product.variants?.find((v) => v.id === selectedVariantId);
-    const hasVariants = product.variants && product.variants.length > 0;
-    const displayPrice = (selectedVariant?.price_idr || null) ?? product.price_idr;
-    const comparePrice = hasVariants ? (selectedVariant?.compare_price_idr ?? null) : null;
+    const hasVariants = (product.variants?.length ?? 0) > 0;
+
+    // Active variants matching the current (possibly partial) option selection
+    const activeVariants = product.variants?.filter((v) => v.is_active) ?? [];
+    const matchingVariants =
+        Object.keys(selectedOptions).length > 0
+            ? activeVariants.filter((v) =>
+                  Object.entries(selectedOptions).every(([gId, oId]) =>
+                      (v.options ?? []).some((o) => o.group_id === Number(gId) && o.id === oId),
+                  ),
+              )
+            : activeVariants;
+
+    const lowestPriceVariant =
+        matchingVariants.length > 0
+            ? matchingVariants.reduce((min, v) => ((v.price_idr ?? 0) < (min.price_idr ?? 0) ? v : min))
+            : null;
+
+    // Exact match when all groups selected, otherwise lowest of matching set
+    const displayPrice = hasVariants
+        ? (selectedVariant?.price_idr ?? lowestPriceVariant?.price_idr ?? null)
+        : (product.price_idr ?? null);
+
+    const comparePrice = selectedVariant?.compare_price_idr ?? null;
+
+    const activeSourceVariant = selectedVariant ?? lowestPriceVariant;
+    const activeBatamCharge = hasVariants
+        ? (activeSourceVariant?.delivery_charge_batam ?? 0)
+        : (product.delivery_charge_batam ?? 0);
+
+    const activeJakartaCharge = hasVariants
+        ? (activeSourceVariant?.delivery_charge_jakarta ?? 0)
+        : (product.delivery_charge_jakarta ?? 0);
+
+    const noDeliveryAvailable = activeBatamCharge === 0 && activeJakartaCharge === 0;
 
     // Build displayable images: product media first, then per-option images not already present
     const productImages: ProductMedia[] =
@@ -65,7 +94,7 @@ export default function ProductShow({ product, whatsapp_number }: ShowProps) {
         setSelectedVariantId(variantId);
     }
 
-    function handleOptionSelect(groupId: number, optionId: number) {
+    function handleOptionSelect(_groupId: number, optionId: number) {
         if (optionImageMap.has(optionId)) {
             setActiveImageIndex(optionImageMap.get(optionId)!);
         }
@@ -87,10 +116,7 @@ export default function ProductShow({ product, whatsapp_number }: ShowProps) {
         setActiveImageIndex((i) => Math.min(images.length - 1, i + 1));
     }
 
-    const hasShipping =
-        (product.delivery_charge_batam_idr ?? 0) > 0 ||
-        (product.delivery_charge_jakarta_idr ?? 0) > 0 ||
-        !!whatsapp_number;
+    const hasShipping = activeBatamCharge > 0 || activeJakartaCharge > 0 || !!whatsapp_number;
 
     return (
         <CustomerLayout fullWidth>
@@ -207,6 +233,7 @@ export default function ProductShow({ product, whatsapp_number }: ShowProps) {
                                         selectedId={selectedVariantId}
                                         onChange={handleVariantChange}
                                         onOptionSelect={handleOptionSelect}
+                                        onSelectionChange={setSelectedOptions}
                                     />
                                 </div>
                             )}
@@ -226,30 +253,30 @@ export default function ProductShow({ product, whatsapp_number }: ShowProps) {
                                         </div>
 
                                         {/* Batam */}
-                                        {(product.delivery_charge_batam_idr ?? 0) > 0 && (
+                                        {activeBatamCharge > 0 && (
                                             <div className="grid grid-cols-3 px-3 py-2 border-t border-slate-100">
                                                 <span className="text-slate-700 font-medium">Batam</span>
                                                 <span className="text-right text-slate-500">
-                                                    {formatIdr(product.delivery_charge_batam_idr!)}
+                                                    {formatIdr(activeBatamCharge)}
                                                 </span>
                                                 <span className="text-right font-semibold text-slate-900">
                                                     {displayPrice
-                                                        ? formatIdr(displayPrice + product.delivery_charge_batam_idr!)
+                                                        ? formatIdr(displayPrice + activeBatamCharge)
                                                         : '-'}
                                                 </span>
                                             </div>
                                         )}
 
                                         {/* Jakarta */}
-                                        {(product.delivery_charge_jakarta_idr ?? 0) > 0 && (
+                                        {activeJakartaCharge > 0 && (
                                             <div className="grid grid-cols-3 px-3 py-2 border-t border-slate-100">
                                                 <span className="text-slate-700 font-medium">Jakarta</span>
                                                 <span className="text-right text-slate-500">
-                                                    {formatIdr(product.delivery_charge_jakarta_idr!)}
+                                                    {formatIdr(activeJakartaCharge)}
                                                 </span>
                                                 <span className="text-right font-semibold text-slate-900">
                                                     {displayPrice
-                                                        ? formatIdr(displayPrice + product.delivery_charge_jakarta_idr!)
+                                                        ? formatIdr(displayPrice + activeJakartaCharge)
                                                         : '-'}
                                                 </span>
                                             </div>

@@ -9,15 +9,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            $table->decimal('delivery_charge_batam', 8, 2)->default(0)->after('delivery_charge')->comment('In IDR');
-            $table->decimal('delivery_charge_jakarta', 8, 2)->default(0)->after('delivery_charge_batam')->comment('In IDR');
+            $table->dropColumn('delivery_charge');
         });
     }
 
     public function down(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            $table->dropColumn(['delivery_charge_batam', 'delivery_charge_jakarta']);
+            $table->decimal('delivery_charge', 8, 2)->default(0)->after('price')->comment('In IDR');
         });
     }
 };

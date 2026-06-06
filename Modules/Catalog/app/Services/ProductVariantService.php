@@ -34,13 +34,19 @@ class ProductVariantService
             }
 
             $variant->update([
-                'price'         => isset($data['price']) ? (float) $data['price'] : $variant->price,
-                'compare_price' => isset($data['compare_price']) && $data['compare_price'] !== ''
+                'price'                   => isset($data['price']) ? (float) $data['price'] : $variant->price,
+                'compare_price'           => isset($data['compare_price']) && $data['compare_price'] !== ''
                     ? (float) $data['compare_price']
                     : null,
-                'stock'         => isset($data['stock']) ? (int) $data['stock'] : $variant->stock,
-                'sku'           => $data['sku'] ?? $variant->sku,
-                'is_active'     => isset($data['is_active'])
+                'delivery_charge_batam'   => isset($data['delivery_charge_batam'])
+                    ? (float) $data['delivery_charge_batam']
+                    : $variant->delivery_charge_batam,
+                'delivery_charge_jakarta' => isset($data['delivery_charge_jakarta'])
+                    ? (float) $data['delivery_charge_jakarta']
+                    : $variant->delivery_charge_jakarta,
+                'stock'                   => isset($data['stock']) ? (int) $data['stock'] : $variant->stock,
+                'sku'                     => $data['sku'] ?? $variant->sku,
+                'is_active'               => isset($data['is_active'])
                     ? filter_var($data['is_active'], FILTER_VALIDATE_BOOLEAN)
                     : $variant->is_active,
             ]);

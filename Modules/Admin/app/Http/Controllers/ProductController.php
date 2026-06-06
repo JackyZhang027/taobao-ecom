@@ -32,7 +32,7 @@ class ProductController extends Controller
 
     public function datatable(): JsonResponse
     {
-        $query = Product::with(['translations', 'media'])->select('products.*');
+        $query = Product::with(['translations', 'media', 'variants'])->select('products.*');
 
         return DataTables::of($query)
             ->addColumn('image', function ($p) {
@@ -44,13 +44,33 @@ class ProductController extends Controller
                     : '<span class="text-xs text-muted-foreground">—</span>';
             })
             ->addColumn('name', fn ($p) => $p->translations->firstWhere('locale', 'en')?->name ?? $p->slug)
-            ->addColumn('price_display', fn ($p) => '¥'.number_format($p->price, 2))
-            ->addColumn('delivery_charge_idr', fn ($p) => 'Rp '.number_format($p->delivery_charge_batam ?: $p->delivery_charge, 0, '.', ','))
-            ->addColumn('final_price_idr', fn ($p) => 'Rp '.number_format($this->currency->rmbToIdr($p->price) + ($p->delivery_charge_batam ?: $p->delivery_charge), 0, '.', ','))
+            ->addColumn('price_display', function ($p) {
+                $minVariantPrice = $p->variants->where('is_active', true)->min('price');
+                if ($minVariantPrice !== null) {
+                    return '¥'.number_format($minVariantPrice, 2).' <span class="text-xs text-muted-foreground">(variant)</span>';
+                }
+                return '¥'.number_format($p->price, 2);
+            })
+            ->addColumn('delivery_charge_idr', function ($p) {
+                $minVariantPrice = $p->variants->where('is_active', true)->min('price');
+                if ($minVariantPrice !== null) {
+                    $minBatam = $p->variants->where('is_active', true)->min('delivery_charge_batam');
+                    return 'Rp '.number_format($minBatam ?? 0, 0, '.', ',').' <span class="text-xs text-muted-foreground">(variant)</span>';
+                }
+                return 'Rp '.number_format($p->delivery_charge_batam ?: $p->delivery_charge, 0, '.', ',');
+            })
+            ->addColumn('final_price_idr', function ($p) {
+                $minVariantPrice = $p->variants->where('is_active', true)->min('price');
+                if ($minVariantPrice !== null) {
+                    $minBatam = $p->variants->where('is_active', true)->min('delivery_charge_batam') ?? 0;
+                    return 'Rp '.number_format($this->currency->rmbToIdr($minVariantPrice) + $minBatam, 0, '.', ',').' <span class="text-xs text-muted-foreground">(variant)</span>';
+                }
+                return 'Rp '.number_format($this->currency->rmbToIdr($p->price) + ($p->delivery_charge_batam ?: $p->delivery_charge), 0, '.', ',');
+            })
             ->addColumn('status', fn ($p) => $p->is_active ? 'Active' : 'Inactive')
-            ->addColumn('variants_count', fn ($p) => $p->variants()->count())
+            ->addColumn('variants_count', fn ($p) => $p->variants->count())
             ->addColumn('actions', fn ($p) => ['id' => $p->id, 'slug' => $p->slug])
-            ->rawColumns(['image', 'status'])
+            ->rawColumns(['image', 'status', 'price_display', 'delivery_charge_idr', 'final_price_idr'])
             ->make(true);
     }
 
@@ -70,7 +90,7 @@ class ProductController extends Controller
 
         $product = DB::transaction(function () use ($request, $translations) {
             $product = Product::create(array_merge(
-                $request->only(['slug', 'thumbnail', 'price', 'delivery_charge', 'is_active', 'sort_order']),
+                $request->only(['slug', 'thumbnail', 'price', 'is_active', 'sort_order']),
                 [
                     'delivery_charge_batam'   => $request->input('delivery_charge_batam') ?? 0,
                     'delivery_charge_jakarta' => $request->input('delivery_charge_jakarta') ?? 0,
@@ -182,7 +202,7 @@ class ProductController extends Controller
 
         DB::transaction(function () use ($request, $product, $translations) {
             $product->update(array_merge(
-                $request->only(['slug', 'thumbnail', 'price', 'delivery_charge', 'is_active', 'sort_order']),
+                $request->only(['slug', 'thumbnail', 'price', 'is_active', 'sort_order']),
                 [
                     'delivery_charge_batam'   => $request->input('delivery_charge_batam') ?? 0,
                     'delivery_charge_jakarta' => $request->input('delivery_charge_jakarta') ?? 0,
@@ -212,13 +232,14 @@ class ProductController extends Controller
                 }
             }
 
-            // Sync variant groups/combinations
-            if ($request->filled('variant_groups')) {
-                $this->variantGenerator->sync($product, $request->input('variant_groups'));
+            // Sync variant groups/combinations (empty array removes all groups/variants)
+            $variantGroups = $request->input('variant_groups', []);
+            $this->variantGenerator->sync($product, $variantGroups);
 
+            if (! empty($variantGroups)) {
                 $this->variantService->syncOptionImages(
                     $product,
-                    $request->input('variant_groups', []),
+                    $variantGroups,
                     $request->file('group_option_images', [])
                 );
             }

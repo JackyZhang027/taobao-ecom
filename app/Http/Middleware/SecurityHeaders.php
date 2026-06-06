@@ -16,14 +16,17 @@ class SecurityHeaders
         $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+        $isDev = config('app.env') !== 'production';
+        $viteOrigins = $isDev ? ' http://localhost:5173 http://127.0.0.1:5173 ws://localhost:5173 ws://127.0.0.1:5173' : '';
+
         $response->headers->set(
             'Content-Security-Policy-Report-Only',
             "default-src 'self'; " .
-            "script-src 'self' 'unsafe-inline' https://app.midtrans.com https://app.sandbox.midtrans.com; " .
-            "style-src 'self' 'unsafe-inline'; " .
+            "script-src 'self' 'unsafe-inline' https://app.midtrans.com https://app.sandbox.midtrans.com{$viteOrigins}; " .
+            "style-src 'self' 'unsafe-inline' https://fonts.bunny.net; " .
             "img-src 'self' data: blob: https:; " .
-            "connect-src 'self'; " .
-            "font-src 'self'; " .
+            "connect-src 'self' https://fonts.bunny.net{$viteOrigins}; " .
+            "font-src 'self' https://fonts.bunny.net; " .
             "frame-src https://app.midtrans.com https://app.sandbox.midtrans.com;"
         );
         $response->headers->remove('X-Powered-By');

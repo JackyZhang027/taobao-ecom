@@ -7,9 +7,11 @@ interface VariantSelectorProps {
     onChange: (id: number | null) => void;
     /** Fired immediately when any option button is clicked, before a full variant match. */
     onOptionSelect?: (groupId: number, optionId: number) => void;
+    /** Fired on every selection change with the current partial/full selection map. */
+    onSelectionChange?: (selectedOptions: Record<number, number>) => void;
 }
 
-export function VariantSelector({ variants, selectedId, onChange, onOptionSelect }: VariantSelectorProps) {
+export function VariantSelector({ variants, selectedId, onChange, onOptionSelect, onSelectionChange }: VariantSelectorProps) {
     const groupMap = new Map<number, { id: number; name: string; options: Map<number, string> }>();
     variants.forEach((v) => {
         (v.options ?? []).forEach((o) => {
@@ -47,6 +49,7 @@ export function VariantSelector({ variants, selectedId, onChange, onOptionSelect
         // Fire immediately so the gallery can switch to the option's image
         // even before a full variant combination is matched.
         onOptionSelect?.(groupId, optionId);
+        onSelectionChange?.(next);
 
         if (Object.keys(next).length === groups.length) {
             const matched = variants.find((v) => v.is_active && variantMatchesHypothesis(v, next));

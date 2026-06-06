@@ -27,6 +27,8 @@ export interface VariantRow {
     variant_id?: number;
     option_labels: string[];
     price: string;
+    delivery_charge_batam: string;
+    delivery_charge_jakarta: string;
     sku: string;
     is_active: boolean;
 }
@@ -36,6 +38,8 @@ interface VariantBuilderProps {
     initialVariants: ProductVariant[];
     productSlug: string;
     onChange: (groups: BuilderGroup[], rows: VariantRow[]) => void;
+    errors?: Record<string, string>;
+    onClearError?: (key: string) => void;
 }
 
 let keyCounter = 0;
@@ -81,6 +85,8 @@ export default function VariantBuilder({
     initialVariants,
     productSlug,
     onChange,
+    errors = {},
+    onClearError,
 }: VariantBuilderProps) {
     const [groups, setGroups] = useState<BuilderGroup[]>(() =>
         initialGroups.map((g) => ({
@@ -101,6 +107,8 @@ export default function VariantBuilder({
 
     const [variantRows, setVariantRows] = useState<VariantRow[]>([]);
     const [bulkPrice, setBulkPrice] = useState('');
+    const [bulkDeliveryBatam, setBulkDeliveryBatam] = useState('');
+    const [bulkDeliveryJakarta, setBulkDeliveryJakarta] = useState('');
 
     const initialVariantMapRef = useRef<Map<string, ProductVariant>>(
         new Map(
@@ -167,6 +175,8 @@ export default function VariantBuilder({
                         variant_id: dbVariant.id,
                         option_labels: optionLabels,
                         price: String(dbVariant.price ?? 0),
+                        delivery_charge_batam: String(dbVariant.delivery_charge_batam ?? 0),
+                        delivery_charge_jakarta: String(dbVariant.delivery_charge_jakarta ?? 0),
                         sku: dbVariant.sku ?? autoSku(productSlug, optionLabels),
                         is_active: dbVariant.is_active ?? true,
                     };
@@ -177,6 +187,8 @@ export default function VariantBuilder({
                     variant_id: undefined,
                     option_labels: optionLabels,
                     price: '0',
+                    delivery_charge_batam: '0',
+                    delivery_charge_jakarta: '0',
                     sku: autoSku(productSlug, optionLabels),
                     is_active: true,
                 };
@@ -285,8 +297,29 @@ export default function VariantBuilder({
 
     const applyBulkPrice = () => {
         if (bulkPrice === '') return;
-        setVariantRows((prev) => prev.map((r) => ({ ...r, price: bulkPrice })));
+        setVariantRows((prev) => {
+            if (parseFloat(bulkPrice) > 0) prev.forEach((_, i) => onClearError?.(`variant_overrides.${i}.price`));
+            return prev.map((r) => ({ ...r, price: bulkPrice }));
+        });
         setBulkPrice('');
+    };
+
+    const applyBulkDeliveryBatam = () => {
+        if (bulkDeliveryBatam === '') return;
+        setVariantRows((prev) => {
+            if (parseFloat(bulkDeliveryBatam) > 0) prev.forEach((_, i) => onClearError?.(`variant_overrides.${i}.delivery_charge_batam`));
+            return prev.map((r) => ({ ...r, delivery_charge_batam: bulkDeliveryBatam }));
+        });
+        setBulkDeliveryBatam('');
+    };
+
+    const applyBulkDeliveryJakarta = () => {
+        if (bulkDeliveryJakarta === '') return;
+        setVariantRows((prev) => {
+            if (parseFloat(bulkDeliveryJakarta) > 0) prev.forEach((_, i) => onClearError?.(`variant_overrides.${i}.delivery_charge_batam`));
+            return prev.map((r) => ({ ...r, delivery_charge_jakarta: bulkDeliveryJakarta }));
+        });
+        setBulkDeliveryJakarta('');
     };
 
     // ── Render ────────────────────────────────────────────────────────
@@ -422,6 +455,46 @@ export default function VariantBuilder({
                                     Apply
                                 </Button>
                             </div>
+                            <div className="flex items-center gap-1">
+                                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                    Batam delivery (Rp):
+                                </span>
+                                <NumberInput
+                                    value={bulkDeliveryBatam}
+                                    onChange={setBulkDeliveryBatam}
+                                    className="h-7 w-28 text-xs"
+                                    placeholder="0"
+                                />
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 text-xs px-2"
+                                    onClick={applyBulkDeliveryBatam}
+                                >
+                                    Apply
+                                </Button>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                    Jakarta delivery (Rp):
+                                </span>
+                                <NumberInput
+                                    value={bulkDeliveryJakarta}
+                                    onChange={setBulkDeliveryJakarta}
+                                    className="h-7 w-28 text-xs"
+                                    placeholder="0"
+                                />
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 text-xs px-2"
+                                    onClick={applyBulkDeliveryJakarta}
+                                >
+                                    Apply
+                                </Button>
+                            </div>
                         </div>
                     </div>
 
@@ -441,7 +514,13 @@ export default function VariantBuilder({
                                         SKU
                                     </th>
                                     <th className="px-2 py-2 text-left font-medium text-muted-foreground">
-                                        Price (¥)
+                                        Price (¥) <span className="text-destructive">*</span>
+                                    </th>
+                                    <th className="px-2 py-2 text-left font-medium text-muted-foreground">
+                                        Batam (Rp)
+                                    </th>
+                                    <th className="px-2 py-2 text-left font-medium text-muted-foreground">
+                                        Jakarta (Rp)
                                     </th>
                                     <th className="px-2 py-2 text-left font-medium text-muted-foreground">
                                         Active
@@ -449,8 +528,12 @@ export default function VariantBuilder({
                                 </tr>
                             </thead>
                             <tbody>
-                                {variantRows.map((row) => (
-                                    <tr key={row.combo_key} className="border-b last:border-0">
+                                {variantRows.map((row, ri) => {
+                                    const ePrice   = errors[`variant_overrides.${ri}.price`];
+                                    const eBatam   = errors[`variant_overrides.${ri}.delivery_charge_batam`];
+                                    const eJakarta = errors[`variant_overrides.${ri}.delivery_charge_jakarta`];
+                                    return (
+                                    <tr key={row.combo_key} className="border-b last:border-0 align-top">
                                         {row.option_labels.map((label, i) => (
                                             <td
                                                 key={i}
@@ -471,12 +554,38 @@ export default function VariantBuilder({
                                         <td className="px-2 py-1.5">
                                             <NumberInput
                                                 value={row.price}
-                                                onChange={(val) =>
-                                                    updateRow(row.combo_key, { price: val })
-                                                }
-                                                className="h-7 w-24 text-xs"
+                                                onChange={(val) => {
+                                                    updateRow(row.combo_key, { price: val });
+                                                    if (parseFloat(val) > 0) onClearError?.(`variant_overrides.${ri}.price`);
+                                                }}
+                                                className={`h-7 w-24 text-xs${ePrice ? ' border-destructive' : ''}`}
                                                 placeholder="0.00"
                                             />
+                                            {ePrice && <p className="text-[10px] text-destructive mt-0.5">{ePrice}</p>}
+                                        </td>
+                                        <td className="px-2 py-1.5">
+                                            <NumberInput
+                                                value={row.delivery_charge_batam}
+                                                onChange={(val) => {
+                                                    updateRow(row.combo_key, { delivery_charge_batam: val });
+                                                    if (parseFloat(val) > 0) onClearError?.(`variant_overrides.${ri}.delivery_charge_batam`);
+                                                }}
+                                                className={`h-7 w-28 text-xs${eBatam ? ' border-destructive' : ''}`}
+                                                placeholder="0"
+                                            />
+                                            {eBatam && <p className="text-[10px] text-destructive mt-0.5">{eBatam}</p>}
+                                        </td>
+                                        <td className="px-2 py-1.5">
+                                            <NumberInput
+                                                value={row.delivery_charge_jakarta}
+                                                onChange={(val) => {
+                                                    updateRow(row.combo_key, { delivery_charge_jakarta: val });
+                                                    if (parseFloat(val) > 0) onClearError?.(`variant_overrides.${ri}.delivery_charge_batam`);
+                                                }}
+                                                className={`h-7 w-28 text-xs${eJakarta ? ' border-destructive' : ''}`}
+                                                placeholder="0"
+                                            />
+                                            {eJakarta && <p className="text-[10px] text-destructive mt-0.5">{eJakarta}</p>}
                                         </td>
                                         <td className="px-2 py-1.5">
                                             <input
@@ -489,7 +598,8 @@ export default function VariantBuilder({
                                             />
                                         </td>
                                     </tr>
-                                ))}
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>

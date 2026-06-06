@@ -30,7 +30,6 @@ interface ProductOption {
     price_idr: number;
     delivery_charge_batam: number;
     delivery_charge_jakarta: number;
-    delivery_charge: number;
     variants: ProductVariantOption[];
 }
 
@@ -115,8 +114,8 @@ export default function AdminOrderCreate({ customers, products, exchangeRate }: 
               .filter((p) => items.some((i) => i.product_id === p.id))
               .reduce((sum, p) => {
                   const charge = city.toLowerCase() === 'jakarta'
-                      ? (p.delivery_charge_jakarta || p.delivery_charge)
-                      : (p.delivery_charge_batam || p.delivery_charge);
+                      ? p.delivery_charge_jakarta
+                      : p.delivery_charge_batam;
                   return sum + charge;
               }, 0)
         : manualShippingRmb;

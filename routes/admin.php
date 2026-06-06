@@ -9,6 +9,7 @@ use Modules\Admin\Http\Controllers\CategoryController;
 use Modules\Admin\Http\Controllers\ShopSettingController;
 use Modules\Admin\Http\Controllers\HeroSlideController;
 use Modules\Admin\Http\Controllers\SocialLinkController;
+use Modules\Admin\Http\Controllers\StoreFeatureController;
 use Modules\Admin\Http\Controllers\WishlistController as AdminWishlistController;
 use Modules\Accounting\Http\Controllers\AccountController;
 use Modules\Accounting\Http\Controllers\JournalEntryController;
@@ -115,6 +116,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'permiss
         'update'  => 'permission:social_links.edit',
         'destroy' => 'permission:social_links.delete',
     ]);
+
+    // --- Store Features ---
+    Route::get('settings/store-features', [StoreFeatureController::class, 'index'])->name('settings.store-features.index')->middleware('permission:store_features.view');
+    Route::get('settings/store-features/{storeFeature}/edit', [StoreFeatureController::class, 'edit'])->name('settings.store-features.edit')->middleware('permission:store_features.view');
+    Route::put('settings/store-features/{storeFeature}', [StoreFeatureController::class, 'update'])->name('settings.store-features.update')->middleware('permission:store_features.edit');
 
     // --- Accounting ---
     // Chart of Accounts

@@ -45,6 +45,8 @@ export default function AdminProductEdit({ product, categories, variantGroups, p
 
     const [processing, setProcessing] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const clearError = (...keys: string[]) =>
+        setErrors((prev) => { const e = { ...prev }; keys.forEach((k) => delete e[k]); return e; });
     const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
     const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
     const [existingMedia, setExistingMedia] = useState<ProductMedia[]>(productMedia ?? []);
@@ -54,11 +56,11 @@ export default function AdminProductEdit({ product, categories, variantGroups, p
     // VariantBuilder state
     const [builderGroups, setBuilderGroups] = useState<BuilderGroup[]>([]);
     const [variantRows, setVariantRows] = useState<VariantRow[]>([]);
+    const hasVariants = builderGroups.length > 0;
 
     const [formData, setFormData] = useState({
         slug: product.slug,
         price: String(product.price ?? 0),
-        delivery_charge: String(product.delivery_charge ?? 0),
         delivery_charge_batam: String((product as any).delivery_charge_batam ?? 0),
         delivery_charge_jakarta: String((product as any).delivery_charge_jakarta ?? 0),
         is_active: product.is_active,
@@ -150,10 +152,11 @@ export default function AdminProductEdit({ product, categories, variantGroups, p
         const fd = new FormData();
         fd.append('_method', 'PUT');
         fd.append('slug', formData.slug);
-        fd.append('price', formData.price);
-        fd.append('delivery_charge', formData.delivery_charge);
-        fd.append('delivery_charge_batam', formData.delivery_charge_batam);
-        fd.append('delivery_charge_jakarta', formData.delivery_charge_jakarta);
+        if (!hasVariants) {
+            fd.append('price', formData.price);
+            fd.append('delivery_charge_batam', formData.delivery_charge_batam);
+            fd.append('delivery_charge_jakarta', formData.delivery_charge_jakarta);
+        }
         fd.append('is_active', formData.is_active ? '1' : '0');
         fd.append('sort_order', formData.sort_order);
 
@@ -174,16 +177,22 @@ export default function AdminProductEdit({ product, categories, variantGroups, p
             fd.append(`variant_groups[${gi}][has_images]`, group.has_images ? '1' : '0');
             group.options.forEach((opt, oi) => {
                 fd.append(`variant_groups[${gi}][options][${oi}]`, opt.value);
-                if (group.has_images && opt.imageFile) {
-                    fd.append(`group_option_images[${gi}][${oi}]`, opt.imageFile);
+                if (group.has_images) {
+                    if (opt.imageFile) {
+                        fd.append(`group_option_images[${gi}][${oi}]`, opt.imageFile);
+                    } else if (opt.existingImageUrl) {
+                        fd.append(`existing_option_images[${gi}][${oi}]`, '1');
+                    }
                 }
             });
         });
 
-        // Variant overrides (per-row price/sku/active — no per-row images)
+        // Variant overrides (per-row price/delivery/sku/active)
         variantRows.forEach((row, ri) => {
             if (row.variant_id) fd.append(`variant_overrides[${ri}][id]`, String(row.variant_id));
             fd.append(`variant_overrides[${ri}][price]`, row.price);
+            fd.append(`variant_overrides[${ri}][delivery_charge_batam]`, row.delivery_charge_batam);
+            fd.append(`variant_overrides[${ri}][delivery_charge_jakarta]`, row.delivery_charge_jakarta);
             fd.append(`variant_overrides[${ri}][sku]`, row.sku);
             fd.append(`variant_overrides[${ri}][is_active]`, row.is_active ? '1' : '0');
         });
@@ -329,6 +338,8 @@ export default function AdminProductEdit({ product, categories, variantGroups, p
                                         setBuilderGroups(groups);
                                         setVariantRows(rows);
                                     }}
+                                    errors={errors}
+                                    onClearError={(key) => clearError(key)}
                                 />
                                 {errors.variant_groups && (
                                     <p className="text-sm text-destructive mt-2">{errors.variant_groups}</p>
@@ -350,76 +361,84 @@ export default function AdminProductEdit({ product, categories, variantGroups, p
                                     <Input
                                         id="slug"
                                         value={formData.slug}
-                                        onChange={(e) => setFormData((prev) => ({ ...prev, slug: e.target.value }))}
+                                        onChange={(e) => { setFormData((prev) => ({ ...prev, slug: e.target.value })); if (e.target.value.trim()) clearError('slug'); }}
                                         required
                                     />
                                     {errors.slug && <p className="text-sm text-destructive">{errors.slug}</p>}
                                 </div>
-                                <div className="space-y-1">
-                                    <Label htmlFor="price">Base Price (RMB) <span className="text-destructive">*</span></Label>
-                                    <NumberInput
-                                        id="price"
-                                        value={formData.price}
-                                        onChange={(v) => setFormData((prev) => ({ ...prev, price: v }))}
-                                        required
-                                    />
-                                    <p className="text-xs text-muted-foreground">Used when no variants are configured</p>
-                                    {errors.price && <p className="text-sm text-destructive">{errors.price}</p>}
-                                </div>
-                                <div className="space-y-1">
-                                    <Label htmlFor="delivery_charge_batam">Delivery Charge — Batam (IDR)</Label>
-                                    <NumberInput
-                                        id="delivery_charge_batam"
-                                        value={formData.delivery_charge_batam}
-                                        onChange={(v) => setFormData((prev) => ({ ...prev, delivery_charge_batam: v }))}
-                                    />
-                                    {errors.delivery_charge_batam && <p className="text-sm text-destructive">{errors.delivery_charge_batam}</p>}
-                                </div>
-                                <div className="space-y-1">
-                                    <Label htmlFor="delivery_charge_jakarta">Delivery Charge — Jakarta (IDR)</Label>
-                                    <NumberInput
-                                        id="delivery_charge_jakarta"
-                                        value={formData.delivery_charge_jakarta}
-                                        onChange={(v) => setFormData((prev) => ({ ...prev, delivery_charge_jakarta: v }))}
-                                    />
-                                    {errors.delivery_charge_jakarta && <p className="text-sm text-destructive">{errors.delivery_charge_jakarta}</p>}
-                                </div>
+                                {hasVariants ? (
+                                    <div className="rounded-lg border border-dashed border-muted-foreground/30 bg-muted/30 p-3 text-xs text-muted-foreground">
+                                        Price and delivery charges are managed per variant in the Variants section.
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="space-y-1">
+                                            <Label htmlFor="price">Base Price (RMB) <span className="text-destructive">*</span></Label>
+                                            <NumberInput
+                                                id="price"
+                                                value={formData.price}
+                                                onChange={(v) => { setFormData((prev) => ({ ...prev, price: v })); if (parseFloat(v) > 0) clearError('price'); }}
+                                                required
+                                            />
+                                            {errors.price && <p className="text-sm text-destructive">{errors.price}</p>}
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label htmlFor="delivery_charge_batam">Delivery Charge — Batam (IDR)</Label>
+                                            <NumberInput
+                                                id="delivery_charge_batam"
+                                                value={formData.delivery_charge_batam}
+                                                onChange={(v) => { setFormData((prev) => ({ ...prev, delivery_charge_batam: v })); if (parseFloat(v) > 0) clearError('delivery_charge_batam'); }}
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label htmlFor="delivery_charge_jakarta">Delivery Charge — Jakarta (IDR)</Label>
+                                            <NumberInput
+                                                id="delivery_charge_jakarta"
+                                                value={formData.delivery_charge_jakarta}
+                                                onChange={(v) => { setFormData((prev) => ({ ...prev, delivery_charge_jakarta: v })); if (parseFloat(v) > 0) clearError('delivery_charge_batam', 'delivery_charge_jakarta'); }}
+                                            />
+                                            <p className="text-[11px] text-muted-foreground">At least one delivery charge is required. <span className="text-destructive">*</span></p>
+                                            {errors.delivery_charge_batam && <p className="text-sm text-destructive">{errors.delivery_charge_batam}</p>}
+                                            {errors.delivery_charge_jakarta && <p className="text-sm text-destructive">{errors.delivery_charge_jakarta}</p>}
+                                        </div>
 
-                                {/* Final Price Display */}
-                                <div className="rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3 space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Final Price</p>
-                                        <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">
-                                            Rate: 1 RMB = {exchangeRate.toLocaleString('en-US')} IDR
-                                        </span>
-                                    </div>
-                                    <div className="flex items-baseline justify-between border-b border-muted pb-1.5 pt-1">
-                                        <span className="text-xs text-muted-foreground">Price (IDR)</span>
-                                        <span className="text-sm font-medium">{formatIdr(priceIdr)}</span>
-                                    </div>
-                                    <div className="space-y-0.5">
-                                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Batam</p>
-                                        <div className="flex items-baseline justify-between">
-                                            <span className="text-xs text-muted-foreground">Delivery (IDR)</span>
-                                            <span className="text-sm font-medium">{formatIdr(deliveryChargeBatamIdr)}</span>
+                                        {/* Final Price Display */}
+                                        <div className="rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3 space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Final Price</p>
+                                                <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">
+                                                    Rate: 1 RMB = {exchangeRate.toLocaleString('en-US')} IDR
+                                                </span>
+                                            </div>
+                                            <div className="flex items-baseline justify-between border-b border-muted pb-1.5 pt-1">
+                                                <span className="text-xs text-muted-foreground">Price (IDR)</span>
+                                                <span className="text-sm font-medium">{formatIdr(priceIdr)}</span>
+                                            </div>
+                                            <div className="space-y-0.5">
+                                                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Batam</p>
+                                                <div className="flex items-baseline justify-between">
+                                                    <span className="text-xs text-muted-foreground">Delivery (IDR)</span>
+                                                    <span className="text-sm font-medium">{formatIdr(deliveryChargeBatamIdr)}</span>
+                                                </div>
+                                                <div className="flex items-baseline justify-between">
+                                                    <span className="text-sm font-bold">Total</span>
+                                                    <span className="font-bold text-sm text-primary">{formatIdr(finalPriceBatamIdr)}</span>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-0.5 border-t border-muted pt-1.5">
+                                                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Jakarta</p>
+                                                <div className="flex items-baseline justify-between">
+                                                    <span className="text-xs text-muted-foreground">Delivery (IDR)</span>
+                                                    <span className="text-sm font-medium">{formatIdr(deliveryChargeJakartaIdr)}</span>
+                                                </div>
+                                                <div className="flex items-baseline justify-between">
+                                                    <span className="text-sm font-bold">Total</span>
+                                                    <span className="font-bold text-sm text-primary">{formatIdr(finalPriceJakartaIdr)}</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="flex items-baseline justify-between">
-                                            <span className="text-sm font-bold">Total</span>
-                                            <span className="font-bold text-sm text-primary">{formatIdr(finalPriceBatamIdr)}</span>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-0.5 border-t border-muted pt-1.5">
-                                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Jakarta</p>
-                                        <div className="flex items-baseline justify-between">
-                                            <span className="text-xs text-muted-foreground">Delivery (IDR)</span>
-                                            <span className="text-sm font-medium">{formatIdr(deliveryChargeJakartaIdr)}</span>
-                                        </div>
-                                        <div className="flex items-baseline justify-between">
-                                            <span className="text-sm font-bold">Total</span>
-                                            <span className="font-bold text-sm text-primary">{formatIdr(finalPriceJakartaIdr)}</span>
-                                        </div>
-                                    </div>
-                                </div>
+                                    </>
+                                )}
 
                                 <div className="space-y-1">
                                     <Label htmlFor="sort_order">Sort Order</Label>

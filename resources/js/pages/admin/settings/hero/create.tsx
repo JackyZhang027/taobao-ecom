@@ -120,6 +120,7 @@ export default function AdminHeroSlideCreate() {
                                             onChange={(e: any) => setData('cta_link', e.target.value)}
                                             placeholder="/shop"
                                         />
+                                        {errors.cta_link && <p className="text-sm text-red-500">{errors.cta_link}</p>}
                                     </div>
                                 </div>
 

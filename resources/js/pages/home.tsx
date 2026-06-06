@@ -1,12 +1,17 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, Navigation, Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
 import { ProductCard } from '@/components/product-card';
 import CustomerLayout from '@/layouts/customer-layout';
 import type { Product, Category } from '@/types/product';
-import type { HeroSlide, ShopSetting } from '@/types/settings';
+import type { HeroSlide, ShopSetting, StoreFeature } from '@/types/settings';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, ArrowRight, Truck, RotateCcw, Shield, Phone } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import { FEATURE_ICONS } from '@/lib/feature-icons';
 
 interface HomeProps {
     heroSlides: HeroSlide[];
@@ -14,41 +19,11 @@ interface HomeProps {
     shopSettings: Record<string, string>;
     products: Product[];
     whatsapp_number?: string;
+    storeFeatures: StoreFeature[];
 }
 
-export default function Home({ heroSlides, categories, shopSettings, products, whatsapp_number }: HomeProps) {
+export default function Home({ heroSlides, categories, shopSettings, products, whatsapp_number, storeFeatures }: HomeProps) {
     const { t } = useTranslation();
-    const [currentSlide, setCurrentSlide] = useState(0);
-    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-    const catScrollRef = useRef<HTMLDivElement>(null);
-
-    const scrollCats = (dir: 'left' | 'right') => {
-        const container = catScrollRef.current;
-        if (!container) return;
-        const itemWidth = (container.querySelector('a') as HTMLElement | null)?.clientWidth ?? 300;
-        container.scrollBy({ left: dir === 'right' ? itemWidth : -itemWidth, behavior: 'smooth' });
-    };
-
-    const resetTimeout = () => {
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-
-    const nextSlide = useCallback(() => {
-        setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
-    }, [heroSlides.length]);
-
-    const prevSlide = useCallback(() => {
-        setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
-    }, [heroSlides.length]);
-
-    useEffect(() => {
-        resetTimeout();
-        if (heroSlides.length > 1) {
-            timeoutRef.current = setTimeout(nextSlide, 5000);
-        }
-        return () => resetTimeout();
-    }, [currentSlide, nextSlide, heroSlides.length]);
 
     return (
         <CustomerLayout fullWidth>
@@ -60,87 +35,68 @@ export default function Home({ heroSlides, categories, shopSettings, products, w
 
             {/* ── Hero Slider ── */}
             {heroSlides.length > 0 ? (
-                <div className="relative w-full h-[560px] md:h-[680px] overflow-hidden bg-[#F8FAFC] group">
-                    <div
-                        className="flex h-full transition-transform duration-700 ease-in-out"
-                        style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+                <div
+                    className="relative w-full h-[560px] md:h-[680px] overflow-hidden bg-[#F8FAFC]"
+                    style={{
+                        '--swiper-navigation-color': 'rgba(255,255,255,0.85)',
+                        '--swiper-navigation-size': '28px',
+                        '--swiper-pagination-color': '#2563eb',
+                        '--swiper-pagination-bullet-inactive-color': 'rgba(255,255,255,0.6)',
+                        '--swiper-pagination-bullet-inactive-opacity': '1',
+                    } as React.CSSProperties}
+                >
+                    <Swiper
+                        modules={[Autoplay, Navigation, Pagination]}
+                        loop={heroSlides.length > 1}
+                        autoplay={heroSlides.length > 1 ? { delay: 5000, disableOnInteraction: false } : false}
+                        speed={700}
+                        navigation={heroSlides.length > 1}
+                        pagination={heroSlides.length > 1 ? { clickable: true } : false}
+                        className="w-full h-full"
                     >
                         {heroSlides.map((slide, index) => (
-                            <div key={index} className="relative w-full h-full flex-shrink-0">
-                                {slide.image_url && (
-                                    <div
-                                        className="absolute inset-0 bg-cover bg-center"
-                                        style={{ backgroundImage: `url(${slide.image_url})` }}
-                                    />
-                                )}
-                                <div className="absolute inset-0 bg-black/10" />
-                                <div className="container relative flex justify-end items-center h-full px-6 md:px-16 mx-auto">
-                                    <div className="bg-white border border-slate-200 shadow-xl p-8 md:p-14 max-w-md rounded-sm">
-                                        {slide.subtitle && (
-                                            <p className="font-semibold tracking-[0.2em] text-slate-600 mb-3 uppercase text-xs">
-                                                {slide.subtitle}
-                                            </p>
-                                        )}
-                                        {slide.title && (
-                                            <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-5 leading-tight">
-                                                {slide.title}
-                                            </h1>
-                                        )}
-                                        {slide.description && (
-                                            <p className="text-slate-500 mb-8 text-sm leading-relaxed">
-                                                {slide.description}
-                                            </p>
-                                        )}
-                                        {slide.cta_text && (
-                                            <Button
-                                                className="bg-slate-900 hover:bg-slate-800 text-white px-10 py-6 text-sm uppercase tracking-widest font-semibold rounded-none"
-                                                asChild
-                                            >
-                                                <Link href={slide.cta_link || '/shop'}>
-                                                    {slide.cta_text}
-                                                </Link>
-                                            </Button>
-                                        )}
+                            <SwiperSlide key={slide.id ?? index}>
+                                <div className="relative w-full h-full">
+                                    {slide.image_url && (
+                                        <div
+                                            className="absolute inset-0 bg-cover bg-center"
+                                            style={{ backgroundImage: `url(${slide.image_url})` }}
+                                        />
+                                    )}
+                                    <div className="absolute inset-0 bg-black/10" />
+                                    <div className="container relative flex justify-end items-center h-full px-6 md:px-16 mx-auto">
+                                        <div className="bg-white border border-slate-200 shadow-xl p-8 md:p-14 max-w-md rounded-sm">
+                                            {slide.subtitle && (
+                                                <p className="font-semibold tracking-[0.2em] text-slate-600 mb-3 uppercase text-xs">
+                                                    {slide.subtitle}
+                                                </p>
+                                            )}
+                                            {slide.title && (
+                                                <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-5 leading-tight">
+                                                    {slide.title}
+                                                </h1>
+                                            )}
+                                            {slide.description && (
+                                                <p className="text-slate-500 mb-8 text-sm leading-relaxed">
+                                                    {slide.description}
+                                                </p>
+                                            )}
+                                            {slide.cta_text && (
+                                                <Button
+                                                    className="bg-slate-900 hover:bg-slate-800 text-white px-10 py-6 text-sm uppercase tracking-widest font-semibold rounded-none"
+                                                    asChild
+                                                >
+                                                    <Link href={slide.cta_link || '/shop'}>
+                                                        {slide.cta_text}
+                                                    </Link>
+                                                </Button>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            </SwiperSlide>
                         ))}
-                    </div>
-
-                    {heroSlides.length > 1 && (
-                        <>
-                            <button
-                                type="button"
-                                onClick={(e) => { e.preventDefault(); prevSlide(); }}
-                                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-slate-900 p-3 transition-all z-20 shadow-md cursor-pointer"
-                                aria-label="Previous slide"
-                            >
-                                <ChevronLeft className="w-5 h-5" />
-                            </button>
-                            <button
-                                type="button"
-                                onClick={(e) => { e.preventDefault(); nextSlide(); }}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-slate-900 p-3 transition-all z-20 shadow-md cursor-pointer"
-                                aria-label="Next slide"
-                            >
-                                <ChevronRight className="w-5 h-5" />
-                            </button>
-                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-2.5 z-10">
-                                {heroSlides.map((_, i) => (
-                                    <button
-                                        key={i}
-                                        onClick={() => setCurrentSlide(i)}
-                                        className={`transition-all duration-300 cursor-pointer rounded-none ${
-                                            currentSlide === i
-                                                ? 'bg-blue-600 w-8 h-2'
-                                                : 'bg-white/60 hover:bg-white w-2 h-2'
-                                        }`}
-                                        aria-label={`Go to slide ${i + 1}`}
-                                    />
-                                ))}
-                            </div>
-                        </>
-                    )}
+                    </Swiper>
                 </div>
             ) : (
                 /* Fallback hero when no slides */
@@ -167,59 +123,55 @@ export default function Home({ heroSlides, categories, shopSettings, products, w
                         <h2 className="text-3xl font-bold text-slate-900">{t('home.browse_category')}</h2>
                         <p className="text-slate-400 mt-2 text-sm">{t('home.browse_category_desc')}</p>
                     </div>
-                    <div className="relative">
-                        {categories.length > 1 && (
-                            <button
-                                type="button"
-                                onClick={() => scrollCats('left')}
-                                className="absolute -left-4 top-[40%] -translate-y-1/2 z-10 bg-[#F8F5EF] border border-[#DDD6CB] shadow-sm hover:bg-[#EFE9DF] text-slate-900 p-2.5 transition-all cursor-pointer rounded-sm"
-                                aria-label="Previous categories"
-                            >
-                                <ChevronLeft className="w-5 h-5" />
-                            </button>
-                        )}
-                        <div
-                            ref={catScrollRef}
-                            className="flex gap-6 overflow-x-auto scroll-smooth scrollbar-hide"
-                            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                    <div
+                        style={{
+                            '--swiper-navigation-color': '#94a3b8',
+                            '--swiper-navigation-size': '22px',
+                            '--swiper-pagination-color': '#0f172a',
+                            '--swiper-pagination-bullet-inactive-color': '#cbd5e1',
+                            '--swiper-pagination-bullet-inactive-opacity': '1',
+                        } as React.CSSProperties}
+                    >
+                        <Swiper
+                            modules={[Navigation]}
+                            loop={categories.length > 3}
+                            navigation={categories.length > 3}
+                            slidesPerView={1}
+                            spaceBetween={24}
+                            breakpoints={{
+                                640: { slidesPerView: 2 },
+                                768: { slidesPerView: 3 },
+                            }}
+                            className="pb-10"
                         >
                             {categories.map((category) => (
-                                <Link
-                                    key={category.id}
-                                    href={`/shop?category=${category.slug}`}
-                                    className="group cursor-pointer text-center flex-shrink-0 w-full sm:w-[calc(50%-12px)] md:w-[calc(33.333%-16px)]"
-                                >
-                                    <div className="w-full aspect-[4/5] mb-4 overflow-hidden rounded-sm bg-[#EFE9DF] relative">
-                                        {category.image_url ? (
-                                            <img
-                                                src={category.image_url}
-                                                alt={category.name}
-                                                className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
-                                            />
-                                        ) : (
-                                            <div className="flex bg-slate-200 items-center justify-center w-full h-full text-5xl font-bold text-slate-300">
-                                                {category.name.charAt(0)}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <h3 className="font-semibold text-lg text-slate-900 group-hover:text-blue-600 transition-colors">
-                                        {category.name}
-                                    </h3>
-                                </Link>
+                                <SwiperSlide key={category.id}>
+                                    <Link
+                                        href={`/shop?category=${category.slug}`}
+                                        className="group cursor-pointer text-center block"
+                                    >
+                                        <div className="w-full aspect-[4/5] mb-4 overflow-hidden rounded-sm bg-[#EFE9DF] relative">
+                                            {category.image_url ? (
+                                                <img
+                                                    src={category.image_url}
+                                                    alt={category.name}
+                                                    className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                                                />
+                                            ) : (
+                                                <div className="flex bg-slate-200 items-center justify-center w-full h-full text-5xl font-bold text-slate-300">
+                                                    {category.name.charAt(0)}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <h3 className="font-semibold text-lg text-slate-900 group-hover:text-blue-600 transition-colors">
+                                            {category.name}
+                                        </h3>
+                                    </Link>
+                                </SwiperSlide>
                             ))}
-                        </div>
-                        {categories.length > 1 && (
-                            <button
-                                type="button"
-                                onClick={() => scrollCats('right')}
-                                className="absolute -right-4 top-[40%] -translate-y-1/2 z-10 bg-[#F8F5EF] border border-[#DDD6CB] shadow-sm hover:bg-[#EFE9DF] text-slate-900 p-2.5 transition-all cursor-pointer rounded-sm"
-                                aria-label="Next categories"
-                            >
-                                <ChevronRight className="w-5 h-5" />
-                            </button>
-                        )}
+                        </Swiper>
                     </div>
-                    <div className="mt-10 flex justify-center">
+                    <div className="mt-4 flex justify-center">
                         <Button
                             variant="outline"
                             className="bg-white border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white px-12 py-3 rounded-none uppercase tracking-wider text-sm font-semibold transition-colors"
@@ -296,28 +248,28 @@ export default function Home({ heroSlides, categories, shopSettings, products, w
             </section>
 
             {/* ── Features Bar ── */}
-            <section className="bg-[#EFE9DF] py-12 border-t border-[#DDD6CB]">
-                <div className="mx-auto max-w-7xl px-4 md:px-8">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                        {[
-                            { icon: Truck, title: t('home.feature_delivery'), desc: t('home.feature_delivery_desc') },
-                            { icon: RotateCcw, title: t('home.feature_return'), desc: t('home.feature_return_desc') },
-                            { icon: Shield, title: t('home.feature_payment'), desc: t('home.feature_payment_desc') },
-                            { icon: Phone, title: t('home.feature_support'), desc: t('home.feature_support_desc') },
-                        ].map(({ icon: Icon, title, desc }) => (
-                            <div key={title} className="flex items-start gap-4">
-                                <div className="w-10 h-10 shrink-0 flex items-center justify-center">
-                                    <Icon className="h-8 w-8 text-slate-700" />
-                                </div>
-                                <div>
-                                    <p className="font-semibold text-slate-900 text-sm">{title}</p>
-                                    <p className="text-slate-400 text-xs mt-0.5">{desc}</p>
-                                </div>
-                            </div>
-                        ))}
+            {storeFeatures.some(f => f.is_active) && (
+                <section className="bg-[#EFE9DF] py-12 border-t border-[#DDD6CB]">
+                    <div className="mx-auto max-w-7xl px-4 md:px-8">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                            {storeFeatures.filter(f => f.is_active).map((feature) => {
+                                const IconComponent = FEATURE_ICONS[feature.icon];
+                                return (
+                                    <div key={feature.id} className="flex items-start gap-4">
+                                        <div className="w-10 h-10 shrink-0 flex items-center justify-center">
+                                            {IconComponent && <IconComponent className="h-8 w-8 text-slate-700" />}
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-slate-900 text-sm">{feature.title}</p>
+                                            <p className="text-slate-400 text-xs mt-0.5">{feature.description}</p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
-                </div>
-            </section>
+                </section>
+            )}
         </CustomerLayout>
     );
 }

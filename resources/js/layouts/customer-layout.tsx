@@ -1,7 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
-import { ShoppingCart, User, Menu, X, Phone, Mail } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, Phone, Mail, Heart, Package, LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { SocialIcon } from '@/lib/social-icons';
 import type { SocialLink } from '@/types/settings';
@@ -17,41 +17,21 @@ export default function CustomerLayout({ children, fullWidth = false }: Customer
     const { url } = usePage();
     const user = auth?.user;
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [profileOpen, setProfileOpen] = useState(false);
+    const profileRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handler = (e: MouseEvent) => {
+            if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+                setProfileOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
 
     return (
         <div className="storefront min-h-screen bg-[#F8F5EF] text-slate-900 font-sans">
-            {/* Top bar */}
-            <div className="bg-slate-900 text-white text-xs py-2 hidden md:block">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-                    <div className="flex items-center gap-6">
-                        {shopSettings.contact_phone && (
-                            <span className="flex items-center gap-1.5">
-                                <Phone className="h-3 w-3" />
-                                {shopSettings.contact_phone}
-                            </span>
-                        )}
-                        {shopSettings.contact_email && (
-                            <span className="flex items-center gap-1.5">
-                                <Mail className="h-3 w-3" />
-                                {shopSettings.contact_email}
-                            </span>
-                        )}
-                    </div>
-                    <div className="flex items-center gap-4">
-                        {user ? (
-                            <>
-                                <Link href="/profile" className="hover:text-blue-400 transition-colors">{t('nav.profile')}</Link>
-                                <Link href="/wishlist" className="hover:text-blue-400 transition-colors">{t('nav.wishlist')}</Link>
-                                <Link href="/orders" className="hover:text-blue-400 transition-colors">{t('nav.orders')}</Link>
-                                <Link href="/logout" method="post" as="button" className="hover:text-blue-400 transition-colors">{t('nav.logout')}</Link>
-                            </>
-                        ) : (
-                            <Link href="/login" className="hover:text-blue-400 transition-colors">{t('nav.login')}</Link>
-                        )}
-                    </div>
-                </div>
-            </div>
-
             {/* Main Navbar */}
             <nav className="bg-[#2d2d2d] border-b border-[#444] sticky top-0 z-50 shadow-sm">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -90,10 +70,50 @@ export default function CustomerLayout({ children, fullWidth = false }: Customer
                                     </span>
                                 )}
                             </Link>
-                            {user ? (
-                                <Link href="/profile" className="hidden md:block text-[#c8c8ca] hover:text-white transition-colors">
-                                    <User className="h-5 w-5" />
+                            {user && (
+                                <Link href="/wishlist" className="hidden md:block text-[#c8c8ca] hover:text-white transition-colors">
+                                    <Heart className="h-5 w-5" />
                                 </Link>
+                            )}
+                            {user ? (
+                                <div className="relative hidden md:block" ref={profileRef}>
+                                    <button
+                                        onClick={() => setProfileOpen(v => !v)}
+                                        className="cursor-pointer text-[#c8c8ca] hover:text-white transition-colors"
+                                    >
+                                        <User className="h-5 w-5" />
+                                    </button>
+                                    {profileOpen && (
+                                        <div className="absolute right-0 top-full mt-2 w-44 rounded-lg bg-white shadow-lg py-1 z-50">
+                                            <Link
+                                                href="/profile"
+                                                className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors"
+                                                onClick={() => setProfileOpen(false)}
+                                            >
+                                                <User className="h-4 w-4 text-slate-400" />
+                                                My Profile
+                                            </Link>
+                                            <Link
+                                                href="/orders"
+                                                className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors"
+                                                onClick={() => setProfileOpen(false)}
+                                            >
+                                                <Package className="h-4 w-4 text-slate-400" />
+                                                My Orders
+                                            </Link>
+                                            <Link
+                                                href="/logout"
+                                                method="post"
+                                                as="button"
+                                                className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors"
+                                                onClick={() => setProfileOpen(false)}
+                                            >
+                                                <LogOut className="h-4 w-4 text-slate-400" />
+                                                {t('nav.logout')}
+                                            </Link>
+                                        </div>
+                                    )}
+                                </div>
                             ) : (
                                 <Link href="/login" className="hidden md:flex items-center gap-1 text-sm font-medium text-[#c8c8ca] hover:text-white transition-colors">
                                     <User className="h-4 w-4" />

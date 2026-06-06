@@ -92,16 +92,18 @@ class ProductController extends Controller
             $translation = $product->translations->firstWhere('locale', $locale)
                 ?? $product->translations->firstWhere('locale', 'en');
 
-            $variants = $product->variants->where('is_active', true)->map(fn ($v) => [
-                'id'                => $v->id,
-                'sku'               => $v->sku,
-                'price_rmb'         => $v->price,
-                'price_idr'         => $this->currency->rmbToIdr($v->price),
-                'compare_price_idr' => $v->compare_price ? $this->currency->rmbToIdr($v->compare_price) : null,
-                'is_active'         => $v->is_active,
-                'sort_order'        => $v->sort_order,
-                'image_url'         => $v->getFirstMediaUrl('image') ?: null,
-                'options'           => $v->options->map(fn ($o) => [
+            $variants = $product->variants->where('is_active', true)->values()->map(fn ($v) => [
+                'id'                          => $v->id,
+                'sku'                         => $v->sku,
+                'price_rmb'                   => $v->price,
+                'price_idr'                   => $this->currency->rmbToIdr($v->price),
+                'compare_price_idr'           => $v->compare_price ? $this->currency->rmbToIdr($v->compare_price) : null,
+                'delivery_charge_batam'   => (float) $v->delivery_charge_batam,
+                'delivery_charge_jakarta' => (float) $v->delivery_charge_jakarta,
+                'is_active'                   => $v->is_active,
+                'sort_order'                  => $v->sort_order,
+                'image_url'                   => $v->getFirstMediaUrl('image') ?: null,
+                'options'                     => $v->options->map(fn ($o) => [
                     'id'         => $o->id,
                     'value'      => $o->value,
                     'group_id'   => $o->group_id,
@@ -124,8 +126,8 @@ class ProductController extends Controller
                 'slug'                        => $product->slug,
                 'thumbnail'                   => $thumbnailUrl,
                 'delivery_charge_idr'         => (float) $product->delivery_charge,
-                'delivery_charge_batam_idr'   => (float) ($product->delivery_charge_batam ?: $product->delivery_charge),
-                'delivery_charge_jakarta_idr' => (float) ($product->delivery_charge_jakarta ?: $product->delivery_charge),
+                'delivery_charge_batam'   => (float) ($product->delivery_charge_batam ?: $product->delivery_charge),
+                'delivery_charge_jakarta' => (float) ($product->delivery_charge_jakarta ?: $product->delivery_charge),
                 'name'                        => $translation?->name ?? $product->slug,
                 'description'                 => $translation?->description,
                 'price_rmb'                   => $product->price,
@@ -167,8 +169,16 @@ class ProductController extends Controller
         $thumbnail = $product->thumbnail
             ?? ($product->getFirstMediaUrl('images', 'thumb') ?: $product->getFirstMediaUrl('images') ?: null);
 
-        $deliveryBatamIdr = (float) ($product->delivery_charge_batam ?: $product->delivery_charge);
-        $deliveryJakartaIdr = (float) ($product->delivery_charge_jakarta ?: $product->delivery_charge);
+        $hasVariants = $activeVariants->isNotEmpty();
+
+        if ($hasVariants) {
+            $minVariant = $activeVariants->sortBy('price')->first();
+            $deliveryBatamIdr  = (float) ($minVariant?->delivery_charge_batam ?: $product->delivery_charge_batam ?: $product->delivery_charge);
+            $deliveryJakartaIdr = (float) ($minVariant?->delivery_charge_jakarta ?: $product->delivery_charge_jakarta ?: $product->delivery_charge);
+        } else {
+            $deliveryBatamIdr  = (float) ($product->delivery_charge_batam ?: $product->delivery_charge);
+            $deliveryJakartaIdr = (float) ($product->delivery_charge_jakarta ?: $product->delivery_charge);
+        }
 
         return [
             'id'                  => $product->id,

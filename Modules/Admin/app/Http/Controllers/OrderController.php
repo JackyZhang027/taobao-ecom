@@ -137,7 +137,6 @@ class OrderController extends Controller
                     'price_idr'              => $this->currency->rmbToIdr($product->price),
                     'delivery_charge_batam'  => $product->delivery_charge_batam,
                     'delivery_charge_jakarta' => $product->delivery_charge_jakarta,
-                    'delivery_charge'        => $product->delivery_charge,
                     'variants'               => $product->variants->map(fn ($v) => [
                         'id'      => $v->id,
                         'sku'     => $v->sku,

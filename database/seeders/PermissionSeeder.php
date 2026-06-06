@@ -22,6 +22,7 @@ class PermissionSeeder extends Seeder
         'hero_slides.view', 'hero_slides.create', 'hero_slides.edit', 'hero_slides.delete',
         'exchange_rates.view', 'exchange_rates.create',
         'social_links.view', 'social_links.create', 'social_links.edit', 'social_links.delete',
+        'store_features.view', 'store_features.edit',
         'accounting_accounts.view', 'accounting_accounts.create', 'accounting_accounts.edit', 'accounting_accounts.delete',
         'accounting_journals.view', 'accounting_journals.create', 'accounting_journals.edit', 'accounting_journals.delete',
         'accounting_ledger.view',

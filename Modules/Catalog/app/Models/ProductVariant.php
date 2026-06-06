@@ -19,15 +19,19 @@ class ProductVariant extends Model implements HasMedia
         'sku',
         'price',
         'compare_price',
+        'delivery_charge_batam',
+        'delivery_charge_jakarta',
         'stock',
         'is_active',
         'sort_order',
     ];
 
     protected $casts = [
-        'price' => 'float',
-        'compare_price' => 'float',
-        'is_active' => 'boolean',
+        'price'                   => 'float',
+        'compare_price'           => 'float',
+        'delivery_charge_batam'   => 'float',
+        'delivery_charge_jakarta' => 'float',
+        'is_active'               => 'boolean',
     ];
 
     public function registerMediaCollections(): void

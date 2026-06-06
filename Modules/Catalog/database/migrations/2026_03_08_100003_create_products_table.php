@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('slug')->unique();
             $table->string('thumbnail')->nullable();
-            $table->decimal('delivery_charge', 8, 2)->default(0)->comment('In RMB');
+            $table->decimal('delivery_charge', 8, 2)->default(0)->comment('In IDR');
             $table->boolean('is_active')->default(true);
             $table->unsignedSmallInteger('sort_order')->default(0);
             $table->softDeletes();
