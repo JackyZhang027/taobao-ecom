@@ -1,15 +1,15 @@
-import { useState } from 'react';
 import { Head, useForm } from '@inertiajs/react';
-import { toast } from 'sonner';
 import { ChevronDown } from 'lucide-react';
-import AdminLayout from '@/layouts/admin-layout';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import AdminLayout from '@/layouts/admin-layout';
 import { FEATURE_ICONS, FEATURE_ICON_OPTIONS } from '@/lib/feature-icons';
 import type { StoreFeature } from '@/types/settings';
 

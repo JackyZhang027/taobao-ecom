@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
-import CustomerLayout from '@/layouts/customer-layout';
 import { ProductCard } from '@/components/product-card';
+import CustomerLayout from '@/layouts/customer-layout';
 import type { Product } from '@/types/product';
 
 interface WishlistProps {

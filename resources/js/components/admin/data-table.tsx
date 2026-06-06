@@ -1,9 +1,10 @@
-import DataTable from 'datatables.net-react';
-import DT from 'datatables.net-dt';
 import type { Config, ConfigColumns } from 'datatables.net';
+import DT from 'datatables.net-dt';
+import DataTable from 'datatables.net-react';
 import 'datatables.net-dt/css/dataTables.dataTables.css';
 import { forwardRef, useImperativeHandle, useRef } from 'react';
 
+// eslint-disable-next-line react-hooks/rules-of-hooks
 DataTable.use(DT);
 
 interface AdminDataTableProps {

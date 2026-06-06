@@ -1,6 +1,6 @@
+import { AppAdminSidebar } from '@/components/app-admin-sidebar';
 import { AppContent } from '@/components/app-content';
 import { AppShell } from '@/components/app-shell';
-import { AppAdminSidebar } from '@/components/app-admin-sidebar';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
 import type { AppLayoutProps } from '@/types';
 

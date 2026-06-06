@@ -1,10 +1,10 @@
 import { Head, Link } from '@inertiajs/react';
 import { Pencil } from 'lucide-react';
-import AdminLayout from '@/layouts/admin-layout';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import AdminLayout from '@/layouts/admin-layout';
 import { FEATURE_ICONS } from '@/lib/feature-icons';
 import type { StoreFeature } from '@/types/settings';
 

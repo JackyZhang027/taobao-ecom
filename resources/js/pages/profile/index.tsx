@@ -8,11 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import CustomerLayout from '@/layouts/customer-layout';
 
-interface ProfileProps {
-    status?: string;
-}
-
-export default function ProfilePage({ status }: ProfileProps) {
+export default function ProfilePage() {
     const { t } = useTranslation();
     const { auth } = usePage().props as any;
     const user = auth.user;

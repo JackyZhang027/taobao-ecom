@@ -1,13 +1,13 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import AdminLayout from '@/layouts/admin-layout';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import AdminLayout from '@/layouts/admin-layout';
 
 interface Role {
     id: number;

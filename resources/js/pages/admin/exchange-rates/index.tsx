@@ -1,15 +1,15 @@
 import { Head, useForm } from '@inertiajs/react';
 import { useRef } from 'react';
 import { toast } from 'sonner';
-import AdminLayout from '@/layouts/admin-layout';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
-import { AdminDataTable, type AdminDataTableRef } from '@/components/admin/data-table';
+import { AdminDataTable  } from '@/components/admin/data-table';
+import type {AdminDataTableRef} from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { NumberInput } from '@/components/ui/number-input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { NumberInput } from '@/components/ui/number-input';
+import AdminLayout from '@/layouts/admin-layout';
 
 const columns = [
     {

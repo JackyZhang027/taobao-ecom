@@ -3,9 +3,9 @@ import { router } from '@inertiajs/react';
 import { ChevronRight, SlidersHorizontal, Search, X } from 'lucide-react';
 import { useState } from 'react';
 import { ProductCard } from '@/components/product-card';
-import CustomerLayout from '@/layouts/customer-layout';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import CustomerLayout from '@/layouts/customer-layout';
 import type { Category, Product } from '@/types/product';
 
 interface ShopProps {

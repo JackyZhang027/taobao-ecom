@@ -2,12 +2,12 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { useCurrency } from '@/hooks/use-currency';
 import { Button } from '@/components/ui/button';
 import {
     Dialog, DialogContent, DialogDescription,
     DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
+import { useCurrency } from '@/hooks/use-currency';
 import CustomerLayout from '@/layouts/customer-layout';
 import type { Order, OrderStatus, OrderStatusHistory } from '@/types/order';
 
@@ -117,7 +117,7 @@ export default function OrderShow({ order, isProduction, clientKey }: OrderShowP
         try {
             const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '';
             await fetch(`/orders/${order.id}/confirm-payment`, { method: 'POST', headers: { 'X-CSRF-TOKEN': csrfToken } });
-        } catch (_) { /* proceed even if confirm fails */ }
+        } catch { /* proceed even if confirm fails */ }
         router.visit(`/orders/${order.id}`);
     };
 

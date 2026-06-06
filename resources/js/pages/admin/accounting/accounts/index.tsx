@@ -1,11 +1,12 @@
 import { Head, router } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
+import { useEffect } from 'react';
 import { toast } from 'sonner';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminDataTable } from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AdminLayout from '@/layouts/admin-layout';
-import { AdminPageHeader } from '@/components/admin/admin-page-header';
 
 const columns = [
     { data: 'code', title: 'Code', width: '100px' },
@@ -53,14 +54,14 @@ const columns = [
 ];
 
 export default function AccountsIndex() {
-    if (typeof window !== 'undefined') {
+    useEffect(() => {
         (window as any)._acctDelete = (url: string) =>
             router.delete(url, {
                 preserveScroll: true,
                 onSuccess: () => toast.success('Account deleted.'),
                 onError: () => toast.error('Cannot delete this account.'),
             });
-    }
+    }, []);
 
     return (
         <AdminLayout>

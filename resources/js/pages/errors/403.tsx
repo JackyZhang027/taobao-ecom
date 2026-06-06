@@ -1,7 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { ShieldOff } from 'lucide-react';
-import AdminLayout from '@/layouts/admin-layout';
 import { Button } from '@/components/ui/button';
+import AdminLayout from '@/layouts/admin-layout';
 
 export default function Error403() {
     return (

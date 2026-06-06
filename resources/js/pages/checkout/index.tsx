@@ -1,7 +1,7 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
+import { ChevronRight, MapPin, Phone, User, FileText, Building2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { ChevronRight, MapPin, Phone, User, FileText, Building2 } from 'lucide-react';
 import { useCurrency } from '@/hooks/use-currency';
 import CustomerLayout from '@/layouts/customer-layout';
 import type { Cart, CartTotals } from '@/types/cart';
@@ -14,7 +14,7 @@ interface CheckoutProps {
 
 const inputClass = 'w-full border border-slate-200 rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-colors bg-[#FAFAFA]';
 
-export default function CheckoutIndex({ cart, totals, whatsapp_number }: CheckoutProps) {
+export default function CheckoutIndex({ cart, totals }: CheckoutProps) {
     const { t } = useTranslation();
     const { formatIdr } = useCurrency();
 

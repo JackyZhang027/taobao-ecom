@@ -1,18 +1,19 @@
 import { Head, router } from '@inertiajs/react';
+import { Upload, X, ImageIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import AdminLayout from '@/layouts/admin-layout';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { NumberInput } from '@/components/ui/number-input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { NumberInput } from '@/components/ui/number-input';
 import RichTextEditor from '@/components/ui/rich-text-editor';
-import { Upload, X, ImageIcon } from 'lucide-react';
-import VariantBuilder, { hasMissingOptionImages, type BuilderGroup, type VariantRow } from '@/components/variant-builder';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import VariantBuilder, { hasMissingOptionImages   } from '@/components/variant-builder';
+import type {BuilderGroup, VariantRow} from '@/components/variant-builder';
+import AdminLayout from '@/layouts/admin-layout';
 import type { Category } from '@/types/product';
 
 interface TranslationData {
@@ -78,6 +79,7 @@ export default function AdminProductCreate({ categories, exchangeRate }: CreateP
                 .toLowerCase()
                 .replace(/[^a-z0-9]+/g, '-')
                 .replace(/^-|-$/g, '');
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setFormData((prev) => ({ ...prev, slug }));
         }
     }, [formData.translations.en.name, slugManuallyEdited]);

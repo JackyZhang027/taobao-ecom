@@ -5,7 +5,6 @@ import { LayoutGrid, Package, ShoppingCart, TrendingUp, FolderTree, Settings, Im
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
-import { usePermission } from '@/hooks/use-permission';
 import {
     Sidebar,
     SidebarContent,
@@ -15,6 +14,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { usePermission } from '@/hooks/use-permission';
 import type { NavItem } from '@/types';
 
 export function AppAdminSidebar() {

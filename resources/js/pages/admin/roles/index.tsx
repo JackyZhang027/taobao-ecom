@@ -1,11 +1,12 @@
 import { Head, router } from '@inertiajs/react';
+import { Plus } from 'lucide-react';
+import { useEffect } from 'react';
 import { toast } from 'sonner';
-import AdminLayout from '@/layouts/admin-layout';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminDataTable } from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus } from 'lucide-react';
+import AdminLayout from '@/layouts/admin-layout';
 
 const columns = [
     { data: 'name', title: 'Name' },
@@ -28,14 +29,14 @@ const columns = [
 ];
 
 export default function RolesIndex() {
-    if (typeof window !== 'undefined') {
+    useEffect(() => {
         (window as any)._deleteRole = (url: string) =>
             router.delete(url, {
                 preserveScroll: true,
                 onSuccess: () => toast.success('Role deleted'),
                 onError: () => toast.error('Failed to delete role'),
             });
-    }
+    }, []);
 
     return (
         <AdminLayout>

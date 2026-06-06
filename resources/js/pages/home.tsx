@@ -1,17 +1,17 @@
 import { Head, Link } from '@inertiajs/react';
+import { ArrowRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Navigation, Pagination } from 'swiper/modules';
+import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import { ProductCard } from '@/components/product-card';
-import CustomerLayout from '@/layouts/customer-layout';
-import type { Product, Category } from '@/types/product';
-import type { HeroSlide, ShopSetting, StoreFeature } from '@/types/settings';
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import CustomerLayout from '@/layouts/customer-layout';
 import { FEATURE_ICONS } from '@/lib/feature-icons';
+import type { Product, Category } from '@/types/product';
+import type { HeroSlide, StoreFeature } from '@/types/settings';
 
 interface HomeProps {
     heroSlides: HeroSlide[];

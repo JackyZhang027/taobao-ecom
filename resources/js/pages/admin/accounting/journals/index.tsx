@@ -1,10 +1,10 @@
 import { Head } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminDataTable } from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AdminLayout from '@/layouts/admin-layout';
-import { AdminPageHeader } from '@/components/admin/admin-page-header';
 
 const statusColors: Record<string, string> = {
     draft:   'bg-gray-100 text-gray-600',

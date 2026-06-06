@@ -1,9 +1,9 @@
 import { Head } from '@inertiajs/react';
-import { useCurrency } from '@/hooks/use-currency';
-import AdminLayout from '@/layouts/admin-layout';
+import { DollarSign, ShoppingCart, Users, Package } from 'lucide-react';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, ShoppingCart, Users, Package } from 'lucide-react';
+import { useCurrency } from '@/hooks/use-currency';
+import AdminLayout from '@/layouts/admin-layout';
 
 interface DashboardProps {
     stats: {

@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import { useTranslation } from 'react-i18next';
 import { ChevronRight, Search, X } from 'lucide-react';
-import CustomerLayout from '@/layouts/customer-layout';
+import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/input';
+import CustomerLayout from '@/layouts/customer-layout';
 import type { Category } from '@/types/product';
 
 interface CategoriesProps {

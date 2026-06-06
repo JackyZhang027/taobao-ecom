@@ -1,14 +1,14 @@
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import AdminLayout from '@/layouts/admin-layout';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import AdminLayout from '@/layouts/admin-layout';
 import type { HeroSlide } from '@/types/settings';
 
 export default function AdminHeroSlideEdit({ heroSlide, imageUrl }: { heroSlide: HeroSlide, imageUrl: string | null }) {

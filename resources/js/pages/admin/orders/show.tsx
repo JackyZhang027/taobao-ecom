@@ -1,21 +1,21 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { useState } from 'react';
 import {
     ArrowLeft, User, Mail, Phone, MapPin, Truck, Hash,
     CreditCard, Calendar, Receipt, ShoppingBag, StickyNote,
     Package, CheckCircle2, Clock, XCircle,
 } from 'lucide-react';
-import { useCurrency } from '@/hooks/use-currency';
+import { useState } from 'react';
 import { toast } from 'sonner';
-import AdminLayout from '@/layouts/admin-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
     Dialog, DialogContent, DialogDescription,
     DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useCurrency } from '@/hooks/use-currency';
+import AdminLayout from '@/layouts/admin-layout';
 import type { Order, OrderStatus, OrderStatusHistory } from '@/types/order';
 
 const toastOptions = {
@@ -319,7 +319,6 @@ function ShipModal({ order }: { order: OrderShowProps['order'] }) {
 // ─── Order Actions ────────────────────────────────────────────────────────────
 
 function OrderActions({ order }: { order: OrderShowProps['order'] }) {
-    const isPaid = PAID_STATUSES.includes(order.payment?.status ?? '');
     const { status } = order;
 
     const transition = (nextStatus: OrderStatus) => {

@@ -1,9 +1,9 @@
-import { useState } from 'react';
 import { CheckIcon, ChevronsUpDownIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 import type { Account } from '@/types';
 
 interface AccountSelectProps {

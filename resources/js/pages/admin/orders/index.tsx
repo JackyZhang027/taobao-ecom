@@ -1,8 +1,8 @@
 import { Head } from '@inertiajs/react';
-import AdminLayout from '@/layouts/admin-layout';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminDataTable } from '@/components/admin/data-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import AdminLayout from '@/layouts/admin-layout';
 
 const columns = [
     { data: 'order_number', title: 'Order #', width: '150px' },

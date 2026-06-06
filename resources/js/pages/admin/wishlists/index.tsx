@@ -1,9 +1,10 @@
 import { Head, router } from '@inertiajs/react';
+import { useEffect } from 'react';
 import { toast } from 'sonner';
-import AdminLayout from '@/layouts/admin-layout';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminDataTable } from '@/components/admin/data-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import AdminLayout from '@/layouts/admin-layout';
 
 const columns = [
     { data: 'id', title: '#', width: '60px' },
@@ -25,14 +26,14 @@ const columns = [
 ];
 
 export default function AdminWishlistsIndex() {
-    if (typeof window !== 'undefined') {
+    useEffect(() => {
         (window as any)._inertiaDeleteWishlist = (url: string) =>
             router.delete(url, {
                 preserveScroll: true,
                 onSuccess: () => toast.success('Wishlist entry removed'),
                 onError: () => toast.error('Failed to remove entry'),
             });
-    }
+    }, []);
 
     return (
         <AdminLayout>

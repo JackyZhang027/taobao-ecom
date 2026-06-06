@@ -1,11 +1,12 @@
 import { Head, router } from '@inertiajs/react';
+import { Plus } from 'lucide-react';
+import { useEffect } from 'react';
 import { toast } from 'sonner';
-import AdminLayout from '@/layouts/admin-layout';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminDataTable } from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus } from 'lucide-react';
+import AdminLayout from '@/layouts/admin-layout';
 
 const columns = [
     { data: 'name', title: 'Name (EN)' },
@@ -28,13 +29,13 @@ const columns = [
 ];
 
 export default function AdminCategoriesIndex() {
-    if (typeof window !== 'undefined') {
-        (window as any)._inertiaDelete = (url: string) => router.delete(url, { 
+    useEffect(() => {
+        (window as any)._inertiaDelete = (url: string) => router.delete(url, {
             preserveScroll: true,
             onSuccess: () => toast.success('Category deleted successfully'),
             onError: () => toast.error('Failed to delete category'),
         });
-    }
+    }, []);
 
     return (
         <AdminLayout>

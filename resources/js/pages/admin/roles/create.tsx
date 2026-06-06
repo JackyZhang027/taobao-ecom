@@ -1,13 +1,13 @@
-import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
+import { useState } from 'react';
 import { toast } from 'sonner';
-import AdminLayout from '@/layouts/admin-layout';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import AdminLayout from '@/layouts/admin-layout';
 
 interface Permission {
     id: number;

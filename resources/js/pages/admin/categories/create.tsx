@@ -1,14 +1,14 @@
 import { Head, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import AdminLayout from '@/layouts/admin-layout';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Category } from '@/types/product';
+import AdminLayout from '@/layouts/admin-layout';
+import type { Category } from '@/types/product';
 
 const generateSlug = (text: string) => {
     return text
@@ -16,8 +16,8 @@ const generateSlug = (text: string) => {
         .toLowerCase()
         .trim()
         .replace(/\s+/g, '-') // Replace spaces with -
-        .replace(/[^\w\-]+/g, '') // Remove all non-word chars
-        .replace(/\-\-+/g, '-') // Replace multiple - with single -
+        .replace(/[^\w-]+/g, '') // Remove all non-word chars
+        .replace(/--+/g, '-') // Replace multiple - with single -
         .replace(/^-+/, '') // Trim - from start of text
         .replace(/-+$/, ''); // Trim - from end of text
 };
@@ -39,6 +39,7 @@ export default function AdminCategoryCreate({ categories }: { categories: Catego
     // Auto-generate slug when name changes, unless manually edited
     useEffect(() => {
         if (!slugManuallyEdited) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setSlug(generateSlug(name));
         }
     }, [name, slugManuallyEdited]);

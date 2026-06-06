@@ -1,13 +1,13 @@
 import { Head, useForm } from '@inertiajs/react';
+import { Plus, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Plus, Trash2 } from 'lucide-react';
-import AdminLayout from '@/layouts/admin-layout';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { Button } from '@/components/ui/button';
-import { NumberInput } from '@/components/ui/number-input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { NumberInput } from '@/components/ui/number-input';
 import { useCurrency } from '@/hooks/use-currency';
+import AdminLayout from '@/layouts/admin-layout';
 
 interface Customer {
     id: number;

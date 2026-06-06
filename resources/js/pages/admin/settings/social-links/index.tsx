@@ -1,20 +1,21 @@
 import { Head, router } from '@inertiajs/react';
-import { toast } from 'sonner';
 import { Link } from '@inertiajs/react';
-import { Plus, Share2 } from 'lucide-react';
-import AdminLayout from '@/layouts/admin-layout';
+import { Plus } from 'lucide-react';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminDataTable } from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
+import AdminLayout from '@/layouts/admin-layout';
 
 export default function AdminSocialLinksIndex() {
-    if (typeof window !== 'undefined') {
+    useEffect(() => {
         (window as any)._deleteSocialLink = (url: string) => router.delete(url, {
             preserveScroll: true,
             onSuccess: () => toast.success('Social link deleted successfully'),
             onError: () => toast.error('Failed to delete social link'),
         });
-    }
+    }, []);
 
     const columns = [
         { data: 'id', title: 'ID', orderable: true },

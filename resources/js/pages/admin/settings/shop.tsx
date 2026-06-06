@@ -1,16 +1,16 @@
 import { Head, useForm } from '@inertiajs/react';
 import { toast } from 'sonner';
-import AdminLayout from '@/layouts/admin-layout';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import AdminLayout from '@/layouts/admin-layout';
 import type { ShopSetting } from '@/types/settings';
 
 export default function AdminShopSettings({ settings }: { settings: ShopSetting }) {
-    const { data, setData, post, processing, errors } = useForm<{
+    const { data, setData, post, processing } = useForm<{
         settings: Record<string, any>;
         favicon: File | null;
         logo: File | null;

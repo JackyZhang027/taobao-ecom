@@ -1,12 +1,12 @@
 import { Head, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import AdminLayout from '@/layouts/admin-layout';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
-import { AdminDataTable, type AdminDataTableRef } from '@/components/admin/data-table';
+import { AdminDataTable  } from '@/components/admin/data-table';
+import type {AdminDataTableRef} from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogContent,
@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import AdminLayout from '@/layouts/admin-layout';
 
 interface SelectedCustomer {
     id: number;

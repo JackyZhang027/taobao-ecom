@@ -1,7 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import { ShoppingCart, User, Menu, X, Phone, Mail, Heart, Package, LogOut } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { SocialIcon } from '@/lib/social-icons';
 import type { SocialLink } from '@/types/settings';

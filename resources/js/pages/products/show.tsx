@@ -1,8 +1,8 @@
 import { Head, Link } from '@inertiajs/react';
 import DOMPurify from 'dompurify';
+import { ChevronLeft, ChevronRight, Minus, Plus, X, ZoomIn } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, ChevronRight, Minus, Plus, X, ZoomIn } from 'lucide-react';
 import { toast } from 'sonner';
 import { VariantSelector } from '@/components/variant-selector';
 import { useCart } from '@/hooks/use-cart';

@@ -1,16 +1,16 @@
 import { Head, router } from '@inertiajs/react';
+import { Plus } from 'lucide-react';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
+import { AdminPageHeader } from '@/components/admin/admin-page-header';
+import { AdminDataTable } from '@/components/admin/data-table';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import AdminLayout from '@/layouts/admin-layout';
 
 const escHtml = (s: string): string =>
     s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
      .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-import { toast } from 'sonner';
-import AdminLayout from '@/layouts/admin-layout';
-import { AdminPageHeader } from '@/components/admin/admin-page-header';
-import { AdminDataTable } from '@/components/admin/data-table';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus } from 'lucide-react';
 
 const columns = [
     {
@@ -50,13 +50,12 @@ const columns = [
 ];
 
 export default function AdminProductsIndex() {
-    // Expose inertia delete for DataTable action buttons
-    if (typeof window !== 'undefined') {
+    useEffect(() => {
         (window as any)._inertiaDelete = (url: string) => router.delete(url, {
             onSuccess: () => toast.success('Product deleted successfully'),
             onError: () => toast.error('Failed to delete product'),
         });
-    }
+    }, []);
 
     return (
         <AdminLayout>
