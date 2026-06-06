@@ -13,7 +13,7 @@ interface CustomerLayoutProps {
 
 export default function CustomerLayout({ children, fullWidth = false }: CustomerLayoutProps) {
     const { t } = useTranslation();
-    const { auth, cartCount, shopSettings = {}, socialLinks = [] } = usePage().props as any;
+    const { auth, cartCount, wishlistCount, shopSettings = {}, socialLinks = [] } = usePage().props as any;
     const { url } = usePage();
     const user = auth?.user;
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -71,8 +71,13 @@ export default function CustomerLayout({ children, fullWidth = false }: Customer
                                 )}
                             </Link>
                             {user && (
-                                <Link href="/wishlist" className="hidden md:block text-[#c8c8ca] hover:text-white transition-colors">
+                                <Link href="/wishlist" className="relative hidden md:block text-[#c8c8ca] hover:text-white transition-colors">
                                     <Heart className="h-5 w-5" />
+                                    {wishlistCount > 0 && (
+                                        <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white font-bold">
+                                            {wishlistCount}
+                                        </span>
+                                    )}
                                 </Link>
                             )}
                             {user ? (

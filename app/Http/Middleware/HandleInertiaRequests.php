@@ -49,6 +49,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'sidebarOpen' => $request->hasCookie('sidebar_state') && $request->cookie('sidebar_state') === 'true',
             'cartCount' => $this->resolveCartCount($request),
+            'wishlistCount' => $this->resolveWishlistCount($request),
             'exchangeRate' => app(\Modules\Currency\Services\CurrencyService::class)->getActiveRate(),
             'shopSettings' => $settings,
             'socialLinks' => fn () => \Illuminate\Support\Facades\Cache::remember(
@@ -66,6 +67,20 @@ class HandleInertiaRequests extends Middleware
             $cart = $cartService->resolveCart($request);
 
             return (int) $cart->items()->sum('quantity');
+        } catch (\Throwable) {
+            return 0;
+        }
+    }
+
+    private function resolveWishlistCount(Request $request): int
+    {
+        try {
+            $user = $request->user();
+            if (! $user) {
+                return 0;
+            }
+
+            return (int) \Modules\Catalog\Models\Wishlist::where('user_id', $user->id)->count();
         } catch (\Throwable) {
             return 0;
         }
