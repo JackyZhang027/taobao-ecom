@@ -65,33 +65,33 @@ export default function Home({ heroSlides, categories, shopSettings, products, w
                                     )}
                                     <div className="absolute inset-0 bg-black/10" />
                                     <div className="container relative flex justify-end items-center h-full px-6 md:px-16 mx-auto">
-                                        <div className="bg-white border border-slate-200 shadow-xl p-8 md:p-14 max-w-md rounded-sm">
-                                            {slide.subtitle && (
-                                                <p className="font-semibold tracking-[0.2em] text-slate-600 mb-3 uppercase text-xs">
-                                                    {slide.subtitle}
-                                                </p>
-                                            )}
-                                            {slide.title && (
+                                        {slide.title && (
+                                            <div className="bg-white border border-slate-200 shadow-xl p-8 md:p-14 max-w-md rounded-sm">
+                                                {slide.subtitle && (
+                                                    <p className="font-semibold tracking-[0.2em] text-slate-600 mb-3 uppercase text-xs">
+                                                        {slide.subtitle}
+                                                    </p>
+                                                )}
                                                 <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-5 leading-tight">
                                                     {slide.title}
                                                 </h1>
-                                            )}
-                                            {slide.description && (
-                                                <p className="text-slate-500 mb-8 text-sm leading-relaxed">
-                                                    {slide.description}
-                                                </p>
-                                            )}
-                                            {slide.cta_text && (
-                                                <Button
-                                                    className="bg-slate-900 hover:bg-slate-800 text-white px-10 py-6 text-sm uppercase tracking-widest font-semibold rounded-none"
-                                                    asChild
-                                                >
-                                                    <Link href={slide.cta_link || '/shop'}>
-                                                        {slide.cta_text}
-                                                    </Link>
-                                                </Button>
-                                            )}
-                                        </div>
+                                                {slide.description && (
+                                                    <p className="text-slate-500 mb-8 text-sm leading-relaxed">
+                                                        {slide.description}
+                                                    </p>
+                                                )}
+                                                {slide.cta_text && (
+                                                    <Button
+                                                        className="bg-slate-900 hover:bg-slate-800 text-white px-10 py-6 text-sm uppercase tracking-widest font-semibold rounded-none"
+                                                        asChild
+                                                    >
+                                                        <Link href={slide.cta_link || '/shop'}>
+                                                            {slide.cta_text}
+                                                        </Link>
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </SwiperSlide>
