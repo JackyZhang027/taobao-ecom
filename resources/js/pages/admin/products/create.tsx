@@ -57,6 +57,7 @@ export default function AdminProductCreate({ categories, exchangeRate }: CreateP
         price: '0',
         delivery_charge_batam: '0',
         delivery_charge_jakarta: '0',
+        show_delivery_charge: false,
         is_active: true,
         sort_order: '0',
         categories: [] as number[],
@@ -144,6 +145,7 @@ export default function AdminProductCreate({ categories, exchangeRate }: CreateP
             fd.append('delivery_charge_batam', formData.delivery_charge_batam);
             fd.append('delivery_charge_jakarta', formData.delivery_charge_jakarta);
         }
+        fd.append('show_delivery_charge', formData.show_delivery_charge ? '1' : '0');
         fd.append('is_active', formData.is_active ? '1' : '0');
         fd.append('sort_order', formData.sort_order);
 
@@ -437,6 +439,14 @@ export default function AdminProductCreate({ categories, exchangeRate }: CreateP
                                         onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, is_active: !!checked }))}
                                     />
                                     <Label htmlFor="is_active">Active</Label>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Checkbox
+                                        id="show_delivery_charge"
+                                        checked={formData.show_delivery_charge}
+                                        onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, show_delivery_charge: !!checked }))}
+                                    />
+                                    <Label htmlFor="show_delivery_charge">Show Delivery Charge on Storefront</Label>
                                 </div>
                             </CardContent>
                         </Card>

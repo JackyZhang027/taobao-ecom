@@ -1,10 +1,12 @@
 <?php
 
-use App\Http\Controllers\Customer\ProfileController as CustomerProfileController;
 use App\Http\Controllers\ChangePasswordController;
+use App\Http\Controllers\Customer\ProfileController as CustomerProfileController;
 use Illuminate\Support\Facades\Route;
 use Modules\Catalog\Http\Controllers\CategoryController;
+use Modules\Catalog\Http\Controllers\FaqController;
 use Modules\Catalog\Http\Controllers\HomeController;
+use Modules\Catalog\Http\Controllers\PageController;
 use Modules\Catalog\Http\Controllers\ProductController;
 use Modules\Catalog\Http\Controllers\WishlistController;
 use Modules\Ordering\Http\Controllers\CartController;
@@ -17,6 +19,9 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/shop', [ProductController::class, 'index'])->name('shop.index');
 Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
+
+Route::get('/pages/{slug}', [PageController::class, 'show'])->name('pages.show');
+Route::get('/faq', [FaqController::class, 'index'])->name('faq');
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::middleware('throttle:60,1')->group(function () {

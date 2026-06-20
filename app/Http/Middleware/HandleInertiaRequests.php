@@ -57,6 +57,23 @@ class HandleInertiaRequests extends Middleware
                 3600,
                 fn () => \Modules\Admin\Models\SocialLink::active()->get(['id', 'name', 'icon', 'url'])
             ),
+            'footerPages' => fn () => \Illuminate\Support\Facades\Cache::remember(
+                'footer_pages_active_'.\Illuminate\Support\Facades\Cache::get('cache_ver_pages', 0).'_'.app()->getLocale(),
+                3600,
+                fn () => \Modules\Admin\Models\Page::with('translations')
+                    ->where('is_active', true)
+                    ->whereNotNull('footer_section')
+                    ->orderBy('sort_order')
+                    ->get()
+                    ->map(fn ($page) => [
+                        'id' => $page->id,
+                        'slug' => $page->slug,
+                        'title' => $page->title,
+                        'footer_section' => $page->footer_section,
+                        'sort_order' => $page->sort_order,
+                    ])
+                    ->values()
+            ),
         ];
     }
 

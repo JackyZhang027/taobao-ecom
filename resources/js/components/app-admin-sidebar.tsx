@@ -40,14 +40,22 @@ export function AppAdminSidebar() {
         can('accounting_income_statement.view') && { title: 'Income Statement',  href: '/admin/accounting/reports/income-statement',  icon: TrendingUp },
     ].filter(Boolean) as NavItem[];
 
+    const contentItems = [
+        can('pages.view')         && { title: 'Pages',       href: '/admin/settings/pages', icon: FileText },
+        can('faqs.view')          && { title: 'FAQs',        href: '/admin/settings/faqs',  icon: BookOpen },
+        can('hero_slides.view')   && { title: 'Hero Slides', href: '/admin/settings/hero',  icon: ImageIcon },
+    ].filter(Boolean) as NavItem[];
+
+    const accessItems = [
+        can('users.view') && { title: 'Users', href: '/admin/users', icon: UserCog },
+        can('roles.view') && { title: 'Roles', href: '/admin/roles', icon: Shield },
+    ].filter(Boolean) as NavItem[];
+
     const settingItems = [
-        can('users.view')    && { title: 'Users',   href: '/admin/users',          icon: UserCog },
-        can('roles.view')    && { title: 'Roles',         href: '/admin/roles',          icon: Shield },
-        can('settings.view')      && { title: 'Shop Settings', href: '/admin/settings/shop',  icon: Settings },
-        can('hero_slides.view')   && { title: 'Hero Slides',   href: '/admin/settings/hero',  icon: ImageIcon },
-        can('exchange_rates.view')&& { title: 'Exchange Rates',href: '/admin/exchange-rates', icon: TrendingUp },
-        can('social_links.view')    && { title: 'Social Links',    href: '/admin/settings/social-links',    icon: Share2 },
-        can('store_features.view')  && { title: 'Store Features',  href: '/admin/settings/store-features',  icon: Sparkles },
+        can('settings.view')       && { title: 'Shop Settings',  href: '/admin/settings/shop',           icon: Settings },
+        can('exchange_rates.view') && { title: 'Exchange Rates', href: '/admin/exchange-rates',          icon: TrendingUp },
+        can('social_links.view')   && { title: 'Social Links',   href: '/admin/settings/social-links',   icon: Share2 },
+        can('store_features.view') && { title: 'Store Features', href: '/admin/settings/store-features', icon: Sparkles },
     ].filter(Boolean) as NavItem[];
 
     return (
@@ -71,6 +79,8 @@ export function AppAdminSidebar() {
                 {masterDataItems.length > 0 && <NavMain label="Master Data" items={masterDataItems} />}
                 {transactionItems.length > 0 && <NavMain label="Transaction" items={transactionItems} />}
                 {accountingNavItems.length > 0 && <NavMain label="Accounting" items={accountingNavItems} />}
+                {contentItems.length > 0 && <NavMain label="Content" items={contentItems} />}
+                {accessItems.length > 0 && <NavMain label="Access Control" items={accessItems} />}
                 {settingItems.length > 0 && <NavMain label="Setting" items={settingItems} />}
             </SidebarContent>
 

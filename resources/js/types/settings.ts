@@ -38,3 +38,39 @@ export type StoreFeature = {
     description: string;
     is_active: boolean;
 };
+
+export type PageTranslationData = {
+    title: string;
+    content: string;
+};
+
+export type FooterSection = 'navigation' | 'help' | 'pages';
+
+export type Page = {
+    id: number;
+    slug: string;
+    footer_section: FooterSection | null;
+    sort_order: number;
+    is_active: boolean;
+    translations: Record<string, PageTranslationData>;
+};
+
+export type FooterPage = {
+    id: number;
+    slug: string;
+    title: string;
+    footer_section: FooterSection;
+    sort_order: number;
+};
+
+export type FaqTranslationData = {
+    question: string;
+    answer: string;
+};
+
+export type Faq = {
+    id: number;
+    sort_order: number;
+    is_active: boolean;
+    translations: Record<string, FaqTranslationData>;
+};

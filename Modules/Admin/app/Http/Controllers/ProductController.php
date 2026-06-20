@@ -90,7 +90,7 @@ class ProductController extends Controller
 
         $product = DB::transaction(function () use ($request, $translations) {
             $product = Product::create(array_merge(
-                $request->only(['slug', 'thumbnail', 'price', 'is_active', 'sort_order']),
+                $request->only(['slug', 'thumbnail', 'price', 'show_delivery_charge', 'is_active', 'sort_order']),
                 [
                     'delivery_charge_batam'   => $request->input('delivery_charge_batam') ?? 0,
                     'delivery_charge_jakarta' => $request->input('delivery_charge_jakarta') ?? 0,
@@ -202,7 +202,7 @@ class ProductController extends Controller
 
         DB::transaction(function () use ($request, $product, $translations) {
             $product->update(array_merge(
-                $request->only(['slug', 'thumbnail', 'price', 'is_active', 'sort_order']),
+                $request->only(['slug', 'thumbnail', 'price', 'show_delivery_charge', 'is_active', 'sort_order']),
                 [
                     'delivery_charge_batam'   => $request->input('delivery_charge_batam') ?? 0,
                     'delivery_charge_jakarta' => $request->input('delivery_charge_jakarta') ?? 0,

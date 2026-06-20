@@ -8,6 +8,7 @@ import { AdminDataTable  } from '@/components/admin/data-table';
 import type {AdminDataTableRef} from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
 import AdminLayout from '@/layouts/admin-layout';
+import { sequenceColumn } from '@/lib/datatable-sequence-column';
 
 export default function AdminHeroSettingsIndex() {
     const tableRef = useRef<AdminDataTableRef>(null);
@@ -24,8 +25,8 @@ export default function AdminHeroSettingsIndex() {
     }, []);
 
     const columns = [
-        { data: 'id', title: 'ID', orderable: true },
-        { 
+        sequenceColumn(),
+        {
             data: 'image_url', 
             title: 'Image', 
             orderable: false,

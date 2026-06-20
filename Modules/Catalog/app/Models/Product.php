@@ -21,6 +21,7 @@ class Product extends Model implements HasMedia
         'price',
         'delivery_charge_batam',
         'delivery_charge_jakarta',
+        'show_delivery_charge',
         'is_active',
         'sort_order',
     ];
@@ -29,6 +30,7 @@ class Product extends Model implements HasMedia
         'price' => 'float',
         'delivery_charge_batam' => 'float',
         'delivery_charge_jakarta' => 'float',
+        'show_delivery_charge' => 'boolean',
         'is_active' => 'boolean',
     ];
 

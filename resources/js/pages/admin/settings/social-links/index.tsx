@@ -7,6 +7,7 @@ import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminDataTable } from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
 import AdminLayout from '@/layouts/admin-layout';
+import { sequenceColumn } from '@/lib/datatable-sequence-column';
 
 export default function AdminSocialLinksIndex() {
     useEffect(() => {
@@ -18,7 +19,7 @@ export default function AdminSocialLinksIndex() {
     }, []);
 
     const columns = [
-        { data: 'id', title: 'ID', orderable: true },
+        sequenceColumn(),
         { data: 'name', title: 'Name', orderable: true },
         { data: 'icon', title: 'Icon', orderable: true },
         {

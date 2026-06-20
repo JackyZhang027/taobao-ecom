@@ -79,6 +79,7 @@ export type Product = {
     delivery_charge_batam?: number;
     delivery_charge_jakarta?: number;
     delivery_charge_idr?: number;
+    show_delivery_charge?: boolean;
     is_active: boolean;
     sort_order: number;
     name: string;

@@ -117,6 +117,8 @@ export default function ProductShow({ product, whatsapp_number }: ShowProps) {
     }
 
     const hasShipping = activeBatamCharge > 0 || activeJakartaCharge > 0 || !!whatsapp_number;
+    const showDeliveryColumn = !!product.show_delivery_charge;
+    const shippingGridCols = showDeliveryColumn ? 'grid-cols-3' : 'grid-cols-2';
 
     return (
         <CustomerLayout fullWidth>
@@ -241,24 +243,26 @@ export default function ProductShow({ product, whatsapp_number }: ShowProps) {
                             {hasShipping && (
                                 <div className="mb-6">
                                     <p className="text-sm font-semibold text-slate-700 mb-2">
-                                        {t('product.shipping')}
+                                        {t('product.price')}
                                     </p>
 
                                     <div className="border border-slate-100 rounded-sm overflow-hidden text-sm">
                                         {/* Header */}
-                                        <div className="grid grid-cols-3 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-400 uppercase tracking-wide">
+                                        <div className={`grid ${shippingGridCols} bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-400 uppercase tracking-wide`}>
                                             <span>Location</span>
-                                            <span className="text-right">Delivery</span>
+                                            {showDeliveryColumn && <span className="text-right">Delivery</span>}
                                             <span className="text-right">Total</span>
                                         </div>
 
                                         {/* Batam */}
                                         {activeBatamCharge > 0 && (
-                                            <div className="grid grid-cols-3 px-3 py-2 border-t border-slate-100">
+                                            <div className={`grid ${shippingGridCols} px-3 py-2 border-t border-slate-100`}>
                                                 <span className="text-slate-700 font-medium">Batam</span>
-                                                <span className="text-right text-slate-500">
-                                                    {formatIdr(activeBatamCharge)}
-                                                </span>
+                                                {showDeliveryColumn && (
+                                                    <span className="text-right text-slate-500">
+                                                        {formatIdr(activeBatamCharge)}
+                                                    </span>
+                                                )}
                                                 <span className="text-right font-semibold text-slate-900">
                                                     {displayPrice
                                                         ? formatIdr(displayPrice + activeBatamCharge)
@@ -269,11 +273,13 @@ export default function ProductShow({ product, whatsapp_number }: ShowProps) {
 
                                         {/* Jakarta */}
                                         {activeJakartaCharge > 0 && (
-                                            <div className="grid grid-cols-3 px-3 py-2 border-t border-slate-100">
+                                            <div className={`grid ${shippingGridCols} px-3 py-2 border-t border-slate-100`}>
                                                 <span className="text-slate-700 font-medium">Jakarta</span>
-                                                <span className="text-right text-slate-500">
-                                                    {formatIdr(activeJakartaCharge)}
-                                                </span>
+                                                {showDeliveryColumn && (
+                                                    <span className="text-right text-slate-500">
+                                                        {formatIdr(activeJakartaCharge)}
+                                                    </span>
+                                                )}
                                                 <span className="text-right font-semibold text-slate-900">
                                                     {displayPrice
                                                         ? formatIdr(displayPrice + activeJakartaCharge)
@@ -284,10 +290,10 @@ export default function ProductShow({ product, whatsapp_number }: ShowProps) {
 
                                         {/* Others - ALWAYS shown if whatsapp exists */}
                                         {whatsapp_number && (
-                                            <div className="grid grid-cols-3 px-3 py-2 border-t border-slate-100 items-center">
+                                            <div className={`grid ${shippingGridCols} px-3 py-2 border-t border-slate-100 items-center`}>
                                                 <span className="text-slate-700 font-medium">Others</span>
 
-                                                <span className="col-span-2 flex justify-end">
+                                                <span className={`${showDeliveryColumn ? 'col-span-2' : ''} flex justify-end`}>
                                                     <a
                                                         href={`https://wa.me/${whatsapp_number.replace(/\D/g, '')}`}
                                                         target="_blank"

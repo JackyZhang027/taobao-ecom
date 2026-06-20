@@ -20,6 +20,7 @@ class UpdateProductRequest extends FormRequest
             'price'                                      => 'nullable|numeric|min:0',
             'delivery_charge_batam'                      => 'nullable|numeric|min:0',
             'delivery_charge_jakarta'                    => 'nullable|numeric|min:0',
+            'show_delivery_charge'                       => 'boolean',
             'is_active'                                  => 'boolean',
             'sort_order'                                 => 'integer|min:0',
             'categories'                                 => 'required|array|min:1',

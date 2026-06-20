@@ -130,6 +130,7 @@ class ProductController extends Controller
                 'delivery_charge_idr'         => (float) $product->delivery_charge,
                 'delivery_charge_batam'   => (float) ($product->delivery_charge_batam ?: $product->delivery_charge),
                 'delivery_charge_jakarta' => (float) ($product->delivery_charge_jakarta ?: $product->delivery_charge),
+                'show_delivery_charge'    => (bool) $product->show_delivery_charge,
                 'name'                        => $translation?->name ?? $product->slug,
                 'description'                 => $translation?->description,
                 'price_rmb'                   => $product->price,

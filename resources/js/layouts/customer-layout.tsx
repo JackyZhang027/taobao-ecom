@@ -1,10 +1,10 @@
 import { Link, usePage } from '@inertiajs/react';
-import { ShoppingCart, User, Menu, X, Phone, Mail, Heart, Package, LogOut } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, Heart, Package, LogOut } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { SocialIcon } from '@/lib/social-icons';
-import type { SocialLink } from '@/types/settings';
+import type { FooterPage, SocialLink } from '@/types/settings';
 
 interface CustomerLayoutProps {
     children: React.ReactNode;
@@ -13,9 +13,12 @@ interface CustomerLayoutProps {
 
 export default function CustomerLayout({ children, fullWidth = false }: CustomerLayoutProps) {
     const { t } = useTranslation();
-    const { auth, cartCount, wishlistCount, shopSettings = {}, socialLinks = [] } = usePage().props as any;
+    const { auth, cartCount, wishlistCount, shopSettings = {}, socialLinks = [], footerPages = [] } = usePage().props as any;
     const { url } = usePage();
     const user = auth?.user;
+    const navigationPages = (footerPages as FooterPage[]).filter((page) => page.footer_section === 'navigation');
+    const helpPages = (footerPages as FooterPage[]).filter((page) => page.footer_section === 'help');
+    const pagesSectionPages = (footerPages as FooterPage[]).filter((page) => page.footer_section === 'pages');
     const [mobileOpen, setMobileOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const profileRef = useRef<HTMLDivElement>(null);
@@ -31,7 +34,7 @@ export default function CustomerLayout({ children, fullWidth = false }: Customer
     }, []);
 
     return (
-        <div className="storefront min-h-screen bg-[#F8F5EF] text-slate-900 font-sans">
+        <div className="storefront min-h-screen flex flex-col bg-[#F8F5EF] text-slate-900 font-sans">
             {/* Main Navbar */}
             <nav className="bg-[#2d2d2d] border-b border-[#444] sticky top-0 z-50 shadow-sm">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -154,18 +157,18 @@ export default function CustomerLayout({ children, fullWidth = false }: Customer
                 )}
             </nav>
 
-            <main className={fullWidth ? 'w-full' : 'mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8'}>
+            <main className={fullWidth ? 'w-full flex-1' : 'mx-auto max-w-7xl flex-1 px-4 py-10 sm:px-6 lg:px-8'}>
                 {children}
             </main>
 
             {/* Footer */}
             <footer className="bg-slate-900 text-white">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+                    <div className={`grid grid-cols-1 gap-10 ${pagesSectionPages.length > 0 ? 'md:grid-cols-5' : 'md:grid-cols-4'}`}>
                         <div>
                             <h3 className="text-xl font-bold text-white mb-4">{shopSettings.shop_name || 'ShopNow'}</h3>
                             <p className="text-gray-400 text-sm leading-relaxed">
-                                {t('footer.tagline')}
+                                {shopSettings.description || t('footer.tagline')}
                             </p>
                             {(socialLinks as SocialLink[]).length > 0 && (
                                 <div className="flex gap-3 mt-6">
@@ -191,25 +194,46 @@ export default function CustomerLayout({ children, fullWidth = false }: Customer
                                 <li><Link href="/shop" className="hover:text-blue-400 transition-colors">{t('nav.shop')}</Link></li>
                                 {user && <li><Link href="/wishlist" className="hover:text-blue-400 transition-colors">{t('nav.wishlist')}</Link></li>}
                                 {user && <li><Link href="/orders" className="hover:text-blue-400 transition-colors">{t('footer.my_orders')}</Link></li>}
+                                {navigationPages.map((page) => (
+                                    <li key={page.id}><Link href={`/pages/${page.slug}`} className="hover:text-blue-400 transition-colors">{page.title}</Link></li>
+                                ))}
                             </ul>
                         </div>
-                        {/* <div>
+                        <div>
                             <h4 className="font-semibold text-sm uppercase tracking-wider mb-4 text-gray-300">{t('footer.help')}</h4>
                             <ul className="space-y-2 text-sm text-gray-400">
-                                <li><span className="hover:text-blue-400 transition-colors cursor-pointer">{t('footer.shipping_policy')}</span></li>
-                                <li><span className="hover:text-blue-400 transition-colors cursor-pointer">{t('footer.returns')}</span></li>
-                                <li><span className="hover:text-blue-400 transition-colors cursor-pointer">{t('footer.faq')}</span></li>
+                                <li><Link href="/faq" className="hover:text-blue-400 transition-colors">{t('footer.faq')}</Link></li>
+                                {helpPages.map((page) => (
+                                    <li key={page.id}><Link href={`/pages/${page.slug}`} className="hover:text-blue-400 transition-colors">{page.title}</Link></li>
+                                ))}
                             </ul>
-                        </div> */}
+                        </div>
+                        {pagesSectionPages.length > 0 && (
+                            <div>
+                                <h4 className="font-semibold text-sm uppercase tracking-wider mb-4 text-gray-300">{t('footer.pages')}</h4>
+                                <ul className="space-y-2 text-sm text-gray-400">
+                                    {pagesSectionPages.map((page) => (
+                                        <li key={page.id}><Link href={`/pages/${page.slug}`} className="hover:text-blue-400 transition-colors">{page.title}</Link></li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
                         <div>
                             <h4 className="font-semibold text-sm uppercase tracking-wider mb-4 text-gray-300">{t('footer.contact')}</h4>
                             <ul className="space-y-3 text-sm text-gray-400">
-                                {shopSettings.contact_email && (
-                                    <li className="flex items-start gap-2"><Mail className="h-4 w-4 mt-0.5 shrink-0 text-blue-400" />{shopSettings.contact_email}</li>
-                                )}
-                                {shopSettings.contact_phone && (
-                                    <li className="flex items-start gap-2"><Phone className="h-4 w-4 mt-0.5 shrink-0 text-blue-400" />{shopSettings.contact_phone}</li>
-                                )}
+                                {(socialLinks as SocialLink[]).map((link) => (
+                                    <li key={link.id} className="flex items-start gap-2">
+                                        <a
+                                            href={link.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-2 hover:text-blue-400 transition-colors"
+                                        >
+                                            <SocialIcon icon={link.icon} className="h-4 w-4 shrink-0 text-blue-400" />
+                                            {link.name}
+                                        </a>
+                                    </li>
+                                ))}
                             </ul>
                         </div>
                     </div>
