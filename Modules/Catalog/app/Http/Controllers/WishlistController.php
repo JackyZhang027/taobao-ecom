@@ -8,10 +8,11 @@ use Inertia\Inertia;
 use Modules\Catalog\Models\Product;
 use Modules\Catalog\Models\Wishlist;
 use Modules\Currency\Services\CurrencyService;
+use Modules\Delivery\Services\DeliveryService;
 
 class WishlistController extends Controller
 {
-    public function __construct(private CurrencyService $currency) {}
+    public function __construct(private CurrencyService $currency, private DeliveryService $delivery) {}
 
     public function index(Request $request)
     {
@@ -34,13 +35,18 @@ class WishlistController extends Controller
                 ?? $product->translations->firstWhere('locale', 'en');
 
             $activeVariants = $product->variants->where('is_active', true);
-            $minVariantPrice = $activeVariants->min('price');
-            $minPriceRmb = $minVariantPrice !== null
-                ? $minVariantPrice
+            $minVariant = $activeVariants->sortBy('price')->first();
+            $minPriceRmb = $minVariant !== null
+                ? $minVariant->price
                 : ($product->price ?? 0);
 
-            $deliveryBatamIdr = (float) ($product->delivery_charge_batam ?: $product->delivery_charge);
-            $deliveryJakartaIdr = (float) ($product->delivery_charge_jakarta ?: $product->delivery_charge);
+            if ($minVariant !== null) {
+                $deliveryBatamIdr = $this->delivery->calculateCharge((float) ($minVariant->delivery_rate_batam ?? 0));
+                $deliveryJakartaIdr = $this->delivery->calculateCharge((float) ($minVariant->delivery_rate_jakarta ?? 0));
+            } else {
+                $deliveryBatamIdr = $this->delivery->calculateCharge((float) ($product->delivery_rate_batam ?? 0));
+                $deliveryJakartaIdr = $this->delivery->calculateCharge((float) ($product->delivery_rate_jakarta ?? 0));
+            }
 
             $thumbnail = $product->thumbnail
                 ?? ($product->getFirstMediaUrl('images', 'thumb') ?: $product->getFirstMediaUrl('images') ?: null);

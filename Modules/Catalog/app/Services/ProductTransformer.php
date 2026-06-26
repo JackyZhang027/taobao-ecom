@@ -4,10 +4,11 @@ namespace Modules\Catalog\Services;
 
 use Modules\Catalog\Models\Product;
 use Modules\Currency\Services\CurrencyService;
+use Modules\Delivery\Services\DeliveryService;
 
 class ProductTransformer
 {
-    public function __construct(private CurrencyService $currency) {}
+    public function __construct(private CurrencyService $currency, private DeliveryService $delivery) {}
 
     public function transform(Product $product, bool $isWishlisted = false): array
     {
@@ -23,12 +24,12 @@ class ProductTransformer
 
         if ($minVariant !== null) {
             $minPriceRmb        = (float) $minVariant->price;
-            $deliveryBatamIdr   = (float) ($minVariant->delivery_charge_batam ?? 0);
-            $deliveryJakartaIdr = (float) ($minVariant->delivery_charge_jakarta ?? 0);
+            $deliveryBatamIdr   = $this->delivery->calculateCharge((float) ($minVariant->delivery_rate_batam ?? 0));
+            $deliveryJakartaIdr = $this->delivery->calculateCharge((float) ($minVariant->delivery_rate_jakarta ?? 0));
         } else {
             $minPriceRmb        = (float) ($product->price ?? 0);
-            $deliveryBatamIdr   = (float) ($product->delivery_charge_batam ?? 0);
-            $deliveryJakartaIdr = (float) ($product->delivery_charge_jakarta ?? 0);
+            $deliveryBatamIdr   = $this->delivery->calculateCharge((float) ($product->delivery_rate_batam ?? 0));
+            $deliveryJakartaIdr = $this->delivery->calculateCharge((float) ($product->delivery_rate_jakarta ?? 0));
         }
 
         return [

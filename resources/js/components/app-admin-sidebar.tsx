@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { LayoutGrid, Package, ShoppingCart, TrendingUp, FolderTree, Settings, Image as ImageIcon, Heart,
-    BarChart2, BookMarked, BookOpen, FileText, Scale, Users, UserCog, Shield, Share2, Sparkles
+    BarChart2, BookMarked, BookOpen, FileText, Scale, Users, UserCog, Shield, Share2, Sparkles, Truck
  } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
@@ -54,6 +54,7 @@ export function AppAdminSidebar() {
     const settingItems = [
         can('settings.view')       && { title: 'Shop Settings',  href: '/admin/settings/shop',           icon: Settings },
         can('exchange_rates.view') && { title: 'Exchange Rates', href: '/admin/exchange-rates',          icon: TrendingUp },
+        can('delivery_rates.view') && { title: 'Delivery Rates', href: '/admin/delivery-rates',          icon: Truck },
         can('social_links.view')   && { title: 'Social Links',   href: '/admin/settings/social-links',   icon: Share2 },
         can('store_features.view') && { title: 'Store Features', href: '/admin/settings/store-features', icon: Sparkles },
     ].filter(Boolean) as NavItem[];

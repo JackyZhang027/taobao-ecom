@@ -27,8 +27,8 @@ export interface VariantRow {
     variant_id?: number;
     option_labels: string[];
     price: string;
-    delivery_charge_batam: string;
-    delivery_charge_jakarta: string;
+    delivery_rate_batam: string;
+    delivery_rate_jakarta: string;
     sku: string;
     is_active: boolean;
 }
@@ -37,6 +37,7 @@ interface VariantBuilderProps {
     initialGroups: VariantGroup[];
     initialVariants: ProductVariant[];
     productSlug: string;
+    deliveryRate: number;
     onChange: (groups: BuilderGroup[], rows: VariantRow[]) => void;
     errors?: Record<string, string>;
     onClearError?: (key: string) => void;
@@ -84,6 +85,7 @@ export default function VariantBuilder({
     initialGroups,
     initialVariants,
     productSlug,
+    deliveryRate,
     onChange,
     errors = {},
     onClearError,
@@ -107,8 +109,8 @@ export default function VariantBuilder({
 
     const [variantRows, setVariantRows] = useState<VariantRow[]>([]);
     const [bulkPrice, setBulkPrice] = useState('');
-    const [bulkDeliveryBatam, setBulkDeliveryBatam] = useState('');
-    const [bulkDeliveryJakarta, setBulkDeliveryJakarta] = useState('');
+    const [bulkRateBatam, setBulkRateBatam] = useState('');
+    const [bulkRateJakarta, setBulkRateJakarta] = useState('');
 
     const initialVariantMapRef = useRef<Map<string, ProductVariant>>(
         new Map(
@@ -175,8 +177,8 @@ export default function VariantBuilder({
                         variant_id: dbVariant.id,
                         option_labels: optionLabels,
                         price: String(dbVariant.price ?? 0),
-                        delivery_charge_batam: String(dbVariant.delivery_charge_batam ?? 0),
-                        delivery_charge_jakarta: String(dbVariant.delivery_charge_jakarta ?? 0),
+                        delivery_rate_batam: String(dbVariant.delivery_rate_batam ?? 0),
+                        delivery_rate_jakarta: String(dbVariant.delivery_rate_jakarta ?? 0),
                         sku: dbVariant.sku ?? autoSku(productSlug, optionLabels),
                         is_active: dbVariant.is_active ?? true,
                     };
@@ -187,8 +189,8 @@ export default function VariantBuilder({
                     variant_id: undefined,
                     option_labels: optionLabels,
                     price: '0',
-                    delivery_charge_batam: '0',
-                    delivery_charge_jakarta: '0',
+                    delivery_rate_batam: '0',
+                    delivery_rate_jakarta: '0',
                     sku: autoSku(productSlug, optionLabels),
                     is_active: true,
                 };
@@ -304,22 +306,22 @@ export default function VariantBuilder({
         setBulkPrice('');
     };
 
-    const applyBulkDeliveryBatam = () => {
-        if (bulkDeliveryBatam === '') return;
+    const applyBulkRateBatam = () => {
+        if (bulkRateBatam === '') return;
         setVariantRows((prev) => {
-            if (parseFloat(bulkDeliveryBatam) > 0) prev.forEach((_, i) => onClearError?.(`variant_overrides.${i}.delivery_charge_batam`));
-            return prev.map((r) => ({ ...r, delivery_charge_batam: bulkDeliveryBatam }));
+            if (parseFloat(bulkRateBatam) > 0) prev.forEach((_, i) => onClearError?.(`variant_overrides.${i}.delivery_rate_batam`));
+            return prev.map((r) => ({ ...r, delivery_rate_batam: bulkRateBatam }));
         });
-        setBulkDeliveryBatam('');
+        setBulkRateBatam('');
     };
 
-    const applyBulkDeliveryJakarta = () => {
-        if (bulkDeliveryJakarta === '') return;
+    const applyBulkRateJakarta = () => {
+        if (bulkRateJakarta === '') return;
         setVariantRows((prev) => {
-            if (parseFloat(bulkDeliveryJakarta) > 0) prev.forEach((_, i) => onClearError?.(`variant_overrides.${i}.delivery_charge_batam`));
-            return prev.map((r) => ({ ...r, delivery_charge_jakarta: bulkDeliveryJakarta }));
+            if (parseFloat(bulkRateJakarta) > 0) prev.forEach((_, i) => onClearError?.(`variant_overrides.${i}.delivery_rate_jakarta`));
+            return prev.map((r) => ({ ...r, delivery_rate_jakarta: bulkRateJakarta }));
         });
-        setBulkDeliveryJakarta('');
+        setBulkRateJakarta('');
     };
 
     // ── Render ────────────────────────────────────────────────────────
@@ -457,40 +459,40 @@ export default function VariantBuilder({
                             </div>
                             <div className="flex items-center gap-1">
                                 <span className="text-xs text-muted-foreground whitespace-nowrap">
-                                    Batam delivery (Rp):
+                                    Batam rate (×):
                                 </span>
                                 <NumberInput
-                                    value={bulkDeliveryBatam}
-                                    onChange={setBulkDeliveryBatam}
-                                    className="h-7 w-28 text-xs"
-                                    placeholder="0"
+                                    value={bulkRateBatam}
+                                    onChange={setBulkRateBatam}
+                                    className="h-7 w-20 text-xs"
+                                    placeholder="0.5"
                                 />
                                 <Button
                                     type="button"
                                     size="sm"
                                     variant="outline"
                                     className="h-7 text-xs px-2"
-                                    onClick={applyBulkDeliveryBatam}
+                                    onClick={applyBulkRateBatam}
                                 >
                                     Apply
                                 </Button>
                             </div>
                             <div className="flex items-center gap-1">
                                 <span className="text-xs text-muted-foreground whitespace-nowrap">
-                                    Jakarta delivery (Rp):
+                                    Jakarta rate (×):
                                 </span>
                                 <NumberInput
-                                    value={bulkDeliveryJakarta}
-                                    onChange={setBulkDeliveryJakarta}
-                                    className="h-7 w-28 text-xs"
-                                    placeholder="0"
+                                    value={bulkRateJakarta}
+                                    onChange={setBulkRateJakarta}
+                                    className="h-7 w-20 text-xs"
+                                    placeholder="0.5"
                                 />
                                 <Button
                                     type="button"
                                     size="sm"
                                     variant="outline"
                                     className="h-7 text-xs px-2"
-                                    onClick={applyBulkDeliveryJakarta}
+                                    onClick={applyBulkRateJakarta}
                                 >
                                     Apply
                                 </Button>
@@ -517,10 +519,10 @@ export default function VariantBuilder({
                                         Price (¥) <span className="text-destructive">*</span>
                                     </th>
                                     <th className="px-2 py-2 text-left font-medium text-muted-foreground">
-                                        Batam (Rp)
+                                        Batam (×)
                                     </th>
                                     <th className="px-2 py-2 text-left font-medium text-muted-foreground">
-                                        Jakarta (Rp)
+                                        Jakarta (×)
                                     </th>
                                     <th className="px-2 py-2 text-left font-medium text-muted-foreground">
                                         Active
@@ -530,8 +532,8 @@ export default function VariantBuilder({
                             <tbody>
                                 {variantRows.map((row, ri) => {
                                     const ePrice   = errors[`variant_overrides.${ri}.price`];
-                                    const eBatam   = errors[`variant_overrides.${ri}.delivery_charge_batam`];
-                                    const eJakarta = errors[`variant_overrides.${ri}.delivery_charge_jakarta`];
+                                    const eBatam   = errors[`variant_overrides.${ri}.delivery_rate_batam`];
+                                    const eJakarta = errors[`variant_overrides.${ri}.delivery_rate_jakarta`];
                                     return (
                                     <tr key={row.combo_key} className="border-b last:border-0 align-top">
                                         {row.option_labels.map((label, i) => (
@@ -565,26 +567,32 @@ export default function VariantBuilder({
                                         </td>
                                         <td className="px-2 py-1.5">
                                             <NumberInput
-                                                value={row.delivery_charge_batam}
+                                                value={row.delivery_rate_batam}
                                                 onChange={(val) => {
-                                                    updateRow(row.combo_key, { delivery_charge_batam: val });
-                                                    if (parseFloat(val) > 0) onClearError?.(`variant_overrides.${ri}.delivery_charge_batam`);
+                                                    updateRow(row.combo_key, { delivery_rate_batam: val });
+                                                    if (parseFloat(val) > 0) onClearError?.(`variant_overrides.${ri}.delivery_rate_batam`);
                                                 }}
-                                                className={`h-7 w-28 text-xs${eBatam ? ' border-destructive' : ''}`}
-                                                placeholder="0"
+                                                className={`h-7 w-20 text-xs${eBatam ? ' border-destructive' : ''}`}
+                                                placeholder="0.5"
                                             />
+                                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                                                ≈ Rp {Math.round((parseFloat(row.delivery_rate_batam) || 0) * deliveryRate).toLocaleString('id-ID')}
+                                            </p>
                                             {eBatam && <p className="text-[10px] text-destructive mt-0.5">{eBatam}</p>}
                                         </td>
                                         <td className="px-2 py-1.5">
                                             <NumberInput
-                                                value={row.delivery_charge_jakarta}
+                                                value={row.delivery_rate_jakarta}
                                                 onChange={(val) => {
-                                                    updateRow(row.combo_key, { delivery_charge_jakarta: val });
-                                                    if (parseFloat(val) > 0) onClearError?.(`variant_overrides.${ri}.delivery_charge_batam`);
+                                                    updateRow(row.combo_key, { delivery_rate_jakarta: val });
+                                                    if (parseFloat(val) > 0) onClearError?.(`variant_overrides.${ri}.delivery_rate_jakarta`);
                                                 }}
-                                                className={`h-7 w-28 text-xs${eJakarta ? ' border-destructive' : ''}`}
-                                                placeholder="0"
+                                                className={`h-7 w-20 text-xs${eJakarta ? ' border-destructive' : ''}`}
+                                                placeholder="0.5"
                                             />
+                                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                                                ≈ Rp {Math.round((parseFloat(row.delivery_rate_jakarta) || 0) * deliveryRate).toLocaleString('id-ID')}
+                                            </p>
                                             {eJakarta && <p className="text-[10px] text-destructive mt-0.5">{eJakarta}</p>}
                                         </td>
                                         <td className="px-2 py-1.5">

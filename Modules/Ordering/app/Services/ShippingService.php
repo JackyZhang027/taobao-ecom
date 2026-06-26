@@ -3,10 +3,14 @@
 namespace Modules\Ordering\Services;
 
 use Illuminate\Support\Facades\Log;
+use Modules\Catalog\Models\Product;
+use Modules\Catalog\Models\ProductVariant;
+use Modules\Delivery\Services\DeliveryService;
 use Modules\Ordering\Models\Cart;
 
 class ShippingService
 {
+    public function __construct(private DeliveryService $delivery) {}
 
     public function calculateShippingIdr(Cart $cart, string $city = 'Batam'): float
     {
@@ -21,22 +25,27 @@ class ShippingService
                     return 0;
                 }
 
-                if ($variant) {
-                    $charge = match (strtolower($city)) {
-                        'jakarta' => $variant->delivery_charge_jakarta
-                                     ?: $variant->delivery_charge_batam
-                                     ?: $product->delivery_charge_jakarta,
-                        default   => $variant->delivery_charge_batam
-                                     ?: $product->delivery_charge_batam,
-                    };
-                } else {
-                    $charge = match (strtolower($city)) {
-                        'jakarta' => $product->delivery_charge_jakarta,
-                        default   => $product->delivery_charge_batam,
-                    };
-                }
+                $multiplier = $this->resolveMultiplier($product, $variant, $city);
 
-                return $charge * $item->quantity;
+                return $this->delivery->calculateCharge((float) $multiplier) * $item->quantity;
             });
+    }
+
+    public function resolveMultiplier(Product $product, ?ProductVariant $variant, string $city): float
+    {
+        if ($variant) {
+            return match (strtolower($city)) {
+                'jakarta' => $variant->delivery_rate_jakarta
+                             ?: $variant->delivery_rate_batam
+                             ?: $product->delivery_rate_jakarta,
+                default => $variant->delivery_rate_batam
+                             ?: $product->delivery_rate_batam,
+            };
+        }
+
+        return match (strtolower($city)) {
+            'jakarta' => $product->delivery_rate_jakarta,
+            default => $product->delivery_rate_batam,
+        };
     }
 }

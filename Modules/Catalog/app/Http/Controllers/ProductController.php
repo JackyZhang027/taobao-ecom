@@ -12,10 +12,15 @@ use Modules\Catalog\Models\Product;
 use Modules\Catalog\Models\Wishlist;
 use Modules\Catalog\Services\ProductTransformer;
 use Modules\Currency\Services\CurrencyService;
+use Modules\Delivery\Services\DeliveryService;
 
 class ProductController extends Controller
 {
-    public function __construct(private CurrencyService $currency, private ProductTransformer $transformer) {}
+    public function __construct(
+        private CurrencyService $currency,
+        private ProductTransformer $transformer,
+        private DeliveryService $delivery,
+    ) {}
 
     public function index(Request $request)
     {
@@ -100,8 +105,8 @@ class ProductController extends Controller
                 'price_rmb'                   => $v->price,
                 'price_idr'                   => $this->currency->rmbToIdr($v->price),
                 'compare_price_idr'           => $v->compare_price ? $this->currency->rmbToIdr($v->compare_price) : null,
-                'delivery_charge_batam'   => (float) $v->delivery_charge_batam,
-                'delivery_charge_jakarta' => (float) $v->delivery_charge_jakarta,
+                'delivery_charge_batam'   => $this->delivery->calculateCharge((float) $v->delivery_rate_batam),
+                'delivery_charge_jakarta' => $this->delivery->calculateCharge((float) $v->delivery_rate_jakarta),
                 'is_active'                   => $v->is_active,
                 'sort_order'                  => $v->sort_order,
                 'image_url'                   => $v->getFirstMediaUrl('image') ?: null,
@@ -127,9 +132,8 @@ class ProductController extends Controller
                 'id'                          => $product->id,
                 'slug'                        => $product->slug,
                 'thumbnail'                   => $thumbnailUrl,
-                'delivery_charge_idr'         => (float) $product->delivery_charge,
-                'delivery_charge_batam'   => (float) ($product->delivery_charge_batam ?: $product->delivery_charge),
-                'delivery_charge_jakarta' => (float) ($product->delivery_charge_jakarta ?: $product->delivery_charge),
+                'delivery_charge_batam'   => $this->delivery->calculateCharge((float) $product->delivery_rate_batam),
+                'delivery_charge_jakarta' => $this->delivery->calculateCharge((float) $product->delivery_rate_jakarta),
                 'show_delivery_charge'    => (bool) $product->show_delivery_charge,
                 'name'                        => $translation?->name ?? $product->slug,
                 'description'                 => $translation?->description,

@@ -21,6 +21,7 @@ class PermissionSeeder extends Seeder
         'settings.view', 'settings.edit',
         'hero_slides.view', 'hero_slides.create', 'hero_slides.edit', 'hero_slides.delete',
         'exchange_rates.view', 'exchange_rates.create',
+        'delivery_rates.view', 'delivery_rates.create',
         'social_links.view', 'social_links.create', 'social_links.edit', 'social_links.delete',
         'store_features.view', 'store_features.edit',
         'pages.view', 'pages.create', 'pages.edit', 'pages.delete',

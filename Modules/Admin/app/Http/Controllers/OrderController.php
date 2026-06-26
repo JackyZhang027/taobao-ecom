@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Modules\Catalog\Models\Product;
 use Modules\Currency\Services\CurrencyService;
+use Modules\Delivery\Services\DeliveryService;
 use Modules\Ordering\Models\Order;
 use Modules\Ordering\Models\OrderLine;
 use Modules\Ordering\Models\OrderStatusHistory;
@@ -23,6 +24,7 @@ class OrderController extends Controller
         private CurrencyService $currency,
         private ShippingService $shipping,
         private PaymentService $paymentService,
+        private DeliveryService $delivery,
     ) {}
 
     public function index(Request $request)
@@ -36,7 +38,7 @@ class OrderController extends Controller
 
         return DataTables::of($query)
             ->addColumn('customer_name', fn ($o) => $o->user?->name ?? '—')
-            ->addColumn('total', fn ($o) => 'Rp ' . number_format($o->grand_total_idr, 0, ',', '.'))
+            ->addColumn('total', fn ($o) => 'Rp '.number_format($o->grand_total_idr, 0, ',', '.'))
             ->addColumn('payment_status', fn ($o) => $o->payment?->status ?? 'unpaid')
             ->make(true);
     }
@@ -65,8 +67,8 @@ class OrderController extends Controller
     }
 
     private const TRANSITIONS = [
-        'pending'    => ['cancelled'],
-        'confirmed'  => ['processing', 'cancelled'],
+        'pending' => ['cancelled'],
+        'confirmed' => ['processing', 'cancelled'],
         'processing' => ['shipped', 'cancelled'],
     ];
 
@@ -75,8 +77,8 @@ class OrderController extends Controller
         $allowed = self::TRANSITIONS[$order->status] ?? [];
 
         $request->validate([
-            'status'          => 'required|in:' . implode(',', $allowed),
-            'courier'         => 'required_if:status,shipped|nullable|string|max:100',
+            'status' => 'required|in:'.implode(',', $allowed),
+            'courier' => 'required_if:status,shipped|nullable|string|max:100',
             'tracking_number' => 'required_if:status,shipped|nullable|string|max:100',
         ]);
 
@@ -105,14 +107,14 @@ class OrderController extends Controller
 
             $fields = ['status' => $request->status];
             if ($request->status === 'shipped') {
-                $fields['courier']         = $request->courier;
+                $fields['courier'] = $request->courier;
                 $fields['tracking_number'] = $request->tracking_number;
             }
             $freshOrder->update($fields);
 
             OrderStatusHistory::create([
-                'order_id'   => $freshOrder->id,
-                'status'     => $request->status,
+                'order_id' => $freshOrder->id,
+                'status' => $request->status,
                 'changed_by' => auth()->id(),
             ]);
         });
@@ -129,46 +131,50 @@ class OrderController extends Controller
             ->get()
             ->map(function ($product) {
                 $nameEn = $product->translations->firstWhere('locale', 'en')?->name ?? $product->slug;
+
                 return [
-                    'id'                     => $product->id,
-                    'slug'                   => $product->slug,
-                    'name'                   => $nameEn,
-                    'price'                  => $product->price,
-                    'price_idr'              => $this->currency->rmbToIdr($product->price),
-                    'delivery_charge_batam'  => $product->delivery_charge_batam,
-                    'delivery_charge_jakarta' => $product->delivery_charge_jakarta,
-                    'variants'               => $product->variants->map(fn ($v) => [
-                        'id'      => $v->id,
-                        'sku'     => $v->sku,
-                        'price'   => $v->price,
+                    'id' => $product->id,
+                    'slug' => $product->slug,
+                    'name' => $nameEn,
+                    'price' => $product->price,
+                    'price_idr' => $this->currency->rmbToIdr($product->price),
+                    'delivery_rate_batam' => $product->delivery_rate_batam,
+                    'delivery_rate_jakarta' => $product->delivery_rate_jakarta,
+                    'variants' => $product->variants->map(fn ($v) => [
+                        'id' => $v->id,
+                        'sku' => $v->sku,
+                        'price' => $v->price,
                         'price_idr' => $this->currency->rmbToIdr($product->price + $v->price),
+                        'delivery_rate_batam' => $v->delivery_rate_batam,
+                        'delivery_rate_jakarta' => $v->delivery_rate_jakarta,
                     ]),
                 ];
             });
 
         return Inertia::render('admin/orders/create', [
-            'customers'    => $customers,
-            'products'     => $products,
+            'customers' => $customers,
+            'products' => $products,
             'exchangeRate' => $this->currency->getActiveRate(),
+            'deliveryRate' => $this->delivery->getActiveRate(),
         ]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'user_id'              => 'required|exists:users,id',
-            'recipient_name'       => 'required|string|max:255',
-            'recipient_phone'      => 'required|string|max:30',
-            'street_address'       => 'required|string',
-            'city'                 => 'required|string|max:100',
-            'province'             => 'nullable|string|max:100',
-            'postal_code'          => 'nullable|string|max:10',
-            'notes'                => 'nullable|string',
-            'manual_shipping_rmb'  => 'nullable|numeric|min:0',
-            'items'                => 'required|array|min:1',
-            'items.*.product_id'   => 'required|exists:products,id',
-            'items.*.variant_id'   => 'nullable|exists:product_variants,id',
-            'items.*.quantity'     => 'required|integer|min:1',
+            'user_id' => 'required|exists:users,id',
+            'recipient_name' => 'required|string|max:255',
+            'recipient_phone' => 'required|string|max:30',
+            'street_address' => 'required|string',
+            'city' => 'required|string|max:100',
+            'province' => 'nullable|string|max:100',
+            'postal_code' => 'nullable|string|max:10',
+            'notes' => 'nullable|string',
+            'manual_shipping_rmb' => 'nullable|numeric|min:0',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.variant_id' => 'nullable|exists:product_variants,id',
+            'items.*.quantity' => 'required|integer|min:1',
         ]);
 
         $city = $request->city;
@@ -178,6 +184,7 @@ class OrderController extends Controller
 
         $order = DB::transaction(function () use ($request, $city, $isKnownCity, $exchangeRate) {
             $subtotalRmb = 0;
+            $shippingIdr = 0.0;
             $lines = [];
 
             foreach ($request->items as $itemData) {
@@ -194,48 +201,42 @@ class OrderController extends Controller
                 $nameEn = $product->translations->firstWhere('locale', 'en')?->name ?? $product->slug;
 
                 $lines[] = [
-                    'product_id'         => $product->id,
+                    'product_id' => $product->id,
                     'product_variant_id' => $variant?->id,
-                    'product_name'       => $nameEn,
-                    'variant_name'       => $variant?->sku,
-                    'sku'                => $variant?->sku ?? $product->slug ?? '-',
-                    'unit_price_idr'     => $unitPriceIdr,
-                    'quantity'           => $qty,
-                    'subtotal_idr'       => $unitPriceIdr * $qty,
+                    'product_name' => $nameEn,
+                    'variant_name' => $variant?->sku,
+                    'sku' => $variant?->sku ?? $product->slug ?? '-',
+                    'unit_price_idr' => $unitPriceIdr,
+                    'quantity' => $qty,
+                    'subtotal_idr' => $unitPriceIdr * $qty,
                 ];
+
+                if ($isKnownCity && empty($request->manual_shipping_rmb)) {
+                    $multiplier = $this->shipping->resolveMultiplier($product, $variant, $city);
+                    $shippingIdr += $this->delivery->calculateCharge((float) $multiplier) * $qty;
+                }
             }
 
             $subtotalIdr = $this->currency->rmbToIdr($subtotalRmb);
 
-            if ($isKnownCity && empty($request->manual_shipping_rmb)) {
-                // Auto-compute shipping based on known city tier
-                // Build a temporary collection to sum delivery charges
-                $productIds = collect($request->items)->pluck('product_id')->unique();
-                $shippingRmb = Product::whereIn('id', $productIds)->get()->sum(function ($product) use ($city) {
-                    return match (strtolower($city)) {
-                        'jakarta' => $product->delivery_charge_jakarta ?: $product->delivery_charge,
-                        default   => $product->delivery_charge_batam ?: $product->delivery_charge,
-                    };
-                });
-                $shippingIdr = $this->currency->rmbToIdr($shippingRmb);
-            } else {
+            if (! $isKnownCity || ! empty($request->manual_shipping_rmb)) {
                 $shippingIdr = $this->currency->rmbToIdr((float) ($request->manual_shipping_rmb ?? 0));
             }
 
             $order = Order::create([
-                'user_id'                => $request->user_id,
-                'status'                 => 'pending',
-                'subtotal_idr'           => $subtotalIdr,
-                'shipping_idr'           => $shippingIdr,
-                'grand_total_idr'        => $subtotalIdr + $shippingIdr,
+                'user_id' => $request->user_id,
+                'status' => 'pending',
+                'subtotal_idr' => $subtotalIdr,
+                'shipping_idr' => $shippingIdr,
+                'grand_total_idr' => $subtotalIdr + $shippingIdr,
                 'exchange_rate_snapshot' => $exchangeRate,
-                'recipient_name'         => $request->recipient_name,
-                'recipient_phone'        => $request->recipient_phone,
-                'street_address'         => $request->street_address,
-                'city'                   => $city,
-                'province'               => $request->province,
-                'postal_code'            => $request->postal_code,
-                'notes'                  => $request->notes,
+                'recipient_name' => $request->recipient_name,
+                'recipient_phone' => $request->recipient_phone,
+                'street_address' => $request->street_address,
+                'city' => $city,
+                'province' => $request->province,
+                'postal_code' => $request->postal_code,
+                'notes' => $request->notes,
             ]);
 
             foreach ($lines as $line) {
@@ -243,8 +244,8 @@ class OrderController extends Controller
             }
 
             OrderStatusHistory::create([
-                'order_id'   => $order->id,
-                'status'     => 'pending',
+                'order_id' => $order->id,
+                'status' => 'pending',
                 'changed_by' => auth()->id(),
             ]);
 

@@ -19,18 +19,18 @@ class ProductVariant extends Model implements HasMedia
         'sku',
         'price',
         'compare_price',
-        'delivery_charge_batam',
-        'delivery_charge_jakarta',
+        'delivery_rate_batam',
+        'delivery_rate_jakarta',
         'stock',
         'is_active',
         'sort_order',
     ];
 
     protected $casts = [
-        'price'                   => 'float',
-        'compare_price'           => 'float',
-        'delivery_charge_batam'   => 'float',
-        'delivery_charge_jakarta' => 'float',
+        'price'                 => 'float',
+        'compare_price'         => 'float',
+        'delivery_rate_batam'   => 'float',
+        'delivery_rate_jakarta' => 'float',
         'is_active'               => 'boolean',
     ];
 

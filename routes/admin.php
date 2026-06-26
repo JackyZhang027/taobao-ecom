@@ -9,6 +9,7 @@ use Modules\Admin\Http\Controllers\AdminUserController;
 use Modules\Admin\Http\Controllers\CategoryController;
 use Modules\Admin\Http\Controllers\CustomerController;
 use Modules\Admin\Http\Controllers\DashboardController;
+use Modules\Admin\Http\Controllers\DeliveryRateController;
 use Modules\Admin\Http\Controllers\ExchangeRateController;
 use Modules\Admin\Http\Controllers\FaqController as AdminFaqController;
 use Modules\Admin\Http\Controllers\HeroSlideController;
@@ -66,6 +67,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'permiss
     Route::get('exchange-rates/datatable', [ExchangeRateController::class, 'datatable'])->name('exchange-rates.datatable')->middleware('permission:exchange_rates.view');
     Route::get('exchange-rates', [ExchangeRateController::class, 'index'])->name('exchange-rates.index')->middleware('permission:exchange_rates.view');
     Route::post('exchange-rates', [ExchangeRateController::class, 'store'])->name('exchange-rates.store')->middleware('permission:exchange_rates.create');
+
+    // --- Delivery Rates ---
+    Route::get('delivery-rates/datatable', [DeliveryRateController::class, 'datatable'])->name('delivery-rates.datatable')->middleware('permission:delivery_rates.view');
+    Route::get('delivery-rates', [DeliveryRateController::class, 'index'])->name('delivery-rates.index')->middleware('permission:delivery_rates.view');
+    Route::post('delivery-rates', [DeliveryRateController::class, 'store'])->name('delivery-rates.store')->middleware('permission:delivery_rates.create');
 
     // --- Customers ---
     Route::get('customers/datatable', [CustomerController::class, 'datatable'])->name('customers.datatable')->middleware('permission:customers.view');

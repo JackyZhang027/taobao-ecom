@@ -2,11 +2,11 @@
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Modules\Catalog\Models\Product;
-use Modules\Catalog\Models\ProductTranslation;
 use Modules\Catalog\Models\ProductVariant;
 use Modules\Currency\Services\CurrencyService;
+use Modules\Delivery\Models\DeliveryRate;
 use Modules\Ordering\Models\Cart;
 use Modules\Ordering\Models\CartItem;
 use Modules\Ordering\Services\CartService;
@@ -18,6 +18,11 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+    // A rate of 1 means multiplier × rate == multiplier, so every numeric
+    // expectation below (in "IDR") stays valid while only field names change.
+    DeliveryRate::query()->delete();
+    DeliveryRate::create(['rate' => 1, 'is_active' => true]);
 });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -25,43 +30,44 @@ beforeEach(function () {
 function makeProduct(array $attrs = []): Product
 {
     return Product::create(array_merge([
-        'slug'                    => 'test-product-' . uniqid(),
-        'price'                   => 100,
-        'delivery_charge_batam'   => 20000,
-        'delivery_charge_jakarta' => 30000,
-        'is_active'               => true,
-        'sort_order'              => 0,
+        'slug' => 'test-product-'.uniqid(),
+        'price' => 100,
+        'delivery_rate_batam' => 20000,
+        'delivery_rate_jakarta' => 30000,
+        'is_active' => true,
+        'sort_order' => 0,
     ], $attrs));
 }
 
 function makeVariant(Product $product, array $attrs = []): ProductVariant
 {
     return ProductVariant::create(array_merge([
-        'product_id'              => $product->id,
-        'sku'                     => 'SKU-' . uniqid(),
-        'price'                   => 50,
-        'delivery_charge_batam'   => 15000,
-        'delivery_charge_jakarta' => 25000,
-        'stock'                   => 10,
-        'is_active'               => true,
-        'sort_order'              => 0,
+        'product_id' => $product->id,
+        'sku' => 'SKU-'.uniqid(),
+        'price' => 50,
+        'delivery_rate_batam' => 15000,
+        'delivery_rate_jakarta' => 25000,
+        'stock' => 10,
+        'is_active' => true,
+        'sort_order' => 0,
     ], $attrs));
 }
 
 function makeCart(): Cart
 {
-    return Cart::create(['session_id' => 'test-session-' . uniqid(), 'user_id' => null]);
+    return Cart::create(['session_id' => 'test-session-'.uniqid(), 'user_id' => null]);
 }
 
 function cartWithVariant(ProductVariant $variant): Cart
 {
     $cart = makeCart();
     CartItem::create([
-        'cart_id'            => $cart->id,
+        'cart_id' => $cart->id,
         'product_variant_id' => $variant->id,
-        'product_id'         => null,
-        'quantity'           => 1,
+        'product_id' => null,
+        'quantity' => 1,
     ]);
+
     return $cart;
 }
 
@@ -69,55 +75,56 @@ function cartWithProduct(Product $product): Cart
 {
     $cart = makeCart();
     CartItem::create([
-        'cart_id'            => $cart->id,
-        'product_id'         => $product->id,
+        'cart_id' => $cart->id,
+        'product_id' => $product->id,
         'product_variant_id' => null,
-        'quantity'           => 1,
+        'quantity' => 1,
     ]);
+
     return $cart;
 }
 
 // ─── ShippingService ──────────────────────────────────────────────────────────
 
-test('ShippingService uses variant delivery_charge_batam when set', function () {
-    $product = makeProduct(['delivery_charge_batam' => 20000]);
-    $variant = makeVariant($product, ['delivery_charge_batam' => 15000]);
-    $cart    = cartWithVariant($variant);
+test('ShippingService uses variant delivery_rate_batam when set', function () {
+    $product = makeProduct(['delivery_rate_batam' => 20000]);
+    $variant = makeVariant($product, ['delivery_rate_batam' => 15000]);
+    $cart = cartWithVariant($variant);
 
     $shipping = app(ShippingService::class);
     expect($shipping->calculateShippingIdr($cart, 'Batam'))->toBe(15000.0);
 });
 
-test('ShippingService uses variant delivery_charge_jakarta when set', function () {
-    $product = makeProduct(['delivery_charge_jakarta' => 30000]);
-    $variant = makeVariant($product, ['delivery_charge_jakarta' => 25000]);
-    $cart    = cartWithVariant($variant);
+test('ShippingService uses variant delivery_rate_jakarta when set', function () {
+    $product = makeProduct(['delivery_rate_jakarta' => 30000]);
+    $variant = makeVariant($product, ['delivery_rate_jakarta' => 25000]);
+    $cart = cartWithVariant($variant);
 
     $shipping = app(ShippingService::class);
     expect($shipping->calculateShippingIdr($cart, 'Jakarta'))->toBe(25000.0);
 });
 
 test('ShippingService falls back to product delivery charge when variant charge is zero', function () {
-    $product = makeProduct(['delivery_charge_batam' => 20000]);
-    $variant = makeVariant($product, ['delivery_charge_batam' => 0, 'delivery_charge_jakarta' => 0]);
-    $cart    = cartWithVariant($variant);
+    $product = makeProduct(['delivery_rate_batam' => 20000]);
+    $variant = makeVariant($product, ['delivery_rate_batam' => 0, 'delivery_rate_jakarta' => 0]);
+    $cart = cartWithVariant($variant);
 
     $shipping = app(ShippingService::class);
     expect($shipping->calculateShippingIdr($cart, 'Batam'))->toBe(20000.0);
 });
 
 test('ShippingService uses product delivery charge for non-variant product', function () {
-    $product = makeProduct(['delivery_charge_batam' => 20000]);
-    $cart    = cartWithProduct($product);
+    $product = makeProduct(['delivery_rate_batam' => 20000]);
+    $cart = cartWithProduct($product);
 
     $shipping = app(ShippingService::class);
     expect($shipping->calculateShippingIdr($cart, 'Batam'))->toBe(20000.0);
 });
 
 test('ShippingService multiplies delivery charge by item quantity', function () {
-    $product = makeProduct(['delivery_charge_batam' => 20000]);
-    $variant = makeVariant($product, ['delivery_charge_batam' => 15000]);
-    $cart    = makeCart();
+    $product = makeProduct(['delivery_rate_batam' => 20000]);
+    $variant = makeVariant($product, ['delivery_rate_batam' => 15000]);
+    $cart = makeCart();
     CartItem::create(['cart_id' => $cart->id, 'product_variant_id' => $variant->id, 'product_id' => null, 'quantity' => 3]);
 
     $shipping = app(ShippingService::class);
@@ -125,11 +132,11 @@ test('ShippingService multiplies delivery charge by item quantity', function () 
 });
 
 test('ShippingService sums shipping across multiple items with different quantities', function () {
-    $productA = makeProduct(['delivery_charge_batam' => 20000]);
-    $variantA = makeVariant($productA, ['delivery_charge_batam' => 15000]);
-    $productB = makeProduct(['delivery_charge_batam' => 20000]);
-    $variantB = makeVariant($productB, ['delivery_charge_batam' => 20000]);
-    $cart     = makeCart();
+    $productA = makeProduct(['delivery_rate_batam' => 20000]);
+    $variantA = makeVariant($productA, ['delivery_rate_batam' => 15000]);
+    $productB = makeProduct(['delivery_rate_batam' => 20000]);
+    $variantB = makeVariant($productB, ['delivery_rate_batam' => 20000]);
+    $cart = makeCart();
     CartItem::create(['cart_id' => $cart->id, 'product_variant_id' => $variantA->id, 'product_id' => null, 'quantity' => 3]);
     CartItem::create(['cart_id' => $cart->id, 'product_variant_id' => $variantB->id, 'product_id' => null, 'quantity' => 2]);
 
@@ -138,16 +145,29 @@ test('ShippingService sums shipping across multiple items with different quantit
     expect($shipping->calculateShippingIdr($cart, 'Batam'))->toBe(85000.0);
 });
 
+test('ShippingService multiplies multiplier by a non-1 active delivery rate', function () {
+    DeliveryRate::query()->delete();
+    DeliveryRate::create(['rate' => 2, 'is_active' => true]);
+    Cache::forget('delivery_rate_active');
+
+    $product = makeProduct(['delivery_rate_batam' => 20000]);
+    $variant = makeVariant($product, ['delivery_rate_batam' => 15000]);
+    $cart = cartWithVariant($variant);
+
+    $shipping = app(ShippingService::class);
+    expect($shipping->calculateShippingIdr($cart, 'Batam'))->toBe(30000.0); // 15000 * 2
+});
+
 // ─── CartService::computeTotals ───────────────────────────────────────────────
 
 test('computeTotals grand_total_idr uses variant delivery charge', function () {
-    $product = makeProduct(['delivery_charge_batam' => 99000]);
-    $variant = makeVariant($product, ['price' => 50, 'delivery_charge_batam' => 15000]);
-    $cart    = cartWithVariant($variant);
+    $product = makeProduct(['delivery_rate_batam' => 99000]);
+    $variant = makeVariant($product, ['price' => 50, 'delivery_rate_batam' => 15000]);
+    $cart = cartWithVariant($variant);
 
     $currency = app(CurrencyService::class);
     $shipping = app(ShippingService::class);
-    $service  = app(CartService::class);
+    $service = app(CartService::class);
 
     $totals = $service->computeTotals($cart, $currency, $shipping, 'Batam');
 
@@ -156,13 +176,13 @@ test('computeTotals grand_total_idr uses variant delivery charge', function () {
 });
 
 test('canDeliver is true when variant has delivery charge but product does not', function () {
-    $product = makeProduct(['delivery_charge_batam' => 0, 'delivery_charge' => 0]);
-    $variant = makeVariant($product, ['delivery_charge_batam' => 15000]);
-    $cart    = cartWithVariant($variant);
+    $product = makeProduct(['delivery_rate_batam' => 0]);
+    $variant = makeVariant($product, ['delivery_rate_batam' => 15000]);
+    $cart = cartWithVariant($variant);
 
     $currency = app(CurrencyService::class);
     $shipping = app(ShippingService::class);
-    $service  = app(CartService::class);
+    $service = app(CartService::class);
 
     $totals = $service->computeTotals($cart, $currency, $shipping, 'Batam');
     expect($totals['can_deliver_batam'])->toBeTrue();
@@ -177,10 +197,10 @@ test('store product without variants requires product price', function () {
 
     $this->actingAs($user)
         ->post(route('admin.products.store'), [
-            'slug'         => 'test-no-price',
-            'is_active'    => true,
-            'sort_order'   => 0,
-            'categories'   => [],
+            'slug' => 'test-no-price',
+            'is_active' => true,
+            'sort_order' => 0,
+            'categories' => [],
             'translations' => ['en' => ['name' => 'Test']],
         ])
         ->assertSessionHasErrors('price');
@@ -193,16 +213,16 @@ test('store product without variants requires at least one delivery charge', fun
 
     $this->actingAs($user)
         ->post(route('admin.products.store'), [
-            'slug'                    => 'test-no-delivery',
-            'price'                   => '50',
-            'delivery_charge_batam'   => '0',
-            'delivery_charge_jakarta' => '0',
-            'is_active'               => true,
-            'sort_order'              => 0,
-            'categories'              => [],
-            'translations'            => ['en' => ['name' => 'Test No Delivery']],
+            'slug' => 'test-no-delivery',
+            'price' => '50',
+            'delivery_rate_batam' => '0',
+            'delivery_rate_jakarta' => '0',
+            'is_active' => true,
+            'sort_order' => 0,
+            'categories' => [],
+            'translations' => ['en' => ['name' => 'Test No Delivery']],
         ])
-        ->assertSessionHasErrors('delivery_charge_batam');
+        ->assertSessionHasErrors('delivery_rate_batam');
 });
 
 test('store product without variants accepts batam-only delivery charge', function () {
@@ -212,16 +232,16 @@ test('store product without variants accepts batam-only delivery charge', functi
 
     $this->actingAs($user)
         ->post(route('admin.products.store'), [
-            'slug'                    => 'test-batam-only',
-            'price'                   => '50',
-            'delivery_charge_batam'   => '15000',
-            'delivery_charge_jakarta' => '0',
-            'is_active'               => true,
-            'sort_order'              => 0,
-            'categories'              => [1],
-            'translations'            => ['en' => ['name' => 'Batam Only']],
+            'slug' => 'test-batam-only',
+            'price' => '50',
+            'delivery_rate_batam' => '15000',
+            'delivery_rate_jakarta' => '0',
+            'is_active' => true,
+            'sort_order' => 0,
+            'categories' => [1],
+            'translations' => ['en' => ['name' => 'Batam Only']],
         ])
-        ->assertSessionDoesntHaveErrors('delivery_charge_batam');
+        ->assertSessionDoesntHaveErrors('delivery_rate_batam');
 });
 
 test('store product with variants rejects both-zero variant delivery charges', function () {
@@ -231,19 +251,19 @@ test('store product with variants rejects both-zero variant delivery charges', f
 
     $this->actingAs($user)
         ->post(route('admin.products.store'), [
-            'slug'              => 'test-variant-zero-delivery',
-            'is_active'         => true,
-            'sort_order'        => 0,
-            'categories'        => [],
-            'translations'      => ['en' => ['name' => 'Zero Variant Delivery']],
-            'variant_groups'    => [
+            'slug' => 'test-variant-zero-delivery',
+            'is_active' => true,
+            'sort_order' => 0,
+            'categories' => [],
+            'translations' => ['en' => ['name' => 'Zero Variant Delivery']],
+            'variant_groups' => [
                 ['name' => 'Size', 'has_images' => false, 'options' => ['S']],
             ],
             'variant_overrides' => [
-                ['price' => '50', 'delivery_charge_batam' => '0', 'delivery_charge_jakarta' => '0', 'sku' => 'TEST-S', 'is_active' => '1'],
+                ['price' => '50', 'delivery_rate_batam' => '0', 'delivery_rate_jakarta' => '0', 'sku' => 'TEST-S', 'is_active' => '1'],
             ],
         ])
-        ->assertSessionHasErrors('variant_overrides.0.delivery_charge_batam');
+        ->assertSessionHasErrors('variant_overrides.0.delivery_rate_batam');
 });
 
 test('store product with variants accepts jakarta-only variant delivery charge', function () {
@@ -253,19 +273,19 @@ test('store product with variants accepts jakarta-only variant delivery charge',
 
     $this->actingAs($user)
         ->post(route('admin.products.store'), [
-            'slug'              => 'test-variant-jakarta-only',
-            'is_active'         => true,
-            'sort_order'        => 0,
-            'categories'        => [1],
-            'translations'      => ['en' => ['name' => 'Jakarta Only Variant']],
-            'variant_groups'    => [
+            'slug' => 'test-variant-jakarta-only',
+            'is_active' => true,
+            'sort_order' => 0,
+            'categories' => [1],
+            'translations' => ['en' => ['name' => 'Jakarta Only Variant']],
+            'variant_groups' => [
                 ['name' => 'Size', 'has_images' => false, 'options' => ['S']],
             ],
             'variant_overrides' => [
-                ['price' => '50', 'delivery_charge_batam' => '0', 'delivery_charge_jakarta' => '25000', 'sku' => 'TEST-S', 'is_active' => '1'],
+                ['price' => '50', 'delivery_rate_batam' => '0', 'delivery_rate_jakarta' => '25000', 'sku' => 'TEST-S', 'is_active' => '1'],
             ],
         ])
-        ->assertSessionDoesntHaveErrors('variant_overrides.0.delivery_charge_batam');
+        ->assertSessionDoesntHaveErrors('variant_overrides.0.delivery_rate_batam');
 });
 
 test('store product with variants does not require product price', function () {
@@ -275,17 +295,17 @@ test('store product with variants does not require product price', function () {
 
     $response = $this->actingAs($user)
         ->post(route('admin.products.store'), [
-            'slug'              => 'test-with-variants',
-            'is_active'         => true,
-            'sort_order'        => 0,
-            'categories'        => [],
-            'translations'      => ['en' => ['name' => 'Test Variant Product']],
-            'variant_groups'    => [
+            'slug' => 'test-with-variants',
+            'is_active' => true,
+            'sort_order' => 0,
+            'categories' => [],
+            'translations' => ['en' => ['name' => 'Test Variant Product']],
+            'variant_groups' => [
                 ['name' => 'Size', 'has_images' => false, 'options' => ['Small', 'Large']],
             ],
             'variant_overrides' => [
-                ['price' => '50', 'delivery_charge_batam' => '15000', 'delivery_charge_jakarta' => '25000', 'sku' => 'TEST-SMALL', 'is_active' => '1'],
-                ['price' => '60', 'delivery_charge_batam' => '15000', 'delivery_charge_jakarta' => '25000', 'sku' => 'TEST-LARGE', 'is_active' => '1'],
+                ['price' => '50', 'delivery_rate_batam' => '15000', 'delivery_rate_jakarta' => '25000', 'sku' => 'TEST-SMALL', 'is_active' => '1'],
+                ['price' => '60', 'delivery_rate_batam' => '15000', 'delivery_rate_jakarta' => '25000', 'sku' => 'TEST-LARGE', 'is_active' => '1'],
             ],
         ]);
 
@@ -299,19 +319,19 @@ test('store product with variants requires variant delivery charges', function (
 
     $this->actingAs($user)
         ->post(route('admin.products.store'), [
-            'slug'              => 'test-missing-delivery',
-            'is_active'         => true,
-            'sort_order'        => 0,
-            'categories'        => [],
-            'translations'      => ['en' => ['name' => 'Missing Delivery']],
-            'variant_groups'    => [
+            'slug' => 'test-missing-delivery',
+            'is_active' => true,
+            'sort_order' => 0,
+            'categories' => [],
+            'translations' => ['en' => ['name' => 'Missing Delivery']],
+            'variant_groups' => [
                 ['name' => 'Size', 'has_images' => false, 'options' => ['S']],
             ],
             'variant_overrides' => [
                 ['price' => '50', 'sku' => 'TEST-S', 'is_active' => '1'],
             ],
         ])
-        ->assertSessionHasErrors('variant_overrides.0.delivery_charge_batam');
+        ->assertSessionHasErrors('variant_overrides.0.delivery_rate_batam');
 });
 
 // ─── Variant delivery charge stored and retrieved correctly ───────────────────
@@ -319,11 +339,11 @@ test('store product with variants requires variant delivery charges', function (
 test('variant delivery charges are persisted and retrievable', function () {
     $product = makeProduct();
     $variant = makeVariant($product, [
-        'delivery_charge_batam'   => 18000,
-        'delivery_charge_jakarta' => 28000,
+        'delivery_rate_batam' => 18000,
+        'delivery_rate_jakarta' => 28000,
     ]);
 
     $fresh = ProductVariant::find($variant->id);
-    expect($fresh->delivery_charge_batam)->toBe(18000.0);
-    expect($fresh->delivery_charge_jakarta)->toBe(28000.0);
+    expect($fresh->delivery_rate_batam)->toBe(18000.0);
+    expect($fresh->delivery_rate_jakarta)->toBe(28000.0);
 });

@@ -38,12 +38,12 @@ class ProductVariantService
                 'compare_price'           => isset($data['compare_price']) && $data['compare_price'] !== ''
                     ? (float) $data['compare_price']
                     : null,
-                'delivery_charge_batam'   => isset($data['delivery_charge_batam'])
-                    ? (float) $data['delivery_charge_batam']
-                    : $variant->delivery_charge_batam,
-                'delivery_charge_jakarta' => isset($data['delivery_charge_jakarta'])
-                    ? (float) $data['delivery_charge_jakarta']
-                    : $variant->delivery_charge_jakarta,
+                'delivery_rate_batam'     => isset($data['delivery_rate_batam'])
+                    ? (float) $data['delivery_rate_batam']
+                    : $variant->delivery_rate_batam,
+                'delivery_rate_jakarta'   => isset($data['delivery_rate_jakarta'])
+                    ? (float) $data['delivery_rate_jakarta']
+                    : $variant->delivery_rate_jakarta,
                 'stock'                   => isset($data['stock']) ? (int) $data['stock'] : $variant->stock,
                 'sku'                     => $data['sku'] ?? $variant->sku,
                 'is_active'               => isset($data['is_active'])

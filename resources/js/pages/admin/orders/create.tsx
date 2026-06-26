@@ -20,6 +20,8 @@ interface ProductVariantOption {
     sku: string | null;
     price: number;
     price_idr: number;
+    delivery_rate_batam: number;
+    delivery_rate_jakarta: number;
 }
 
 interface ProductOption {
@@ -28,8 +30,8 @@ interface ProductOption {
     name: string;
     price: number;
     price_idr: number;
-    delivery_charge_batam: number;
-    delivery_charge_jakarta: number;
+    delivery_rate_batam: number;
+    delivery_rate_jakarta: number;
     variants: ProductVariantOption[];
 }
 
@@ -43,11 +45,12 @@ interface AdminOrderCreateProps {
     customers: Customer[];
     products: ProductOption[];
     exchangeRate: number;
+    deliveryRate: number;
 }
 
 const KNOWN_CITIES = ['batam', 'jakarta'];
 
-export default function AdminOrderCreate({ customers, products, exchangeRate }: AdminOrderCreateProps) {
+export default function AdminOrderCreate({ customers, products, exchangeRate, deliveryRate }: AdminOrderCreateProps) {
     const { formatIdr } = useCurrency();
     const [items, setItems] = useState<OrderItem[]>([{ product_id: '', variant_id: null, quantity: 1 }]);
     const [city, setCity] = useState('');
@@ -108,18 +111,22 @@ export default function AdminOrderCreate({ customers, products, exchangeRate }: 
         return sum + product.price_idr * item.quantity;
     }, 0);
 
-    // Compute shipping preview
-    const shippingRmb = isKnownCity
-        ? products
-              .filter((p) => items.some((i) => i.product_id === p.id))
-              .reduce((sum, p) => {
-                  const charge = city.toLowerCase() === 'jakarta'
-                      ? p.delivery_charge_jakarta
-                      : p.delivery_charge_batam;
-                  return sum + charge;
-              }, 0)
-        : manualShippingRmb;
-    const shippingIdr = shippingRmb * exchangeRate;
+    // Compute shipping preview (mirrors OrderController::store()'s per-item fallback chain)
+    const shippingIdr = isKnownCity
+        ? items.reduce((sum, item) => {
+              if (!item.product_id) return sum;
+              const product = products.find((p) => p.id === item.product_id);
+              if (!product) return sum;
+              const variant = item.variant_id ? product.variants.find((v) => v.id === item.variant_id) : null;
+              const isJakarta = city.toLowerCase() === 'jakarta';
+              const multiplier = variant
+                  ? (isJakarta
+                        ? variant.delivery_rate_jakarta || variant.delivery_rate_batam || product.delivery_rate_jakarta
+                        : variant.delivery_rate_batam || product.delivery_rate_batam)
+                  : (isJakarta ? product.delivery_rate_jakarta : product.delivery_rate_batam);
+              return sum + Math.round(multiplier * deliveryRate) * item.quantity;
+          }, 0)
+        : manualShippingRmb * exchangeRate;
     const grandTotalIdr = subtotalIdr + shippingIdr;
 
     const submit = (e: React.FormEvent) => {

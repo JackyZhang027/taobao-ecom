@@ -43,6 +43,10 @@ export type ProductVariant = {
     price_idr?: number;
     compare_price: number | null;
     compare_price_idr?: number | null;
+    // Raw multiplier (admin write-paths)
+    delivery_rate_batam?: number;
+    delivery_rate_jakarta?: number;
+    // Computed actual IDR amount = multiplier × active Delivery Rate (storefront display)
     delivery_charge_batam?: number;
     delivery_charge_jakarta?: number;
     is_active: boolean;
@@ -76,9 +80,12 @@ export type Product = {
     slug: string;
     thumbnail: string | null;
     price?: number;
+    // Raw multiplier (admin write-paths)
+    delivery_rate_batam?: number;
+    delivery_rate_jakarta?: number;
+    // Computed actual IDR amount = multiplier × active Delivery Rate (storefront display)
     delivery_charge_batam?: number;
     delivery_charge_jakarta?: number;
-    delivery_charge_idr?: number;
     show_delivery_charge?: boolean;
     is_active: boolean;
     sort_order: number;

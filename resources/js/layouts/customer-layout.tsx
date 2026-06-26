@@ -157,7 +157,7 @@ export default function CustomerLayout({ children, fullWidth = false }: Customer
                 )}
             </nav>
 
-            <main className={fullWidth ? 'w-full flex-1' : 'mx-auto max-w-7xl flex-1 px-4 py-10 sm:px-6 lg:px-8'}>
+            <main className={fullWidth ? 'w-full flex-1' : 'w-full mx-auto max-w-7xl flex-1 px-4 py-10 sm:px-6 lg:px-8'}>
                 {children}
             </main>
 

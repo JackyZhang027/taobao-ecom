@@ -27,6 +27,7 @@ interface TranslationData {
 interface CreateProps {
     categories: Category[];
     exchangeRate: number;
+    deliveryRate: number;
 }
 
 const LOCALES = [
@@ -37,7 +38,7 @@ const LOCALES = [
 const formatIdr = (amount: number) =>
     `Rp ${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-export default function AdminProductCreate({ categories, exchangeRate }: CreateProps) {
+export default function AdminProductCreate({ categories, exchangeRate, deliveryRate }: CreateProps) {
     const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
     const [processing, setProcessing] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -55,8 +56,8 @@ export default function AdminProductCreate({ categories, exchangeRate }: CreateP
     const [formData, setFormData] = useState({
         slug: '',
         price: '0',
-        delivery_charge_batam: '0',
-        delivery_charge_jakarta: '0',
+        delivery_rate_batam: '0',
+        delivery_rate_jakarta: '0',
         show_delivery_charge: false,
         is_active: true,
         sort_order: '0',
@@ -68,8 +69,8 @@ export default function AdminProductCreate({ categories, exchangeRate }: CreateP
     });
 
     const priceRmb = parseFloat(formData.price) || 0;
-    const deliveryChargeBatamIdr = parseFloat(formData.delivery_charge_batam) || 0;
-    const deliveryChargeJakartaIdr = parseFloat(formData.delivery_charge_jakarta) || 0;
+    const deliveryChargeBatamIdr = Math.round((parseFloat(formData.delivery_rate_batam) || 0) * deliveryRate);
+    const deliveryChargeJakartaIdr = Math.round((parseFloat(formData.delivery_rate_jakarta) || 0) * deliveryRate);
     const priceIdr = priceRmb * exchangeRate;
     const finalPriceBatamIdr = priceIdr + deliveryChargeBatamIdr;
     const finalPriceJakartaIdr = priceIdr + deliveryChargeJakartaIdr;
@@ -142,8 +143,8 @@ export default function AdminProductCreate({ categories, exchangeRate }: CreateP
         fd.append('slug', formData.slug);
         if (!hasVariants) {
             fd.append('price', formData.price);
-            fd.append('delivery_charge_batam', formData.delivery_charge_batam);
-            fd.append('delivery_charge_jakarta', formData.delivery_charge_jakarta);
+            fd.append('delivery_rate_batam', formData.delivery_rate_batam);
+            fd.append('delivery_rate_jakarta', formData.delivery_rate_jakarta);
         }
         fd.append('show_delivery_charge', formData.show_delivery_charge ? '1' : '0');
         fd.append('is_active', formData.is_active ? '1' : '0');
@@ -173,8 +174,8 @@ export default function AdminProductCreate({ categories, exchangeRate }: CreateP
         variantRows.forEach((row, ri) => {
             if (row.variant_id) fd.append(`variant_overrides[${ri}][id]`, String(row.variant_id));
             fd.append(`variant_overrides[${ri}][price]`, row.price);
-            fd.append(`variant_overrides[${ri}][delivery_charge_batam]`, row.delivery_charge_batam);
-            fd.append(`variant_overrides[${ri}][delivery_charge_jakarta]`, row.delivery_charge_jakarta);
+            fd.append(`variant_overrides[${ri}][delivery_rate_batam]`, row.delivery_rate_batam);
+            fd.append(`variant_overrides[${ri}][delivery_rate_jakarta]`, row.delivery_rate_jakarta);
             fd.append(`variant_overrides[${ri}][sku]`, row.sku);
             fd.append(`variant_overrides[${ri}][is_active]`, row.is_active ? '1' : '0');
         });
@@ -312,6 +313,7 @@ export default function AdminProductCreate({ categories, exchangeRate }: CreateP
                                     initialGroups={[]}
                                     initialVariants={[]}
                                     productSlug={formData.slug}
+                                    deliveryRate={deliveryRate}
                                     onChange={(groups, rows) => {
                                         setBuilderGroups(groups);
                                         setVariantRows(rows);
@@ -366,31 +368,34 @@ export default function AdminProductCreate({ categories, exchangeRate }: CreateP
                                             {errors.price && <p className="text-sm text-destructive">{errors.price}</p>}
                                         </div>
                                         <div className="space-y-1">
-                                            <Label htmlFor="delivery_charge_batam">Delivery Charge — Batam (IDR)</Label>
+                                            <Label htmlFor="delivery_rate_batam">Delivery Rate — Batam (×)</Label>
                                             <NumberInput
-                                                id="delivery_charge_batam"
-                                                value={formData.delivery_charge_batam}
-                                                onChange={(v) => { setFormData((prev) => ({ ...prev, delivery_charge_batam: v })); if (parseFloat(v) > 0) clearError('delivery_charge_batam'); }}
+                                                id="delivery_rate_batam"
+                                                value={formData.delivery_rate_batam}
+                                                onChange={(v) => { setFormData((prev) => ({ ...prev, delivery_rate_batam: v })); if (parseFloat(v) > 0) clearError('delivery_rate_batam'); }}
                                             />
                                         </div>
                                         <div className="space-y-1">
-                                            <Label htmlFor="delivery_charge_jakarta">Delivery Charge — Jakarta (IDR)</Label>
+                                            <Label htmlFor="delivery_rate_jakarta">Delivery Rate — Jakarta (×)</Label>
                                             <NumberInput
-                                                id="delivery_charge_jakarta"
-                                                value={formData.delivery_charge_jakarta}
-                                                onChange={(v) => { setFormData((prev) => ({ ...prev, delivery_charge_jakarta: v })); if (parseFloat(v) > 0) clearError('delivery_charge_batam', 'delivery_charge_jakarta'); }}
+                                                id="delivery_rate_jakarta"
+                                                value={formData.delivery_rate_jakarta}
+                                                onChange={(v) => { setFormData((prev) => ({ ...prev, delivery_rate_jakarta: v })); if (parseFloat(v) > 0) clearError('delivery_rate_batam', 'delivery_rate_jakarta'); }}
                                             />
-                                            <p className="text-[11px] text-muted-foreground">At least one delivery charge is required. <span className="text-destructive">*</span></p>
-                                            {errors.delivery_charge_batam && <p className="text-sm text-destructive">{errors.delivery_charge_batam}</p>}
-                                            {errors.delivery_charge_jakarta && <p className="text-sm text-destructive">{errors.delivery_charge_jakarta}</p>}
+                                            <p className="text-[11px] text-muted-foreground">At least one delivery rate is required. <span className="text-destructive">*</span></p>
+                                            {errors.delivery_rate_batam && <p className="text-sm text-destructive">{errors.delivery_rate_batam}</p>}
+                                            {errors.delivery_rate_jakarta && <p className="text-sm text-destructive">{errors.delivery_rate_jakarta}</p>}
                                         </div>
 
                                         {/* Final Price Display */}
                                         <div className="rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3 space-y-2">
-                                            <div className="flex items-center justify-between">
+                                            <div className="flex items-center justify-between flex-wrap gap-1">
                                                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Final Price</p>
                                                 <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">
-                                                    Rate: 1 RMB = {exchangeRate.toLocaleString('en-US')} IDR
+                                                    1 RMB = {exchangeRate.toLocaleString('en-US')} IDR
+                                                </span>
+                                                <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">
+                                                    Delivery rate: Rp {deliveryRate.toLocaleString('en-US')} / unit
                                                 </span>
                                             </div>
                                             <div className="flex items-baseline justify-between border-b border-muted pb-1.5 pt-1">

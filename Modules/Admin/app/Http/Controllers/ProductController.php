@@ -15,6 +15,7 @@ use Modules\Catalog\Models\ProductTranslation;
 use Modules\Catalog\Services\ProductVariantService;
 use Modules\Catalog\Services\VariantGeneratorService;
 use Modules\Currency\Services\CurrencyService;
+use Modules\Delivery\Services\DeliveryService;
 use Yajra\DataTables\Facades\DataTables;
 
 class ProductController extends Controller
@@ -23,6 +24,7 @@ class ProductController extends Controller
         private CurrencyService $currency,
         private VariantGeneratorService $variantGenerator,
         private ProductVariantService $variantService,
+        private DeliveryService $delivery,
     ) {}
 
     public function index()
@@ -54,18 +56,22 @@ class ProductController extends Controller
             ->addColumn('delivery_charge_idr', function ($p) {
                 $minVariantPrice = $p->variants->where('is_active', true)->min('price');
                 if ($minVariantPrice !== null) {
-                    $minBatam = $p->variants->where('is_active', true)->min('delivery_charge_batam');
-                    return 'Rp '.number_format($minBatam ?? 0, 0, '.', ',').' <span class="text-xs text-muted-foreground">(variant)</span>';
+                    $minBatamRate = $p->variants->where('is_active', true)->min('delivery_rate_batam');
+                    $batamIdr = $this->delivery->calculateCharge((float) ($minBatamRate ?? 0));
+                    return 'Rp '.number_format($batamIdr, 0, '.', ',').' <span class="text-xs text-muted-foreground">(variant)</span>';
                 }
-                return 'Rp '.number_format($p->delivery_charge_batam ?: $p->delivery_charge, 0, '.', ',');
+                $batamIdr = $this->delivery->calculateCharge((float) $p->delivery_rate_batam);
+                return 'Rp '.number_format($batamIdr, 0, '.', ',');
             })
             ->addColumn('final_price_idr', function ($p) {
                 $minVariantPrice = $p->variants->where('is_active', true)->min('price');
                 if ($minVariantPrice !== null) {
-                    $minBatam = $p->variants->where('is_active', true)->min('delivery_charge_batam') ?? 0;
-                    return 'Rp '.number_format($this->currency->rmbToIdr($minVariantPrice) + $minBatam, 0, '.', ',').' <span class="text-xs text-muted-foreground">(variant)</span>';
+                    $minBatamRate = $p->variants->where('is_active', true)->min('delivery_rate_batam') ?? 0;
+                    $batamIdr = $this->delivery->calculateCharge((float) $minBatamRate);
+                    return 'Rp '.number_format($this->currency->rmbToIdr($minVariantPrice) + $batamIdr, 0, '.', ',').' <span class="text-xs text-muted-foreground">(variant)</span>';
                 }
-                return 'Rp '.number_format($this->currency->rmbToIdr($p->price) + ($p->delivery_charge_batam ?: $p->delivery_charge), 0, '.', ',');
+                $batamIdr = $this->delivery->calculateCharge((float) $p->delivery_rate_batam);
+                return 'Rp '.number_format($this->currency->rmbToIdr($p->price) + $batamIdr, 0, '.', ',');
             })
             ->addColumn('status', fn ($p) => $p->is_active ? 'Active' : 'Inactive')
             ->addColumn('variants_count', fn ($p) => $p->variants->count())
@@ -80,6 +86,7 @@ class ProductController extends Controller
             'categories'   => Category::all(),
             'variantGroups' => [],
             'exchangeRate' => $this->currency->getActiveRate(),
+            'deliveryRate' => $this->delivery->getActiveRate(),
         ]);
     }
 
@@ -92,8 +99,8 @@ class ProductController extends Controller
             $product = Product::create(array_merge(
                 $request->only(['slug', 'thumbnail', 'price', 'show_delivery_charge', 'is_active', 'sort_order']),
                 [
-                    'delivery_charge_batam'   => $request->input('delivery_charge_batam') ?? 0,
-                    'delivery_charge_jakarta' => $request->input('delivery_charge_jakarta') ?? 0,
+                    'delivery_rate_batam'   => $request->input('delivery_rate_batam') ?? 0,
+                    'delivery_rate_jakarta' => $request->input('delivery_rate_jakarta') ?? 0,
                 ]
             ));
 
@@ -192,6 +199,7 @@ class ProductController extends Controller
             'variantGroups' => $variantGroups,
             'productMedia'  => $media,
             'exchangeRate'  => $this->currency->getActiveRate(),
+            'deliveryRate'  => $this->delivery->getActiveRate(),
         ]);
     }
 
@@ -204,8 +212,8 @@ class ProductController extends Controller
             $product->update(array_merge(
                 $request->only(['slug', 'thumbnail', 'price', 'show_delivery_charge', 'is_active', 'sort_order']),
                 [
-                    'delivery_charge_batam'   => $request->input('delivery_charge_batam') ?? 0,
-                    'delivery_charge_jakarta' => $request->input('delivery_charge_jakarta') ?? 0,
+                    'delivery_rate_batam'   => $request->input('delivery_rate_batam') ?? 0,
+                    'delivery_rate_jakarta' => $request->input('delivery_rate_jakarta') ?? 0,
                 ]
             ));
 

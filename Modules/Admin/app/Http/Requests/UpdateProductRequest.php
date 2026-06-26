@@ -18,8 +18,8 @@ class UpdateProductRequest extends FormRequest
         return [
             'slug'                                       => "required|string|alpha_dash|max:255|unique:products,slug,{$productId}",
             'price'                                      => 'nullable|numeric|min:0',
-            'delivery_charge_batam'                      => 'nullable|numeric|min:0',
-            'delivery_charge_jakarta'                    => 'nullable|numeric|min:0',
+            'delivery_rate_batam'                        => 'nullable|numeric|min:0',
+            'delivery_rate_jakarta'                       => 'nullable|numeric|min:0',
             'show_delivery_charge'                       => 'boolean',
             'is_active'                                  => 'boolean',
             'sort_order'                                 => 'integer|min:0',
@@ -46,8 +46,8 @@ class UpdateProductRequest extends FormRequest
             'variant_overrides.*.price'                  => 'nullable|numeric|min:0',
             'variant_overrides.*.sku'                    => 'nullable|string|max:255',
             'variant_overrides.*.is_active'              => 'nullable|in:0,1,true,false',
-            'variant_overrides.*.delivery_charge_batam'  => 'nullable|numeric|min:0',
-            'variant_overrides.*.delivery_charge_jakarta' => 'nullable|numeric|min:0',
+            'variant_overrides.*.delivery_rate_batam'    => 'nullable|numeric|min:0',
+            'variant_overrides.*.delivery_rate_jakarta'  => 'nullable|numeric|min:0',
             'group_option_images'                        => 'nullable|array',
             'group_option_images.*'                      => 'nullable|array',
             'group_option_images.*.*'                    => 'image|max:5120',
@@ -66,10 +66,10 @@ class UpdateProductRequest extends FormRequest
                 if (! is_numeric($this->input('price')) || (float) $this->input('price') <= 0) {
                     $v->errors()->add('price', 'The price field is required and must be greater than 0.');
                 }
-                $batam   = (float) $this->input('delivery_charge_batam', 0);
-                $jakarta = (float) $this->input('delivery_charge_jakarta', 0);
+                $batam   = (float) $this->input('delivery_rate_batam', 0);
+                $jakarta = (float) $this->input('delivery_rate_jakarta', 0);
                 if ($batam <= 0 && $jakarta <= 0) {
-                    $v->errors()->add('delivery_charge_batam', 'At least one delivery charge (Batam or Jakarta) is required.');
+                    $v->errors()->add('delivery_rate_batam', 'At least one delivery rate (Batam or Jakarta) is required.');
                 }
 
                 $product = $this->route('product');
@@ -95,10 +95,10 @@ class UpdateProductRequest extends FormRequest
                     if (! isset($override['price']) || ! is_numeric($override['price']) || (float) $override['price'] <= 0) {
                         $v->errors()->add("variant_overrides.{$i}.price", 'Variant price is required and must be greater than 0.');
                     }
-                    $batam   = (float) ($override['delivery_charge_batam'] ?? 0);
-                    $jakarta = (float) ($override['delivery_charge_jakarta'] ?? 0);
+                    $batam   = (float) ($override['delivery_rate_batam'] ?? 0);
+                    $jakarta = (float) ($override['delivery_rate_jakarta'] ?? 0);
                     if ($batam <= 0 && $jakarta <= 0) {
-                        $v->errors()->add("variant_overrides.{$i}.delivery_charge_batam", 'At least one delivery charge (Batam or Jakarta) is required.');
+                        $v->errors()->add("variant_overrides.{$i}.delivery_rate_batam", 'At least one delivery rate (Batam or Jakarta) is required.');
                     }
                 }
             }

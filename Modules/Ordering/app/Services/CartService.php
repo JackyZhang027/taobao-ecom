@@ -80,18 +80,18 @@ class CartService
         $canDeliverBatam = $uniqueItems->every(function ($item) {
             $variant = $item->variant;
             $product = $variant?->product ?? $item->product;
-            if ($variant && ($variant->delivery_charge_batam ?: $variant->delivery_charge_jakarta)) {
+            if ($variant && ($variant->delivery_rate_batam ?: $variant->delivery_rate_jakarta)) {
                 return true;
             }
-            return $product && $product->delivery_charge_batam > 0;
+            return $product && $product->delivery_rate_batam > 0;
         });
         $canDeliverJakarta = $uniqueItems->every(function ($item) {
             $variant = $item->variant;
             $product = $variant?->product ?? $item->product;
-            if ($variant && ($variant->delivery_charge_jakarta ?: $variant->delivery_charge_batam)) {
+            if ($variant && ($variant->delivery_rate_jakarta ?: $variant->delivery_rate_batam)) {
                 return true;
             }
-            return $product && $product->delivery_charge_jakarta > 0;
+            return $product && $product->delivery_rate_jakarta > 0;
         });
 
         return [
