@@ -32,9 +32,21 @@ class OrderController extends Controller
         return Inertia::render('admin/orders/index');
     }
 
-    public function datatable(): JsonResponse
+    public function datatable(Request $request): JsonResponse
     {
-        $query = Order::with('user', 'payment')->select('orders.*');
+        $query = Order::with('user', 'payment')->select('orders.*')
+            ->when($request->filled('status') && $request->status !== 'all', fn ($q) => $q->where('status', $request->status))
+            ->when($request->payment_status === 'paid', fn ($q) => $q->whereHas('payment', fn ($p) => $p->whereIn('status', ['settlement', 'capture'])))
+            ->when($request->payment_status === 'unpaid', fn ($q) => $q->whereDoesntHave('payment', fn ($p) => $p->whereIn('status', ['settlement', 'capture'])))
+            ->when($request->filled('date_from'), fn ($q) => $q->whereDate('created_at', '>=', $request->date_from))
+            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('created_at', '<=', $request->date_to))
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $term = $request->search;
+                $q->where(function ($q) use ($term) {
+                    $q->where('order_number', 'like', "%{$term}%")
+                        ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$term}%")->orWhere('email', 'like', "%{$term}%"));
+                });
+            });
 
         return DataTables::of($query)
             ->addColumn('customer_name', fn ($o) => $o->user?->name ?? '—')

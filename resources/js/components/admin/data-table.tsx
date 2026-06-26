@@ -2,7 +2,7 @@ import type { Config, ConfigColumns } from 'datatables.net';
 import DT from 'datatables.net-dt';
 import DataTable from 'datatables.net-react';
 import 'datatables.net-dt/css/dataTables.dataTables.css';
-import { forwardRef, useImperativeHandle, useRef } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
 // eslint-disable-next-line react-hooks/rules-of-hooks
 DataTable.use(DT);
@@ -11,6 +11,7 @@ interface AdminDataTableProps {
     url: string;
     columns: ConfigColumns[];
     options?: Partial<Config>;
+    filters?: Record<string, unknown>;
 }
 
 export interface AdminDataTableRef {
@@ -18,8 +19,12 @@ export interface AdminDataTableRef {
 }
 
 export const AdminDataTable = forwardRef<AdminDataTableRef, AdminDataTableProps>(
-    ({ url, columns, options = {} }, ref) => {
+    ({ url, columns, options = {}, filters = {} }, ref) => {
         const tableRef = useRef<any>(null);
+        const filtersRef = useRef(filters);
+        const isFirstRender = useRef(true);
+
+        filtersRef.current = filters;
 
         useImperativeHandle(ref, () => ({
             reload() {
@@ -29,11 +34,22 @@ export const AdminDataTable = forwardRef<AdminDataTableRef, AdminDataTableProps>
             },
         }));
 
+        useEffect(() => {
+            if (isFirstRender.current) {
+                isFirstRender.current = false;
+                return;
+            }
+            if (tableRef.current) {
+                tableRef.current.dt().ajax.reload(null, true);
+            }
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [JSON.stringify(filters)]);
+
         return (
             <div className="dt-wrapper">
                 <DataTable
                     ref={tableRef}
-                    ajax={url}
+                    ajax={{ url, data: (d: any) => ({ ...d, ...filtersRef.current }) }}
                     columns={columns}
                     options={
                         {

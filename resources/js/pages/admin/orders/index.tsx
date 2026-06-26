@@ -1,8 +1,18 @@
 import { Head } from '@inertiajs/react';
+import { useEffect, useMemo, useState } from 'react';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { AdminDataTable } from '@/components/admin/data-table';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AdminLayout from '@/layouts/admin-layout';
+
+const STATUS_OPTIONS = ['all', 'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+const PAYMENT_STATUS_OPTIONS = ['all', 'paid', 'unpaid'];
+
+const DEFAULT_STATUS = 'confirmed';
+const DEFAULT_PAYMENT_STATUS = 'paid';
 
 const columns = [
     { data: 'order_number', title: 'Order #', width: '150px' },
@@ -45,6 +55,41 @@ const columns = [
 ];
 
 export default function AdminOrdersIndex() {
+    const [status, setStatus] = useState(DEFAULT_STATUS);
+    const [paymentStatus, setPaymentStatus] = useState(DEFAULT_PAYMENT_STATUS);
+    const [dateFrom, setDateFrom] = useState('');
+    const [dateTo, setDateTo] = useState('');
+    const [searchInput, setSearchInput] = useState('');
+    const [search, setSearch] = useState('');
+
+    useEffect(() => {
+        const timeout = setTimeout(() => setSearch(searchInput), 400);
+        return () => clearTimeout(timeout);
+    }, [searchInput]);
+
+    const filters = useMemo(
+        () => ({
+            status,
+            payment_status: paymentStatus,
+            date_from: dateFrom,
+            date_to: dateTo,
+            search,
+        }),
+        [status, paymentStatus, dateFrom, dateTo, search]
+    );
+
+    const hasActiveFilters =
+        status !== DEFAULT_STATUS || paymentStatus !== DEFAULT_PAYMENT_STATUS || dateFrom !== '' || dateTo !== '' || search !== '';
+
+    const clearFilters = () => {
+        setStatus(DEFAULT_STATUS);
+        setPaymentStatus(DEFAULT_PAYMENT_STATUS);
+        setDateFrom('');
+        setDateTo('');
+        setSearchInput('');
+        setSearch('');
+    };
+
     return (
         <AdminLayout>
             <Head title="Orders" />
@@ -54,7 +99,67 @@ export default function AdminOrdersIndex() {
                     <CardTitle>All Orders</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <AdminDataTable url="/admin/orders/datatable" columns={columns} />
+                    <div className="mb-4 flex flex-wrap items-end gap-3">
+                        <div className="flex flex-col gap-1">
+                            <span className="text-xs font-medium text-muted-foreground">Status</span>
+                            <Select value={status} onValueChange={setStatus}>
+                                <SelectTrigger className="w-40">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {STATUS_OPTIONS.map((option) => (
+                                        <SelectItem key={option} value={option} className="capitalize">
+                                            {option === 'all' ? 'All statuses' : option}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <span className="text-xs font-medium text-muted-foreground">Payment</span>
+                            <Select value={paymentStatus} onValueChange={setPaymentStatus}>
+                                <SelectTrigger className="w-36">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {PAYMENT_STATUS_OPTIONS.map((option) => (
+                                        <SelectItem key={option} value={option} className="capitalize">
+                                            {option === 'all' ? 'All payments' : option}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <span className="text-xs font-medium text-muted-foreground">From</span>
+                            <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-40" />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <span className="text-xs font-medium text-muted-foreground">To</span>
+                            <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-40" />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <span className="text-xs font-medium text-muted-foreground">Search</span>
+                            <Input
+                                type="text"
+                                placeholder="Order # or customer..."
+                                value={searchInput}
+                                onChange={(e) => setSearchInput(e.target.value)}
+                                className="w-56"
+                            />
+                        </div>
+                        {hasActiveFilters && (
+                            <Button type="button" variant="ghost" onClick={clearFilters}>
+                                Clear filters
+                            </Button>
+                        )}
+                    </div>
+                    <AdminDataTable
+                        url="/admin/orders/datatable"
+                        columns={columns}
+                        filters={filters}
+                        options={{ order: [[0, 'desc']] }}
+                    />
                 </CardContent>
             </Card>
         </AdminLayout>
