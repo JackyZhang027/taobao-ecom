@@ -44,11 +44,13 @@ const columns = [
         title: 'Actions',
         orderable: false,
         searchable: false,
-        render: (id: number, _type: string, row: { name: string }) =>
-            `<button
-                onclick="window._openResetModal(${id}, ${JSON.stringify(row.name)})"
+        render: (id: number, _type: string, row: { name: string }) => {
+            const safeName = JSON.stringify(row.name).replace(/"/g, '&quot;');
+            return `<button
+                onclick="window._openResetModal(${id}, ${safeName})"
                 class="inline-flex items-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors"
-            >Reset Password</button>`,
+            >Reset Password</button>`;
+        },
     },
 ];
 
