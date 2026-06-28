@@ -9,6 +9,7 @@ import type {AdminDataTableRef} from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
 import AdminLayout from '@/layouts/admin-layout';
 import { sequenceColumn } from '@/lib/datatable-sequence-column';
+import { escHtml } from '@/lib/utils';
 
 export default function AdminHeroSettingsIndex() {
     const tableRef = useRef<AdminDataTableRef>(null);
@@ -30,7 +31,7 @@ export default function AdminHeroSettingsIndex() {
             data: 'image_url', 
             title: 'Image', 
             orderable: false,
-            render: (data: string) => data ? `<img src="${data}" alt="Hero" class="w-16 h-10 object-cover rounded-md" />` : 'No Image'
+            render: (data: string) => data ? `<img src="${escHtml(data)}" alt="Hero" class="w-16 h-10 object-cover rounded-md" />` : 'No Image'
         },
         { data: 'title', title: 'Title', orderable: true },
         { data: 'sort_order', title: 'Order', orderable: true },

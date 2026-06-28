@@ -46,9 +46,10 @@ class RoleController extends Controller
             'permissions.*' => 'string|exists:permissions,name',
         ]);
 
-        $role = Role::create(['name' => $validated['name'], 'guard_name' => 'web']);
-
         $permissions = array_unique(array_merge(['admin.access'], $validated['permissions'] ?? []));
+        $this->authorizePermissionGrant($request, $permissions);
+
+        $role = Role::create(['name' => $validated['name'], 'guard_name' => 'web']);
         $role->syncPermissions($permissions);
 
         return redirect()->route('admin.roles.index')->with('success', 'Role created successfully.');
@@ -85,9 +86,10 @@ class RoleController extends Controller
             'permissions.*' => 'string|exists:permissions,name',
         ]);
 
-        $role->update(['name' => $validated['name']]);
-
         $permissions = array_unique(array_merge(['admin.access'], $validated['permissions'] ?? []));
+        $this->authorizePermissionGrant($request, $permissions);
+
+        $role->update(['name' => $validated['name']]);
         $role->syncPermissions($permissions);
 
         return redirect()->route('admin.roles.index')->with('success', 'Role updated successfully.');
@@ -102,5 +104,19 @@ class RoleController extends Controller
         $role->delete();
 
         return redirect()->route('admin.roles.index')->with('success', 'Role deleted successfully.');
+    }
+
+    /**
+     * Prevent an actor from granting a role permissions they don't hold themselves —
+     * otherwise a non-admin with roles.edit could self-escalate via a custom role.
+     */
+    private function authorizePermissionGrant(Request $request, array $permissions): void
+    {
+        $actorPermissions = $request->user()->getAllPermissions()->pluck('name');
+        $disallowed = collect($permissions)->diff($actorPermissions);
+
+        if ($disallowed->isNotEmpty()) {
+            abort(403, 'You cannot grant permissions you do not hold yourself: '.$disallowed->implode(', '));
+        }
     }
 }

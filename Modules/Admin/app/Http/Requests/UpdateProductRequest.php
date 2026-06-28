@@ -17,6 +17,7 @@ class UpdateProductRequest extends FormRequest
 
         return [
             'slug'                                       => "required|string|alpha_dash|max:255|unique:products,slug,{$productId}",
+            'thumbnail'                                  => 'nullable|string|max:500',
             'price'                                      => 'nullable|numeric|min:0',
             'delivery_rate_batam'                        => 'nullable|numeric|min:0',
             'delivery_rate_jakarta'                       => 'nullable|numeric|min:0',

@@ -8,6 +8,7 @@ import { AdminDataTable } from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
 import AdminLayout from '@/layouts/admin-layout';
 import { sequenceColumn } from '@/lib/datatable-sequence-column';
+import { escHtml } from '@/lib/utils';
 
 export default function AdminPagesIndex() {
     useEffect(() => {
@@ -31,8 +32,8 @@ export default function AdminPagesIndex() {
             searchable: false,
             render: (data: string) => `
                 <div class="flex items-center gap-2">
-                    <a href="/admin/settings/pages/${data}/edit" class="text-sm text-blue-600 hover:text-blue-800">Edit</a>
-                    <button onclick="_deletePage('/admin/settings/pages/${data}')" class="text-sm text-red-600 hover:text-red-800">Delete</button>
+                    <a href="/admin/settings/pages/${escHtml(data)}/edit" class="text-sm text-blue-600 hover:text-blue-800">Edit</a>
+                    <button onclick="_deletePage('/admin/settings/pages/${escHtml(data)}')" class="text-sm text-red-600 hover:text-red-800">Delete</button>
                 </div>
             `,
         },

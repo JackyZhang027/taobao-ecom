@@ -105,11 +105,17 @@ class AdminUserController extends Controller
         return redirect()->route('admin.users.index')->with('success', 'Admin user deleted.');
     }
 
-    private function authorizeRoleAssignment(Request $request, string $role): void
+    private function authorizeRoleAssignment(Request $request, string $roleName): void
     {
-        // Only a user who already holds the 'admin' role may assign it to others.
-        if ($role === 'admin' && ! $request->user()->hasRole('admin')) {
-            abort(403, 'You are not allowed to assign the admin role.');
+        // An actor can only assign a role whose permissions are a subset of their
+        // own — otherwise a non-admin with users.edit + roles.edit could grant
+        // themselves a custom role broader than the 'admin' check alone would block.
+        $targetPermissions = Role::where('name', $roleName)->first()?->permissions->pluck('name') ?? collect();
+        $actorPermissions = $request->user()->getAllPermissions()->pluck('name');
+        $disallowed = $targetPermissions->diff($actorPermissions);
+
+        if ($disallowed->isNotEmpty()) {
+            abort(403, 'You cannot assign a role with permissions you do not hold yourself.');
         }
     }
 }

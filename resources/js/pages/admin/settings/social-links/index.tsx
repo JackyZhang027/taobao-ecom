@@ -8,6 +8,7 @@ import { AdminDataTable } from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
 import AdminLayout from '@/layouts/admin-layout';
 import { sequenceColumn } from '@/lib/datatable-sequence-column';
+import { escHtml } from '@/lib/utils';
 
 export default function AdminSocialLinksIndex() {
     useEffect(() => {
@@ -26,7 +27,7 @@ export default function AdminSocialLinksIndex() {
             data: 'url',
             title: 'URL',
             orderable: false,
-            render: (data: string) => `<a href="${data}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline max-w-xs block truncate">${data}</a>`,
+            render: (data: string) => `<a href="${escHtml(data)}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline max-w-xs block truncate">${escHtml(data)}</a>`,
         },
         { data: 'sort_order', title: 'Order', orderable: true },
         { data: 'status', title: 'Status', orderable: true },
