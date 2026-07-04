@@ -41,8 +41,8 @@ class OrderController extends Controller
         $order->update(['status' => 'delivered']);
 
         OrderStatusHistory::create([
-            'order_id'   => $order->id,
-            'status'     => 'delivered',
+            'order_id' => $order->id,
+            'status' => 'delivered',
             'changed_by' => $request->user()->id,
         ]);
 
@@ -58,6 +58,16 @@ class OrderController extends Controller
         return response()->json([
             'status' => $order->fresh()->status,
             'transaction_status' => $transactionStatus,
+        ]);
+    }
+
+    public function regeneratePayment(Request $request, Order $order)
+    {
+        abort_if($order->user_id !== $request->user()->id, 403);
+        abort_if($order->status !== 'pending', 422);
+
+        return response()->json([
+            'snapToken' => $this->payment->regenerateSnapToken($order),
         ]);
     }
 }

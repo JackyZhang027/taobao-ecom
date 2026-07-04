@@ -22,18 +22,40 @@ class PaymentService
 
     public function createSnapToken(Order $order): string
     {
-        $existing = Payment::where('order_id', $order->id)->first();
-        if ($existing) {
+        $existing = $order->payment;
+        if ($existing && in_array($existing->status, self::CANCELLABLE_PAYMENT_STATUSES, true)) {
             return $existing->snap_token;
         }
 
-        $midtransOrderId = 'ORDER-' . $order->id . '-' . \Illuminate\Support\Str::ulid();
+        return $this->mintNewPayment($order);
+    }
+
+    /**
+     * Cancel any still-open transaction, then mint a brand-new one. This is the
+     * "select other payment method" entry point — it always produces a fresh
+     * Midtrans transaction/token so Snap no longer remembers a prior selection.
+     */
+    public function regenerateSnapToken(Order $order): string
+    {
+        $latest = $order->payment;
+        if ($latest && in_array($latest->status, ['settlement', 'capture'], true)) {
+            throw new \RuntimeException('Order is already paid.');
+        }
+
+        $this->cancelTransaction($order);
+
+        return $this->mintNewPayment($order);
+    }
+
+    protected function mintNewPayment(Order $order): string
+    {
+        $midtransOrderId = 'ORDER-'.$order->id.'-'.\Illuminate\Support\Str::ulid();
 
         $items = $order->lines->map(fn ($line) => [
             'id' => (string) $line->id,
             'price' => (int) $line->unit_price_idr,
             'quantity' => $line->quantity,
-            'name' => $line->product_name . ($line->variant_name ? ' - ' . $line->variant_name : ''),
+            'name' => $line->product_name.($line->variant_name ? ' - '.$line->variant_name : ''),
         ])->toArray();
 
         if ((int) $order->shipping_idr > 0) {
@@ -95,30 +117,32 @@ class PaymentService
 
         if (! $payment) {
             \Log::info('cancelTransaction: no payment found for order', ['order_id' => $order->id]);
+
             return;
         }
 
         if (! in_array($payment->status, self::CANCELLABLE_PAYMENT_STATUSES, true)) {
             \Log::info('cancelTransaction: payment not in cancellable state — skipping Midtrans call', [
-                'order_id'       => $order->id,
+                'order_id' => $order->id,
                 'payment_status' => $payment->status,
             ]);
+
             return;
         }
 
         try {
             $response = Transaction::cancel($payment->midtrans_order_id);
             \Log::info('cancelTransaction: Midtrans cancel successful', [
-                'order_id'          => $order->id,
+                'order_id' => $order->id,
                 'midtrans_order_id' => $payment->midtrans_order_id,
-                'response'          => $response,
+                'response' => $response,
             ]);
         } catch (\Throwable $e) {
             // Swallowed intentionally — local cancellation must always proceed regardless.
             \Log::warning('cancelTransaction: Midtrans cancel failed (local cancel will still proceed)', [
-                'order_id'          => $order->id,
+                'order_id' => $order->id,
                 'midtrans_order_id' => $payment->midtrans_order_id,
-                'error'             => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
         }
     }
@@ -139,6 +163,7 @@ class PaymentService
                 'expected' => $payment->amount,
                 'received' => $payload['gross_amount'] ?? null,
             ]);
+
             return;
         }
 
@@ -149,6 +174,7 @@ class PaymentService
                 'midtrans_order_id' => $payload['order_id'],
                 'transaction_status' => $transactionStatus,
             ]);
+
             return;
         }
 
@@ -161,11 +187,12 @@ class PaymentService
         // Early exit before acquiring the DB lock (avoids unnecessary locking overhead).
         if (in_array($order->status, self::TERMINAL_STATUSES, true)) {
             \Log::warning('Midtrans webhook ignored: order is in terminal state', [
-                'midtrans_order_id'  => $payload['order_id'],
-                'order_id'           => $order->id,
-                'order_status'       => $order->status,
+                'midtrans_order_id' => $payload['order_id'],
+                'order_id' => $order->id,
+                'order_status' => $order->status,
                 'transaction_status' => $transactionStatus,
             ]);
+
             return;
         }
 
@@ -199,7 +226,7 @@ class PaymentService
     {
         $payment = $order->payment;
 
-        if (!$payment) {
+        if (! $payment) {
             return 'no_payment';
         }
 
@@ -211,6 +238,7 @@ class PaymentService
                 'midtrans_order_id' => $payment->midtrans_order_id,
                 'error' => $e->getMessage(),
             ]);
+
             return 'error';
         }
 
@@ -221,10 +249,11 @@ class PaymentService
 
             if (in_array($order->status, self::TERMINAL_STATUSES, true)) {
                 \Log::info('confirmFromTransaction: skipping transition — order is in terminal state', [
-                    'order_id'           => $order->id,
-                    'order_status'       => $order->status,
+                    'order_id' => $order->id,
+                    'order_status' => $order->status,
                     'transaction_status' => $transactionStatus,
                 ]);
+
                 return $transactionStatus;
             }
 
@@ -248,10 +277,11 @@ class PaymentService
         // Never transition out of terminal states (last line of defence).
         if (in_array($order->status, self::TERMINAL_STATUSES, true)) {
             \Log::info('transitionOrder skipped: order is in terminal state', [
-                'order_id'   => $order->id,
-                'status'     => $order->status,
+                'order_id' => $order->id,
+                'status' => $order->status,
                 'new_status' => $newStatus,
             ]);
+
             return;
         }
 
@@ -262,8 +292,8 @@ class PaymentService
         $order->update(['status' => $newStatus]);
 
         OrderStatusHistory::create([
-            'order_id'   => $order->id,
-            'status'     => $newStatus,
+            'order_id' => $order->id,
+            'status' => $newStatus,
             'changed_by' => null,
         ]);
     }
