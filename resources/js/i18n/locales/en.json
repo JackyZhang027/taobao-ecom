@@ -94,7 +94,19 @@
         "tracking_info": "Your order is on its way!",
         "confirmReceipt": "Confirm Receipt",
         "confirmReceiptPrompt": "Have you received your order?",
-        "confirmReceiptMessage": "Are you sure you have received this order? This cannot be undone."
+        "confirmReceiptMessage": "Are you sure you have received this order? This cannot be undone.",
+        "receiptConfirmed": "Receipt confirmed. Thank you!",
+        "receiptConfirmFailed": "Failed to confirm receipt.",
+        "paymentIncompleteTitle": "Payment not completed",
+        "paymentIncompleteDesc": "Complete your payment to confirm this order.",
+        "opening": "Opening...",
+        "continuePayment": "Continue Payment",
+        "selectOtherMethod": "Select Other Payment Method",
+        "payNow": "Pay Now",
+        "paymentStartFailed": "Could not start a new payment. Please try again.",
+        "product": "Product",
+        "price": "Price",
+        "backToOrders": "Back to Orders"
     },
     "admin": {
         "dashboard": "Dashboard",

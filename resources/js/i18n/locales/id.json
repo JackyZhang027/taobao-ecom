@@ -94,7 +94,19 @@
         "tracking_info": "Pesanan Anda sedang dalam perjalanan!",
         "confirmReceipt": "Konfirmasi Penerimaan",
         "confirmReceiptPrompt": "Apakah pesanan Anda sudah diterima?",
-        "confirmReceiptMessage": "Apakah Anda yakin telah menerima pesanan ini? Tindakan ini tidak dapat dibatalkan."
+        "confirmReceiptMessage": "Apakah Anda yakin telah menerima pesanan ini? Tindakan ini tidak dapat dibatalkan.",
+        "receiptConfirmed": "Penerimaan dikonfirmasi. Terima kasih!",
+        "receiptConfirmFailed": "Gagal mengonfirmasi penerimaan.",
+        "paymentIncompleteTitle": "Pembayaran belum selesai",
+        "paymentIncompleteDesc": "Selesaikan pembayaran Anda untuk mengonfirmasi pesanan ini.",
+        "opening": "Membuka...",
+        "continuePayment": "Lanjutkan Pembayaran",
+        "selectOtherMethod": "Pilih Metode Pembayaran Lain",
+        "payNow": "Bayar Sekarang",
+        "paymentStartFailed": "Tidak dapat memulai pembayaran baru. Silakan coba lagi.",
+        "product": "Produk",
+        "price": "Harga",
+        "backToOrders": "Kembali ke Pesanan"
     },
     "admin": {
         "dashboard": "Dashboard",

@@ -25,6 +25,7 @@ class HomeController extends Controller
         $settingsV = Cache::get('cache_ver_settings', 0);
         $productV  = Cache::get('cache_ver_products', 0);
         $featV     = Cache::get('cache_ver_features', 0);
+        $locale    = app()->getLocale();
 
         $heroSlides = Cache::remember("hero_slides_{$heroV}", 3600, fn () =>
             HeroSlide::with('media')
@@ -43,14 +44,14 @@ class HomeController extends Controller
                 ->all()
         );
 
-        $categories = Cache::remember("home_all_categories_{$catV}", 3600, fn () =>
+        $categories = Cache::remember("home_all_categories_{$catV}_{$locale}", 3600, fn () =>
             Category::with('media')
                 ->whereNull('parent_id')
                 ->orderBy('sort_order')
                 ->get()
                 ->map(fn ($c) => [
                     'id'        => $c->id,
-                    'name'      => $c->name,
+                    'name'      => $c->localized_name,
                     'name_id'   => $c->name_id,
                     'slug'      => $c->slug,
                     'image_url' => $c->getFirstMediaUrl('image', 'thumb') ?: $c->getFirstMediaUrl('image'),
@@ -63,7 +64,6 @@ class HomeController extends Controller
         );
 
         $transformer = $this->transformer;
-        $locale = app()->getLocale();
         $products = Cache::remember("home_featured_products_{$productV}_{$locale}", 3600, fn () =>
             Product::with(['translations', 'variants', 'media'])
                 ->where('is_active', true)

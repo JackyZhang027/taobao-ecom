@@ -106,8 +106,8 @@ export default function OrderShow({ order, isProduction, clientKey }: OrderShowP
     const handleConfirmReceipt = () => {
         setSubmittingReceipt(true);
         router.post(`/orders/${order.id}/confirm-receipt`, {}, {
-            onSuccess: () => { setReceiptModalOpen(false); toast.success('Receipt confirmed. Thank you!'); },
-            onError: () => { toast.error('Failed to confirm receipt.'); setSubmittingReceipt(false); },
+            onSuccess: () => { setReceiptModalOpen(false); toast.success(t('orders.receiptConfirmed')); },
+            onError: () => { toast.error(t('orders.receiptConfirmFailed')); setSubmittingReceipt(false); },
         });
     };
 
@@ -165,7 +165,7 @@ export default function OrderShow({ order, isProduction, clientKey }: OrderShowP
             const { snapToken: newToken } = await res.json();
             openSnap(newToken);
         } catch {
-            toast.error('Could not start a new payment. Please try again.');
+            toast.error(t('orders.paymentStartFailed'));
         } finally {
             setRegenerating(false);
         }
@@ -233,8 +233,8 @@ export default function OrderShow({ order, isProduction, clientKey }: OrderShowP
                 {canRetry && (
                     <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-3">
                         <div>
-                            <p className="font-semibold text-yellow-800">Payment not completed</p>
-                            <p className="text-sm text-yellow-700">Complete your payment to confirm this order.</p>
+                            <p className="font-semibold text-yellow-800">{t('orders.paymentIncompleteTitle')}</p>
+                            <p className="text-sm text-yellow-700">{t('orders.paymentIncompleteDesc')}</p>
                         </div>
                         <div className="flex flex-col sm:flex-row gap-2 sm:ml-4 sm:shrink-0">
                             {paymentIsOpen && snapToken && (
@@ -243,7 +243,7 @@ export default function OrderShow({ order, isProduction, clientKey }: OrderShowP
                                     disabled={paying || regenerating}
                                     className="w-full sm:w-auto rounded-lg bg-yellow-500 px-4 py-2 text-sm font-semibold text-white hover:bg-yellow-600 disabled:opacity-60 transition-colors"
                                 >
-                                    {paying ? 'Opening...' : 'Continue Payment'}
+                                    {paying ? t('orders.opening') : t('orders.continuePayment')}
                                 </button>
                             )}
                             <button
@@ -253,7 +253,7 @@ export default function OrderShow({ order, isProduction, clientKey }: OrderShowP
                                     ? 'w-full sm:w-auto rounded-lg border border-yellow-500 px-4 py-2 text-sm font-semibold text-yellow-700 hover:bg-yellow-100 disabled:opacity-60 transition-colors'
                                     : 'w-full sm:w-auto rounded-lg bg-yellow-500 px-4 py-2 text-sm font-semibold text-white hover:bg-yellow-600 disabled:opacity-60 transition-colors'}
                             >
-                                {regenerating ? 'Opening...' : (paymentIsOpen && snapToken ? 'Select Other Payment Method' : 'Pay Now')}
+                                {regenerating ? t('orders.opening') : (paymentIsOpen && snapToken ? t('orders.selectOtherMethod') : t('orders.payNow'))}
                             </button>
                         </div>
                     </div>
@@ -267,10 +267,10 @@ export default function OrderShow({ order, isProduction, clientKey }: OrderShowP
 
                 <div className="rounded-lg border">
                     <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_1fr] gap-4 border-b bg-muted/50 px-4 py-3 text-sm font-medium">
-                        <span>Product</span>
-                        <span className="text-right">Price</span>
-                        <span className="text-right">Qty</span>
-                        <span className="text-right">Subtotal</span>
+                        <span>{t('orders.product')}</span>
+                        <span className="text-right">{t('orders.price')}</span>
+                        <span className="text-right">{t('cart.quantity')}</span>
+                        <span className="text-right">{t('cart.subtotal')}</span>
                     </div>
                     <div className="divide-y">
                         {order.lines?.map((line) => (
@@ -280,15 +280,15 @@ export default function OrderShow({ order, isProduction, clientKey }: OrderShowP
                                     {line.variant_name && <p className="text-muted-foreground">{line.variant_name}</p>}
                                 </div>
                                 <div className="flex items-center justify-between md:block md:text-right">
-                                    <span className="text-muted-foreground md:hidden">Price</span>
+                                    <span className="text-muted-foreground md:hidden">{t('orders.price')}</span>
                                     <span>{formatIdr(line.unit_price_idr)}</span>
                                 </div>
                                 <div className="flex items-center justify-between md:block md:text-right">
-                                    <span className="text-muted-foreground md:hidden">Qty</span>
+                                    <span className="text-muted-foreground md:hidden">{t('cart.quantity')}</span>
                                     <span>{line.quantity}</span>
                                 </div>
                                 <div className="flex items-center justify-between md:block md:text-right">
-                                    <span className="text-muted-foreground md:hidden">Subtotal</span>
+                                    <span className="text-muted-foreground md:hidden">{t('cart.subtotal')}</span>
                                     <span className="font-medium">{formatIdr(line.subtotal_idr)}</span>
                                 </div>
                             </div>
@@ -305,7 +305,7 @@ export default function OrderShow({ order, isProduction, clientKey }: OrderShowP
                         </div>
                     </div>
                 </div>
-                <Link href="/orders" className="mt-4 inline-block text-sm text-primary hover:underline">← Back to Orders</Link>
+                <Link href="/orders" className="mt-4 inline-block text-sm text-primary hover:underline">← {t('orders.backToOrders')}</Link>
             </div>
         </CustomerLayout>
     );

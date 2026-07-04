@@ -26,7 +26,7 @@ class CategoryController extends Controller
 
         $categories = $query->get()->map(fn ($c) => [
             'id'        => $c->id,
-            'name'      => $c->name,
+            'name'      => $c->localized_name,
             'name_id'   => $c->name_id,
             'slug'      => $c->slug,
             'image_url' => $c->getFirstMediaUrl('image', 'thumb') ?: $c->getFirstMediaUrl('image'),

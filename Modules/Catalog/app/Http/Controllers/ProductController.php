@@ -41,9 +41,17 @@ class ProductController extends Controller
         $catV      = Cache::get('cache_ver_categories', 0);
         $settingsV = Cache::get('cache_ver_settings', 0);
         $productV  = Cache::get('cache_ver_products', 0);
+        $locale    = app()->getLocale();
 
-        $categories = Cache::remember("shop_all_categories_{$catV}", 3600, fn () =>
-            Category::orderBy('sort_order')->get()
+        $categories = Cache::remember("shop_all_categories_{$catV}_{$locale}", 3600, fn () =>
+            Category::orderBy('sort_order')->get()->map(fn ($c) => [
+                'id'         => $c->id,
+                'name'       => $c->localized_name,
+                'name_id'    => $c->name_id,
+                'slug'       => $c->slug,
+                'parent_id'  => $c->parent_id,
+                'sort_order' => $c->sort_order,
+            ])->all()
         );
 
         $shopSettings = Cache::remember("shop_settings_{$settingsV}", 3600, fn () =>
@@ -51,7 +59,6 @@ class ProductController extends Controller
         );
 
         $transformer = $this->transformer;
-        $locale = app()->getLocale();
         $filterKey = md5(serialize($request->only(['category', 'search', 'attributes', 'page'])));
         $paginatedData = Cache::remember("shop_products_{$filterKey}_{$productV}_{$locale}", 600, function () use ($query, $transformer) {
             return $query->paginate(12)
@@ -143,7 +150,7 @@ class ProductController extends Controller
                 'price_idr'                   => $product->price ? $this->currency->rmbToIdr($product->price) : null,
                 'categories'                  => $product->categories->map(fn ($c) => [
                     'id'      => $c->id,
-                    'name'    => $c->name,
+                    'name'    => $c->localized_name,
                     'name_id' => $c->name_id,
                     'slug'    => $c->slug,
                 ])->all(),

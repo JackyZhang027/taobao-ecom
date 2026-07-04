@@ -37,6 +37,13 @@ class Category extends Model implements HasMedia
         return $this->belongsToMany(Product::class);
     }
 
+    public function getLocalizedNameAttribute(): string
+    {
+        $locale = app()->getLocale();
+
+        return ($locale === 'id' && ! empty($this->name_id)) ? $this->name_id : $this->name;
+    }
+
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('image')->singleFile();
