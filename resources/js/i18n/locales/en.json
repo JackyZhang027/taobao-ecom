@@ -40,7 +40,13 @@
         "order_other_location": "Order to Other Location",
         "add_wishlist": "Add to wishlist",
         "remove_wishlist": "Remove from wishlist",
-        "view_product": "View product"
+        "view_product": "View product",
+        "location": "Location",
+        "delivery": "Delivery",
+        "total": "Total",
+        "batam_and_delivery": "Batam and Delivery",
+        "jakarta_and_delivery": "Jakarta and Delivery",
+        "others": "Others"
     },
     "cart": {
         "title": "Shopping Cart",

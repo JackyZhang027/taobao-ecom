@@ -40,7 +40,13 @@
         "order_other_location": "Pesan ke Lokasi Lain",
         "add_wishlist": "Tambah ke wishlist",
         "remove_wishlist": "Hapus dari wishlist",
-        "view_product": "Lihat produk"
+        "view_product": "Lihat produk",
+        "location": "Lokasi",
+        "delivery": "Ongkir",
+        "total": "Total",
+        "batam_and_delivery": "Batam dan Ongkir",
+        "jakarta_and_delivery": "Jakarta dan Ongkir",
+        "others": "Lainnya"
     },
     "cart": {
         "title": "Keranjang Belanja",
