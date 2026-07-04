@@ -9,12 +9,12 @@ use Inertia\Inertia;
 use Modules\Admin\Models\ShopSetting;
 use Modules\Currency\Services\CurrencyService;
 use Modules\Ordering\Models\CartItem;
-use Modules\Payment\Models\Payment;
 use Modules\Ordering\Models\Order;
 use Modules\Ordering\Models\OrderLine;
 use Modules\Ordering\Models\OrderStatusHistory;
 use Modules\Ordering\Services\CartService;
 use Modules\Ordering\Services\ShippingService;
+use Modules\Payment\Models\Payment;
 use Modules\Payment\Services\PaymentService;
 
 class CheckoutController extends Controller
@@ -112,8 +112,24 @@ class CheckoutController extends Controller
             return back()->withErrors(['cart' => 'Some items in your cart are no longer available. Please remove them before proceeding.']);
         }
 
+        // Every item must resolve to a positive price — a null/zero price means the
+        // item was added through an invalid path (e.g. a variant product added by
+        // product_id) and would otherwise be sold for free.
+        $hasUnpriced = $cart->items->contains(function ($item) {
+            $priceRmb = $item->variant ? $item->variant->price : $item->product?->price;
+
+            return $priceRmb === null || $priceRmb <= 0;
+        });
+        if ($hasUnpriced) {
+            return back()->withErrors(['cart' => 'Some items in your cart are invalid. Please remove them before proceeding.']);
+        }
+
         $city = $request->city;
         $totals = $this->cartService->computeTotals($cart, $this->currency, $this->shipping, $city);
+
+        if ($totals['grand_total_idr'] <= 0) {
+            return back()->withErrors(['cart' => 'Your order total is invalid. Please review your cart before proceeding.']);
+        }
 
         $canDeliver = strtolower($city) === 'jakarta'
             ? $totals['can_deliver_jakarta']
@@ -180,8 +196,8 @@ class CheckoutController extends Controller
                 CartItem::where('cart_id', $lockedCart->id)->delete();
 
                 OrderStatusHistory::create([
-                    'order_id'   => $order->id,
-                    'status'     => 'pending',
+                    'order_id' => $order->id,
+                    'status' => 'pending',
                     'changed_by' => $request->user()->id,
                 ]);
 

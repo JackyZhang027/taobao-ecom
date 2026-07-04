@@ -13,6 +13,8 @@ use Yajra\DataTables\Facades\DataTables;
 
 class RoleController extends Controller
 {
+    private const SYSTEM_ROLES = ['admin', 'customer'];
+
     public function index()
     {
         return Inertia::render('admin/roles/index');
@@ -41,8 +43,8 @@ class RoleController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'          => 'required|string|max:100|unique:roles,name',
-            'permissions'   => 'array',
+            'name' => 'required|string|max:100|unique:roles,name',
+            'permissions' => 'array',
             'permissions.*' => 'string|exists:permissions,name',
         ]);
 
@@ -57,9 +59,9 @@ class RoleController extends Controller
 
     public function edit(Role $role)
     {
-        if ($role->name === 'admin') {
+        if (in_array($role->name, self::SYSTEM_ROLES, true)) {
             return redirect()->route('admin.roles.index')
-                ->with('error', 'The admin role cannot be edited.');
+                ->with('error', 'System roles cannot be edited.');
         }
 
         $permissions = Permission::all()
@@ -68,21 +70,21 @@ class RoleController extends Controller
         $rolePermissions = $role->permissions->pluck('name')->toArray();
 
         return Inertia::render('admin/roles/edit', [
-            'role'            => $role->only('id', 'name'),
-            'permissions'     => $permissions,
+            'role' => $role->only('id', 'name'),
+            'permissions' => $permissions,
             'rolePermissions' => $rolePermissions,
         ]);
     }
 
     public function update(Request $request, Role $role)
     {
-        if ($role->name === 'admin') {
-            return back()->withErrors(['error' => 'The admin role cannot be edited.']);
+        if (in_array($role->name, self::SYSTEM_ROLES, true)) {
+            return back()->withErrors(['error' => 'System roles cannot be edited.']);
         }
 
         $validated = $request->validate([
-            'name'          => ['required', 'string', 'max:100', Rule::unique('roles', 'name')->ignore($role->id)],
-            'permissions'   => 'array',
+            'name' => ['required', 'string', 'max:100', Rule::unique('roles', 'name')->ignore($role->id)],
+            'permissions' => 'array',
             'permissions.*' => 'string|exists:permissions,name',
         ]);
 
@@ -97,7 +99,7 @@ class RoleController extends Controller
 
     public function destroy(Role $role)
     {
-        if (in_array($role->name, ['admin', 'customer'])) {
+        if (in_array($role->name, self::SYSTEM_ROLES, true)) {
             return back()->with('error', 'System roles cannot be deleted.');
         }
 

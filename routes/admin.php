@@ -30,25 +30,18 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'permiss
 
     // --- Products ---
     Route::get('products/datatable', [ProductController::class, 'datatable'])->name('products.datatable')->middleware('permission:products.view');
-    Route::resource('products', ProductController::class)->middleware([
-        'index' => 'permission:products.view',
-        'show' => 'permission:products.view',
-        'create' => 'permission:products.create',
-        'store' => 'permission:products.create',
-        'edit' => 'permission:products.edit',
-        'update' => 'permission:products.edit',
-        'destroy' => 'permission:products.delete',
-    ]);
+    Route::resource('products', ProductController::class)
+        ->middlewareFor(['index', 'show'], 'permission:products.view')
+        ->middlewareFor(['create', 'store'], 'permission:products.create')
+        ->middlewareFor(['edit', 'update'], 'permission:products.edit')
+        ->middlewareFor('destroy', 'permission:products.delete');
     // --- Categories ---
     Route::get('categories/datatable', [CategoryController::class, 'datatable'])->name('categories.datatable')->middleware('permission:categories.view');
-    Route::resource('categories', CategoryController::class)->except(['show'])->middleware([
-        'index' => 'permission:categories.view',
-        'create' => 'permission:categories.create',
-        'store' => 'permission:categories.create',
-        'edit' => 'permission:categories.edit',
-        'update' => 'permission:categories.edit',
-        'destroy' => 'permission:categories.delete',
-    ]);
+    Route::resource('categories', CategoryController::class)->except(['show'])
+        ->middlewareFor('index', 'permission:categories.view')
+        ->middlewareFor(['create', 'store'], 'permission:categories.create')
+        ->middlewareFor(['edit', 'update'], 'permission:categories.edit')
+        ->middlewareFor('destroy', 'permission:categories.delete');
 
     // --- Wishlists ---
     Route::get('wishlists/datatable', [AdminWishlistController::class, 'datatable'])->name('wishlists.datatable')->middleware('permission:wishlists.view');
@@ -80,50 +73,38 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'permiss
 
     // --- Users ---
     Route::get('users/datatable', [AdminUserController::class, 'datatable'])->name('users.datatable')->middleware('permission:users.view');
-    Route::resource('users', AdminUserController::class)->except(['show'])->middleware([
-        'index' => 'permission:users.view',
-        'create' => 'permission:users.create',
-        'store' => 'permission:users.create',
-        'edit' => 'permission:users.edit',
-        'update' => 'permission:users.edit',
-        'destroy' => 'permission:users.delete',
-    ]);
+    Route::resource('users', AdminUserController::class)->except(['show'])
+        ->middlewareFor('index', 'permission:users.view')
+        ->middlewareFor(['create', 'store'], 'permission:users.create')
+        ->middlewareFor(['edit', 'update'], 'permission:users.edit')
+        ->middlewareFor('destroy', 'permission:users.delete');
 
     // --- Roles ---
     Route::get('roles/datatable', [RoleController::class, 'datatable'])->name('roles.datatable')->middleware('permission:roles.view');
-    Route::resource('roles', RoleController::class)->except(['show'])->middleware([
-        'index' => 'permission:roles.view',
-        'create' => 'permission:roles.create',
-        'store' => 'permission:roles.create',
-        'edit' => 'permission:roles.edit',
-        'update' => 'permission:roles.edit',
-        'destroy' => 'permission:roles.delete',
-    ]);
+    Route::resource('roles', RoleController::class)->except(['show'])
+        ->middlewareFor('index', 'permission:roles.view')
+        ->middlewareFor(['create', 'store'], 'permission:roles.create')
+        ->middlewareFor(['edit', 'update'], 'permission:roles.edit')
+        ->middlewareFor('destroy', 'permission:roles.delete');
 
     // --- Settings ---
     Route::get('settings/shop', [ShopSettingController::class, 'edit'])->name('settings.shop.edit')->middleware('permission:settings.view');
     Route::post('settings/shop', [ShopSettingController::class, 'update'])->name('settings.shop.update')->middleware('permission:settings.edit');
 
     Route::get('settings/hero/datatable', [HeroSlideController::class, 'datatable'])->name('settings.hero.datatable')->middleware('permission:hero_slides.view');
-    Route::resource('settings/hero', HeroSlideController::class)->names('settings.hero')->middleware([
-        'index' => 'permission:hero_slides.view',
-        'create' => 'permission:hero_slides.create',
-        'store' => 'permission:hero_slides.create',
-        'edit' => 'permission:hero_slides.edit',
-        'update' => 'permission:hero_slides.edit',
-        'destroy' => 'permission:hero_slides.delete',
-    ]);
+    Route::resource('settings/hero', HeroSlideController::class)->names('settings.hero')
+        ->middlewareFor(['index', 'show'], 'permission:hero_slides.view')
+        ->middlewareFor(['create', 'store'], 'permission:hero_slides.create')
+        ->middlewareFor(['edit', 'update'], 'permission:hero_slides.edit')
+        ->middlewareFor('destroy', 'permission:hero_slides.delete');
 
     // --- Social Links ---
     Route::get('settings/social-links/datatable', [SocialLinkController::class, 'datatable'])->name('settings.social-links.datatable')->middleware('permission:social_links.view');
-    Route::resource('settings/social-links', SocialLinkController::class)->names('settings.social-links')->middleware([
-        'index' => 'permission:social_links.view',
-        'create' => 'permission:social_links.create',
-        'store' => 'permission:social_links.create',
-        'edit' => 'permission:social_links.edit',
-        'update' => 'permission:social_links.edit',
-        'destroy' => 'permission:social_links.delete',
-    ]);
+    Route::resource('settings/social-links', SocialLinkController::class)->names('settings.social-links')
+        ->middlewareFor(['index', 'show'], 'permission:social_links.view')
+        ->middlewareFor(['create', 'store'], 'permission:social_links.create')
+        ->middlewareFor(['edit', 'update'], 'permission:social_links.edit')
+        ->middlewareFor('destroy', 'permission:social_links.delete');
 
     // --- Store Features ---
     Route::get('settings/store-features', [StoreFeatureController::class, 'index'])->name('settings.store-features.index')->middleware('permission:store_features.view');
@@ -132,37 +113,28 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'permiss
 
     // --- Pages ---
     Route::get('settings/pages/datatable', [AdminPageController::class, 'datatable'])->name('settings.pages.datatable')->middleware('permission:pages.view');
-    Route::resource('settings/pages', AdminPageController::class)->names('settings.pages')->middleware([
-        'index' => 'permission:pages.view',
-        'create' => 'permission:pages.create',
-        'store' => 'permission:pages.create',
-        'edit' => 'permission:pages.edit',
-        'update' => 'permission:pages.edit',
-        'destroy' => 'permission:pages.delete',
-    ]);
+    Route::resource('settings/pages', AdminPageController::class)->names('settings.pages')
+        ->middlewareFor(['index', 'show'], 'permission:pages.view')
+        ->middlewareFor(['create', 'store'], 'permission:pages.create')
+        ->middlewareFor(['edit', 'update'], 'permission:pages.edit')
+        ->middlewareFor('destroy', 'permission:pages.delete');
 
     // --- FAQs ---
     Route::get('settings/faqs/datatable', [AdminFaqController::class, 'datatable'])->name('settings.faqs.datatable')->middleware('permission:faqs.view');
-    Route::resource('settings/faqs', AdminFaqController::class)->names('settings.faqs')->middleware([
-        'index' => 'permission:faqs.view',
-        'create' => 'permission:faqs.create',
-        'store' => 'permission:faqs.create',
-        'edit' => 'permission:faqs.edit',
-        'update' => 'permission:faqs.edit',
-        'destroy' => 'permission:faqs.delete',
-    ]);
+    Route::resource('settings/faqs', AdminFaqController::class)->names('settings.faqs')
+        ->middlewareFor(['index', 'show'], 'permission:faqs.view')
+        ->middlewareFor(['create', 'store'], 'permission:faqs.create')
+        ->middlewareFor(['edit', 'update'], 'permission:faqs.edit')
+        ->middlewareFor('destroy', 'permission:faqs.delete');
 
     // --- Accounting ---
     // Chart of Accounts
     Route::get('accounting/accounts/datatable', [AccountController::class, 'datatable'])->name('accounting.accounts.datatable')->middleware('permission:accounting_accounts.view');
-    Route::resource('accounting/accounts', AccountController::class)->names('accounting.accounts')->except(['show'])->middleware([
-        'index' => 'permission:accounting_accounts.view',
-        'create' => 'permission:accounting_accounts.create',
-        'store' => 'permission:accounting_accounts.create',
-        'edit' => 'permission:accounting_accounts.edit',
-        'update' => 'permission:accounting_accounts.edit',
-        'destroy' => 'permission:accounting_accounts.delete',
-    ]);
+    Route::resource('accounting/accounts', AccountController::class)->names('accounting.accounts')->except(['show'])
+        ->middlewareFor('index', 'permission:accounting_accounts.view')
+        ->middlewareFor(['create', 'store'], 'permission:accounting_accounts.create')
+        ->middlewareFor(['edit', 'update'], 'permission:accounting_accounts.edit')
+        ->middlewareFor('destroy', 'permission:accounting_accounts.delete');
 
     // Journal Entries
     Route::get('accounting/journals/datatable', [JournalEntryController::class, 'datatable'])->name('accounting.journals.datatable')->middleware('permission:accounting_journals.view');

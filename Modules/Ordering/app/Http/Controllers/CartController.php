@@ -7,6 +7,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use Modules\Catalog\Models\Product;
 use Modules\Currency\Services\CurrencyService;
 use Modules\Ordering\Models\CartItem;
 use Modules\Ordering\Services\CartService;
@@ -92,11 +93,22 @@ class CartController extends Controller
                 'nullable', 'integer',
                 Rule::exists('product_variants', 'id')->whereNull('deleted_at'),
             ],
-            'product_id' => 'nullable|integer|exists:products,id',
+            'product_id' => [
+                'nullable', 'integer',
+                Rule::exists('products', 'id')->whereNull('deleted_at')->where('is_active', true),
+            ],
             'quantity' => 'integer|min:1|max:999',
         ]);
 
         abort_if(! $request->product_variant_id && ! $request->product_id, 422, 'product_variant_id or product_id required');
+
+        // Direct product adds are only valid for variant-less products with a real
+        // price — otherwise the null base price would fall back to 0 at checkout.
+        if (! $request->product_variant_id) {
+            $product = Product::find($request->product_id);
+            abort_if($product->variants()->exists(), 422, 'This product requires selecting a variant.');
+            abort_if($product->price === null || $product->price <= 0, 422, 'This product cannot be added to the cart.');
+        }
 
         $cart = $this->cartService->resolveCart($request);
         $quantity = $request->input('quantity', 1);
@@ -115,10 +127,10 @@ class CartController extends Controller
                 $existing->increment('quantity', $quantity);
             } else {
                 CartItem::create([
-                    'cart_id'            => $cart->id,
-                    'product_id'         => $request->product_variant_id ? null : $request->product_id,
+                    'cart_id' => $cart->id,
+                    'product_id' => $request->product_variant_id ? null : $request->product_id,
                     'product_variant_id' => $request->product_variant_id,
-                    'quantity'           => $quantity,
+                    'quantity' => $quantity,
                 ]);
             }
         });
