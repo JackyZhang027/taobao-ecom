@@ -20,9 +20,9 @@ const columns = [
     },
     { data: 'name', title: 'Name' },
     { data: 'slug', title: 'Slug', className: 'text-muted-foreground' },
-    { data: 'price_display', title: 'Price (RMB)' },
-    { data: 'delivery_charge_idr', title: 'Delivery (IDR)' },
-    { data: 'final_price_idr', title: 'Final Price (IDR)', className: 'font-bold' },
+    { data: 'price_display', title: 'Price (RMB)', render: (data: string) => data },
+    { data: 'delivery_charge_idr', title: 'Delivery (IDR)', render: (data: string) => data },
+    { data: 'final_price_idr', title: 'Final Price (IDR)', className: 'font-bold', render: (data: string) => data },
     {
         data: 'status',
         title: 'Status',
