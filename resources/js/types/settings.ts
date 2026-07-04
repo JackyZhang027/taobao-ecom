@@ -7,6 +7,8 @@ export type ShopSetting = {
     contact_email?: string;
     contact_phone?: string;
     whatsapp_number?: string;
+    whatsapp_sender?: string;
+    whatsapp_admin_numbers?: string;
 };
 
 export type SocialLink = {

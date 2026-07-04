@@ -2,6 +2,7 @@
 
 namespace Modules\Payment\Services;
 
+use App\Jobs\SendOrderPaidWhatsAppNotification;
 use Illuminate\Support\Facades\DB;
 use Midtrans\Config;
 use Midtrans\Snap;
@@ -296,5 +297,9 @@ class PaymentService
             'status' => $newStatus,
             'changed_by' => null,
         ]);
+
+        if ($newStatus === 'confirmed') {
+            SendOrderPaidWhatsAppNotification::dispatch($order);
+        }
     }
 }

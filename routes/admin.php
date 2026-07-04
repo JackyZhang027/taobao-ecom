@@ -20,6 +20,7 @@ use Modules\Admin\Http\Controllers\RoleController;
 use Modules\Admin\Http\Controllers\ShopSettingController;
 use Modules\Admin\Http\Controllers\SocialLinkController;
 use Modules\Admin\Http\Controllers\StoreFeatureController;
+use Modules\Admin\Http\Controllers\WhatsappSettingController;
 use Modules\Admin\Http\Controllers\WishlistController as AdminWishlistController;
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'permission:admin.access'])->group(function () {
@@ -90,6 +91,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'permiss
     // --- Settings ---
     Route::get('settings/shop', [ShopSettingController::class, 'edit'])->name('settings.shop.edit')->middleware('permission:settings.view');
     Route::post('settings/shop', [ShopSettingController::class, 'update'])->name('settings.shop.update')->middleware('permission:settings.edit');
+
+    Route::get('settings/whatsapp', [WhatsappSettingController::class, 'edit'])->name('settings.whatsapp.edit')->middleware('permission:settings.view');
+    Route::post('settings/whatsapp', [WhatsappSettingController::class, 'update'])->name('settings.whatsapp.update')->middleware('permission:settings.edit');
+    Route::post('settings/whatsapp/qr', [WhatsappSettingController::class, 'generateQr'])->name('settings.whatsapp.qr')->middleware('permission:settings.edit');
+    Route::post('settings/whatsapp/logout-device', [WhatsappSettingController::class, 'logoutDevice'])->name('settings.whatsapp.logout-device')->middleware('permission:settings.edit');
 
     Route::get('settings/hero/datatable', [HeroSlideController::class, 'datatable'])->name('settings.hero.datatable')->middleware('permission:hero_slides.view');
     Route::resource('settings/hero', HeroSlideController::class)->names('settings.hero')
