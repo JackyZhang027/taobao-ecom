@@ -37,6 +37,8 @@ class Order extends Model
         'courier',
         'tracking_number',
         'order_number',
+        'payment_reminder_count',
+        'last_payment_reminder_at',
     ];
 
     protected static function booted(): void
@@ -57,6 +59,7 @@ class Order extends Model
         'shipping_idr' => 'float',
         'grand_total_idr' => 'float',
         'exchange_rate_snapshot' => 'float',
+        'last_payment_reminder_at' => 'datetime',
     ];
 
     public function user(): BelongsTo

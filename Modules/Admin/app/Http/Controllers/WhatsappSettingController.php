@@ -3,6 +3,7 @@
 namespace Modules\Admin\Http\Controllers;
 
 use App\Services\WhatsAppService;
+use App\Support\ReminderSchedule;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Cache;
@@ -14,6 +15,8 @@ class WhatsappSettingController extends Controller
     private const ALLOWED_SETTING_KEYS = [
         'whatsapp_sender',
         'whatsapp_admin_numbers',
+        'whatsapp_customer_reminder_enabled',
+        'whatsapp_customer_reminder_schedule',
     ];
 
     public function edit()
@@ -30,6 +33,15 @@ class WhatsappSettingController extends Controller
         $request->validate([
             'settings' => 'nullable|array',
             'settings.*' => 'nullable|string|max:1000',
+            'settings.whatsapp_customer_reminder_schedule' => ['nullable', 'string', 'max:1000', function ($attribute, $value, $fail) {
+                if ($value === null || $value === '') {
+                    return;
+                }
+
+                if (! ReminderSchedule::isValidScheduleString($value)) {
+                    $fail('The reminder schedule must be comma-separated durations like 10m,6h,1d (minimum 10 minutes per step).');
+                }
+            }],
         ]);
 
         if ($request->has('settings')) {

@@ -44,6 +44,40 @@ test('admin can save the sender number and admin recipient numbers', function ()
     expect(ShopSetting::get('whatsapp_admin_numbers'))->toBe('628111111111,628222222222');
 });
 
+test('admin can save the customer reminder settings', function () {
+    $admin = createWhatsappAdminUser();
+
+    $this->actingAs($admin)->post('/admin/settings/whatsapp', [
+        'settings' => [
+            'whatsapp_customer_reminder_enabled' => '1',
+            'whatsapp_customer_reminder_schedule' => '10m,6h,1d',
+        ],
+    ])->assertRedirect();
+
+    expect(ShopSetting::get('whatsapp_customer_reminder_enabled'))->toBe('1');
+    expect(ShopSetting::get('whatsapp_customer_reminder_schedule'))->toBe('10m,6h,1d');
+});
+
+test('saving a malformed reminder schedule is rejected', function () {
+    $admin = createWhatsappAdminUser();
+
+    $this->actingAs($admin)->post('/admin/settings/whatsapp', [
+        'settings' => [
+            'whatsapp_customer_reminder_schedule' => '10x,6h',
+        ],
+    ])->assertSessionHasErrors('settings.whatsapp_customer_reminder_schedule');
+});
+
+test('saving a reminder schedule below the 10 minute minimum is rejected', function () {
+    $admin = createWhatsappAdminUser();
+
+    $this->actingAs($admin)->post('/admin/settings/whatsapp', [
+        'settings' => [
+            'whatsapp_customer_reminder_schedule' => '5m,6h',
+        ],
+    ])->assertSessionHasErrors('settings.whatsapp_customer_reminder_schedule');
+});
+
 test('saving an unknown setting key is rejected', function () {
     $admin = createWhatsappAdminUser();
 

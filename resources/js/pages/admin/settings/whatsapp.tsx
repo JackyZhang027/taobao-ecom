@@ -5,6 +5,7 @@ import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogContent,
@@ -62,6 +63,10 @@ export default function AdminWhatsappSettings({
         settings: {
             whatsapp_sender: settings.whatsapp_sender || '',
             whatsapp_admin_numbers: settings.whatsapp_admin_numbers || '',
+            whatsapp_customer_reminder_enabled:
+                settings.whatsapp_customer_reminder_enabled || '0',
+            whatsapp_customer_reminder_schedule:
+                settings.whatsapp_customer_reminder_schedule || '10m,6h,23h',
         },
     });
 
@@ -287,6 +292,67 @@ export default function AdminWhatsappSettings({
                                     <p className="text-xs text-muted-foreground">
                                         Comma-separated numbers that receive a
                                         WhatsApp alert for every new paid order.
+                                    </p>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="mt-6">
+                            <CardHeader>
+                                <CardTitle>Customer Payment Reminders</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="flex items-center gap-2">
+                                    <Checkbox
+                                        id="whatsapp_customer_reminder_enabled"
+                                        checked={
+                                            data.settings
+                                                .whatsapp_customer_reminder_enabled ===
+                                            '1'
+                                        }
+                                        onCheckedChange={(checked) =>
+                                            setData('settings', {
+                                                ...data.settings,
+                                                whatsapp_customer_reminder_enabled:
+                                                    checked ? '1' : '0',
+                                            })
+                                        }
+                                    />
+                                    <Label
+                                        htmlFor="whatsapp_customer_reminder_enabled"
+                                        className="cursor-pointer"
+                                    >
+                                        Enable payment reminders
+                                    </Label>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <Label htmlFor="whatsapp_customer_reminder_schedule">
+                                        Reminder Schedule
+                                    </Label>
+                                    <Input
+                                        id="whatsapp_customer_reminder_schedule"
+                                        value={
+                                            data.settings
+                                                .whatsapp_customer_reminder_schedule
+                                        }
+                                        onChange={(e: any) =>
+                                            setData('settings', {
+                                                ...data.settings,
+                                                whatsapp_customer_reminder_schedule:
+                                                    e.target.value,
+                                            })
+                                        }
+                                        placeholder="e.g. 10m,6h,1d"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        Comma-separated durations after order
+                                        creation at which an unpaid customer
+                                        is reminded via WhatsApp. Use{' '}
+                                        <code>m</code> for minutes,{' '}
+                                        <code>h</code> for hours, and{' '}
+                                        <code>d</code> for days. Minimum 10
+                                        minutes per step.
                                     </p>
                                 </div>
                             </CardContent>

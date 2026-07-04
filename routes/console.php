@@ -9,4 +9,5 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('orders:auto-deliver')->daily();
+Schedule::command('orders:send-payment-reminders')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('queue:work --stop-when-empty')->everyMinute()->withoutOverlapping();

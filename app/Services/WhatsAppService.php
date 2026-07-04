@@ -21,6 +21,39 @@ class WhatsAppService
         }
     }
 
+    public function checkNumber(string $number): bool
+    {
+        try {
+            $response = Http::asForm()->post(config('whatsapp.base_url').'/check-number', [
+                'api_key' => config('whatsapp.api_key'),
+                'sender' => ShopSetting::get('whatsapp_sender'),
+                'number' => $number,
+            ]);
+
+            if ($response->failed()) {
+                \Log::warning('WhatsApp checkNumber: gateway request failed', [
+                    'number' => $number,
+                    'status' => $response->status(),
+                ]);
+
+                return false;
+            }
+
+            // The documented response nests the result under "msg", but the
+            // live gateway actually nests it under "data" — support both.
+            $exists = $response->json('data.exists') ?? $response->json('msg.exists');
+
+            return (bool) $exists;
+        } catch (\Throwable $e) {
+            \Log::warning('WhatsApp checkNumber: exception', [
+                'number' => $number,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
+
     public function generateQr(bool $force = false): array
     {
         return Http::asForm()->post(config('whatsapp.base_url').'/generate-qr', [
