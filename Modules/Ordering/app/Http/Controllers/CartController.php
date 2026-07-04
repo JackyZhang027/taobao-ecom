@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Modules\Catalog\Models\Product;
+use Modules\Catalog\Models\ProductVariant;
 use Modules\Currency\Services\CurrencyService;
 use Modules\Ordering\Models\CartItem;
 use Modules\Ordering\Services\CartService;
@@ -101,6 +102,12 @@ class CartController extends Controller
         ]);
 
         abort_if(! $request->product_variant_id && ! $request->product_id, 422, 'product_variant_id or product_id required');
+
+        if ($request->product_variant_id) {
+            $variant = ProductVariant::with('product')->find($request->product_variant_id);
+            abort_if(! $variant->is_active, 422, 'This product option is unavailable.');
+            abort_if(! $variant->product?->is_active, 422, 'This product is unavailable.');
+        }
 
         // Direct product adds are only valid for variant-less products with a real
         // price — otherwise the null base price would fall back to 0 at checkout.

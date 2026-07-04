@@ -12,6 +12,12 @@ class CurrencyService
         return Cache::remember('exchange_rate_active', 300, function () {
             $rate = ExchangeRate::where('is_active', true)->latest()->first();
 
+            if ($rate === null) {
+                \Illuminate\Support\Facades\Log::error(
+                    'CurrencyService: no active exchange rate configured — storefront prices will display as 0'
+                );
+            }
+
             return $rate?->rate ?? 0.0;
         });
     }

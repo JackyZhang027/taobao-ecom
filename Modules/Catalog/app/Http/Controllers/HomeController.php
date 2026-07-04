@@ -63,7 +63,8 @@ class HomeController extends Controller
         );
 
         $transformer = $this->transformer;
-        $products = Cache::remember("home_featured_products_{$productV}", 3600, fn () =>
+        $locale = app()->getLocale();
+        $products = Cache::remember("home_featured_products_{$productV}_{$locale}", 3600, fn () =>
             Product::with(['translations', 'variants', 'media'])
                 ->where('is_active', true)
                 ->orderBy('sort_order')

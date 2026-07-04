@@ -183,3 +183,177 @@ test('view-only admin can reach the products index but not write routes', functi
     $this->actingAs($actor)->post('/admin/products', [])->assertForbidden();
     $this->actingAs($actor)->delete("/admin/products/{$product->id}")->assertForbidden();
 });
+
+// ─── Fix 4: managing higher-privileged admin users ────────────────────────────
+
+function fullAdmin(): User
+{
+    $user = User::factory()->create();
+    $user->assignRole('admin');
+
+    return $user;
+}
+
+test('limited admin cannot update a full admin', function () {
+    $this->seed(\Database\Seeders\RoleSeeder::class);
+    $actor = limitedAdmin(['users.view', 'users.edit']);
+    $target = fullAdmin();
+
+    $this->actingAs($actor)->put("/admin/users/{$target->id}", [
+        'name' => 'Hijacked',
+        'email' => 'hijacked@example.com',
+        'role' => 'admin',
+    ])->assertForbidden();
+
+    expect($target->fresh()->email)->not->toBe('hijacked@example.com');
+});
+
+test('limited admin cannot delete a full admin', function () {
+    $this->seed(\Database\Seeders\RoleSeeder::class);
+    $actor = limitedAdmin(['users.view', 'users.delete']);
+    $target = fullAdmin();
+
+    $this->actingAs($actor)->delete("/admin/users/{$target->id}")->assertForbidden();
+
+    expect(User::find($target->id))->not->toBeNull();
+});
+
+test('admin user routes return 404 for customer targets', function () {
+    $this->seed(\Database\Seeders\RoleSeeder::class);
+    $actor = limitedAdmin(['users.view', 'users.edit', 'users.delete']);
+    $customer = customerUser();
+
+    $this->actingAs($actor)->get("/admin/users/{$customer->id}/edit")->assertNotFound();
+    $this->actingAs($actor)->put("/admin/users/{$customer->id}", [
+        'name' => 'Promoted',
+        'email' => $customer->email,
+        'role' => $actor->getRoleNames()->first(),
+    ])->assertNotFound();
+    $this->actingAs($actor)->delete("/admin/users/{$customer->id}")->assertNotFound();
+
+    expect($customer->fresh()->hasRole('customer'))->toBeTrue();
+});
+
+test('full admin can still update a lesser admin', function () {
+    $this->seed(\Database\Seeders\RoleSeeder::class);
+    $actor = fullAdmin();
+    $target = limitedAdmin(['users.view']);
+
+    $this->actingAs($actor)->put("/admin/users/{$target->id}", [
+        'name' => 'Renamed Admin',
+        'email' => $target->email,
+        'role' => $target->getRoleNames()->first(),
+    ])->assertRedirect(route('admin.users.index'));
+
+    expect($target->fresh()->name)->toBe('Renamed Admin');
+});
+
+// ─── Fix 5: inactive variants / inactive parent products in the cart ─────────
+
+test('cannot add an inactive variant to the cart', function () {
+    $product = makeSecProduct();
+    $variant = makeSecVariant($product, ['is_active' => false]);
+
+    $this->post('/cart', ['product_variant_id' => $variant->id, 'quantity' => 1])
+        ->assertStatus(422);
+
+    expect(CartItem::count())->toBe(0);
+});
+
+test('cannot add a variant of an inactive product to the cart', function () {
+    $product = makeSecProduct(['is_active' => false]);
+    $variant = makeSecVariant($product);
+
+    $this->post('/cart', ['product_variant_id' => $variant->id, 'quantity' => 1])
+        ->assertStatus(422);
+
+    expect(CartItem::count())->toBe(0);
+});
+
+test('can still add an active variant of an active product to the cart', function () {
+    $product = makeSecProduct();
+    $variant = makeSecVariant($product);
+
+    $this->post('/cart', ['product_variant_id' => $variant->id, 'quantity' => 1])
+        ->assertRedirect();
+
+    expect(CartItem::where('product_variant_id', $variant->id)->exists())->toBeTrue();
+});
+
+// ─── Fix 6: deleting roles still in use ───────────────────────────────────────
+
+test('a role assigned to users cannot be deleted', function () {
+    $this->seed(\Database\Seeders\RoleSeeder::class);
+    $actor = limitedAdmin(['roles.view', 'roles.delete']);
+    $role = Role::create(['name' => 'in-use-role', 'guard_name' => 'web']);
+    User::factory()->create()->assignRole($role);
+
+    $this->actingAs($actor)->delete("/admin/roles/{$role->id}");
+
+    expect(Role::find($role->id))->not->toBeNull();
+});
+
+test('an unassigned role can be deleted', function () {
+    $this->seed(\Database\Seeders\RoleSeeder::class);
+    $actor = limitedAdmin(['roles.view', 'roles.delete']);
+    $role = Role::create(['name' => 'unused-role', 'guard_name' => 'web']);
+
+    $this->actingAs($actor)->delete("/admin/roles/{$role->id}")
+        ->assertRedirect(route('admin.roles.index'));
+
+    expect(Role::find($role->id))->toBeNull();
+});
+
+// ─── Fix 7: admin manual orders use the storefront's absolute variant price ──
+
+test('admin manual order prices a variant by its own price, not product + variant', function () {
+    $this->seed(\Database\Seeders\RoleSeeder::class);
+    ExchangeRate::create(['rate' => 1000, 'is_active' => true]);
+    DeliveryRate::create(['rate' => 1, 'is_active' => true]);
+
+    $actor = limitedAdmin(['orders.view', 'orders.create']);
+    $customer = customerUser();
+    $product = makeSecProduct(['price' => 100]);
+    $variant = makeSecVariant($product, ['price' => 50]);
+
+    $this->actingAs($actor)->post('/admin/orders', [
+        'user_id' => $customer->id,
+        'recipient_name' => 'Jane',
+        'recipient_phone' => '08123456789',
+        'street_address' => '1 Test St',
+        'city' => 'Batam',
+        'items' => [
+            ['product_id' => $product->id, 'variant_id' => $variant->id, 'quantity' => 1],
+        ],
+    ]);
+
+    $line = \Modules\Ordering\Models\OrderLine::firstWhere('product_variant_id', $variant->id);
+    expect($line)->not->toBeNull()
+        ->and((float) $line->unit_price_idr)->toBe(50000.0); // 50 RMB × 1000, not (100+50) × 1000
+});
+
+// ─── Fix 8: product caches are segmented by locale ────────────────────────────
+
+test('product page cache does not leak one locale into another', function () {
+    ExchangeRate::create(['rate' => 1000, 'is_active' => true]);
+    DeliveryRate::create(['rate' => 1, 'is_active' => true]);
+
+    $product = makeSecProduct();
+    \Modules\Catalog\Models\ProductTranslation::create([
+        'product_id' => $product->id, 'locale' => 'en', 'name' => 'Cache EN Name',
+    ]);
+    \Modules\Catalog\Models\ProductTranslation::create([
+        'product_id' => $product->id, 'locale' => 'id', 'name' => 'Cache ID Name',
+    ]);
+
+    // First request warms the cache under the default (en) locale.
+    $this->get("/products/{$product->slug}")
+        ->assertOk()
+        ->assertSee('Cache EN Name');
+
+    // Same URL under the id locale must not be served the cached en payload.
+    app()->setLocale('id');
+    $this->get("/products/{$product->slug}")
+        ->assertOk()
+        ->assertSee('Cache ID Name');
+});

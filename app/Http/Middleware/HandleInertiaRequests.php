@@ -81,9 +81,9 @@ class HandleInertiaRequests extends Middleware
     {
         try {
             $cartService = app(\Modules\Ordering\Services\CartService::class);
-            $cart = $cartService->resolveCart($request);
+            $cart = $cartService->findCart($request);
 
-            return (int) $cart->items()->sum('quantity');
+            return $cart ? (int) $cart->items()->sum('quantity') : 0;
         } catch (\Throwable) {
             return 0;
         }

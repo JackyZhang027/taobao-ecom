@@ -20,7 +20,7 @@ class SecurityHeaders
         $viteOrigins = $isDev ? ' http://localhost:5173 http://127.0.0.1:5173 ws://localhost:5173 ws://127.0.0.1:5173' : '';
 
         $response->headers->set(
-            'Content-Security-Policy-Report-Only',
+            'Content-Security-Policy',
             "default-src 'self'; " .
             "script-src 'self' 'unsafe-inline' https://app.midtrans.com https://app.sandbox.midtrans.com{$viteOrigins}; " .
             "style-src 'self' 'unsafe-inline' https://fonts.bunny.net; " .

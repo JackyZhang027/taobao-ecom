@@ -103,6 +103,10 @@ class RoleController extends Controller
             return back()->with('error', 'System roles cannot be deleted.');
         }
 
+        if ($role->users()->exists()) {
+            return back()->with('error', 'This role is still assigned to users and cannot be deleted.');
+        }
+
         $role->delete();
 
         return redirect()->route('admin.roles.index')->with('success', 'Role deleted successfully.');

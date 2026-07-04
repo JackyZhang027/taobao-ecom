@@ -61,8 +61,10 @@ class AdminUserController extends Controller
         return redirect()->route('admin.users.index')->with('success', 'Admin user created.');
     }
 
-    public function edit(User $user)
+    public function edit(Request $request, User $user)
     {
+        $this->authorizeTargetUser($request, $user);
+
         $roles = Role::where('name', '!=', 'customer')->orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('admin/users/edit', [
@@ -74,6 +76,8 @@ class AdminUserController extends Controller
 
     public function update(Request $request, User $user)
     {
+        $this->authorizeTargetUser($request, $user);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
@@ -94,8 +98,10 @@ class AdminUserController extends Controller
         return redirect()->route('admin.users.index')->with('success', 'Admin user updated.');
     }
 
-    public function destroy(User $user)
+    public function destroy(Request $request, User $user)
     {
+        $this->authorizeTargetUser($request, $user);
+
         if ($user->id === Auth::id()) {
             return back()->withErrors(['error' => 'You cannot delete your own account.']);
         }
@@ -103,6 +109,24 @@ class AdminUserController extends Controller
         $user->delete();
 
         return redirect()->route('admin.users.index')->with('success', 'Admin user deleted.');
+    }
+
+    /**
+     * A target user may only be managed by an actor whose permissions are a
+     * superset of the target's — otherwise an actor with just users.edit could
+     * change a full admin's credentials or demote them. Customer accounts are
+     * out of scope here entirely (CustomerController manages those).
+     */
+    private function authorizeTargetUser(Request $request, User $target): void
+    {
+        abort_unless($target->can('admin.access'), 404);
+
+        $targetPermissions = $target->getAllPermissions()->pluck('name');
+        $actorPermissions = $request->user()->getAllPermissions()->pluck('name');
+
+        if ($targetPermissions->diff($actorPermissions)->isNotEmpty()) {
+            abort(403, 'You cannot manage a user with permissions you do not hold yourself.');
+        }
     }
 
     private function authorizeRoleAssignment(Request $request, string $roleName): void

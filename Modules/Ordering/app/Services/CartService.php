@@ -21,6 +21,22 @@ class CartService
         return Cart::firstOrCreate(['session_id' => $sessionId, 'user_id' => null]);
     }
 
+    /**
+     * Read-only variant of resolveCart() — never inserts a cart row. Use on
+     * every-request paths (e.g. shared Inertia props) so guests and crawlers
+     * don't write a cart per session just by browsing.
+     */
+    public function findCart(Request $request): ?Cart
+    {
+        if ($request->user()) {
+            return Cart::where('user_id', $request->user()->id)->first();
+        }
+
+        return Cart::where('session_id', $request->session()->getId())
+            ->whereNull('user_id')
+            ->first();
+    }
+
     public function mergeGuestCart(User $user, string $sessionId): void
     {
         $guestCart = Cart::where('session_id', $sessionId)->where('user_id', null)->first();

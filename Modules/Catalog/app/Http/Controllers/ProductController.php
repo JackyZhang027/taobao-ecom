@@ -51,8 +51,9 @@ class ProductController extends Controller
         );
 
         $transformer = $this->transformer;
+        $locale = app()->getLocale();
         $filterKey = md5(serialize($request->only(['category', 'search', 'attributes', 'page'])));
-        $paginatedData = Cache::remember("shop_products_{$filterKey}_{$productV}", 600, function () use ($query, $transformer) {
+        $paginatedData = Cache::remember("shop_products_{$filterKey}_{$productV}_{$locale}", 600, function () use ($query, $transformer) {
             return $query->paginate(12)
                 ->through(fn ($p) => $transformer->transform($p))
                 ->toArray();
@@ -82,7 +83,8 @@ class ProductController extends Controller
     public function show(string $slug)
     {
         $productV = Cache::get('cache_ver_products', 0);
-        $productData = Cache::remember("product_show_{$slug}_{$productV}", 3600, function () use ($slug) {
+        $locale = app()->getLocale();
+        $productData = Cache::remember("product_show_{$slug}_{$productV}_{$locale}", 3600, function () use ($slug) {
             $product = Product::with([
                 'translations',
                 'variants.options.group',

@@ -18,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AdminLayout from '@/layouts/admin-layout';
+import { escHtml } from '@/lib/utils';
 
 interface SelectedCustomer {
     id: number;
@@ -45,7 +46,9 @@ const columns = [
         orderable: false,
         searchable: false,
         render: (id: number, _type: string, row: { name: string }) => {
-            const safeName = JSON.stringify(row.name).replace(/"/g, '&quot;');
+            // escHtml escapes & first, so entities already in the name (e.g. &quot;)
+            // can't survive attribute decoding and break out of the JS string.
+            const safeName = escHtml(JSON.stringify(row.name));
             return `<button
                 onclick="window._openResetModal(${id}, ${safeName})"
                 class="inline-flex items-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors"

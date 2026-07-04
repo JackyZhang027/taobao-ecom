@@ -105,44 +105,19 @@ class CheckoutController extends Controller
         $cart = $this->cartService->resolveCart($request);
         $cart->load('items.variant.options', 'items.variant.product.translations', 'items.product.translations');
 
-        $hasUnavailable = $cart->items->contains(
-            fn ($item) => $item->product_variant_id && $item->variant?->trashed()
-        );
-        if ($hasUnavailable) {
-            return back()->withErrors(['cart' => 'Some items in your cart are no longer available. Please remove them before proceeding.']);
-        }
-
-        // Every item must resolve to a positive price — a null/zero price means the
-        // item was added through an invalid path (e.g. a variant product added by
-        // product_id) and would otherwise be sold for free.
-        $hasUnpriced = $cart->items->contains(function ($item) {
-            $priceRmb = $item->variant ? $item->variant->price : $item->product?->price;
-
-            return $priceRmb === null || $priceRmb <= 0;
-        });
-        if ($hasUnpriced) {
-            return back()->withErrors(['cart' => 'Some items in your cart are invalid. Please remove them before proceeding.']);
-        }
-
         $city = $request->city;
-        $totals = $this->cartService->computeTotals($cart, $this->currency, $this->shipping, $city);
 
-        if ($totals['grand_total_idr'] <= 0) {
-            return back()->withErrors(['cart' => 'Your order total is invalid. Please review your cart before proceeding.']);
-        }
-
-        $canDeliver = strtolower($city) === 'jakarta'
-            ? $totals['can_deliver_jakarta']
-            : $totals['can_deliver_batam'];
-
-        if (! $canDeliver) {
-            return back()->withErrors(['city' => 'Delivery is not available for the selected city.']);
+        // Pre-transaction checks give friendly, field-level errors; they are all
+        // re-run against the locked cart inside the transaction, which is
+        // authoritative — the cart may change between here and the lock.
+        if ($error = $this->findCartError($cart, $city)) {
+            return back()->withErrors($error);
         }
 
         $exchangeRate = $this->currency->getActiveRate();
 
         try {
-            $order = DB::transaction(function () use ($request, $cart, $totals, $exchangeRate, $city) {
+            $order = DB::transaction(function () use ($request, $cart, $exchangeRate, $city) {
                 // Pessimistic lock — serialises concurrent checkout attempts for the same cart
                 $lockedCart = \Modules\Ordering\Models\Cart::lockForUpdate()->find($cart->id);
 
@@ -151,6 +126,14 @@ class CheckoutController extends Controller
                 }
 
                 $lockedCart->load('items.variant.options', 'items.variant.product.translations', 'items.product.translations');
+
+                if ($error = $this->findCartError($lockedCart, $city)) {
+                    throw new \RuntimeException(implode(' ', $error));
+                }
+
+                // Totals must come from the locked cart so the charged amount always
+                // matches the order lines created below.
+                $totals = $this->cartService->computeTotals($lockedCart, $this->currency, $this->shipping, $city);
 
                 $order = Order::create([
                     'user_id' => $request->user()->id,
@@ -213,6 +196,48 @@ class CheckoutController extends Controller
         return redirect()->route('checkout.complete', $order);
     }
 
+    /**
+     * Validate that every cart item is orderable and the totals are chargeable.
+     * Returns an error bag (field => message) or null when the cart is valid.
+     */
+    private function findCartError(\Modules\Ordering\Models\Cart $cart, string $city): ?array
+    {
+        $hasUnavailable = $cart->items->contains(
+            fn ($item) => $item->product_variant_id && $item->variant?->trashed()
+        );
+        if ($hasUnavailable) {
+            return ['cart' => 'Some items in your cart are no longer available. Please remove them before proceeding.'];
+        }
+
+        // Every item must resolve to a positive price — a null/zero price means the
+        // item was added through an invalid path (e.g. a variant product added by
+        // product_id) and would otherwise be sold for free.
+        $hasUnpriced = $cart->items->contains(function ($item) {
+            $priceRmb = $item->variant ? $item->variant->price : $item->product?->price;
+
+            return $priceRmb === null || $priceRmb <= 0;
+        });
+        if ($hasUnpriced) {
+            return ['cart' => 'Some items in your cart are invalid. Please remove them before proceeding.'];
+        }
+
+        $totals = $this->cartService->computeTotals($cart, $this->currency, $this->shipping, $city);
+
+        if ($totals['grand_total_idr'] <= 0) {
+            return ['cart' => 'Your order total is invalid. Please review your cart before proceeding.'];
+        }
+
+        $canDeliver = strtolower($city) === 'jakarta'
+            ? $totals['can_deliver_jakarta']
+            : $totals['can_deliver_batam'];
+
+        if (! $canDeliver) {
+            return ['city' => 'Delivery is not available for the selected city.'];
+        }
+
+        return null;
+    }
+
     public function complete(Request $request, Order $order)
     {
         abort_if($order->user_id !== $request->user()->id, 403);
@@ -242,6 +267,10 @@ class CheckoutController extends Controller
         }
 
         $order = $payment->order;
+
+        if (! $order) {
+            return redirect()->route('orders.index');
+        }
 
         abort_if($order->user_id !== $request->user()->id, 403);
 

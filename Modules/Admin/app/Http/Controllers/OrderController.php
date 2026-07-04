@@ -41,7 +41,7 @@ class OrderController extends Controller
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('created_at', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('created_at', '<=', $request->date_to))
             ->when($request->filled('search'), function ($q) use ($request) {
-                $term = $request->search;
+                $term = addcslashes($request->search, '%_\\');
                 $q->where(function ($q) use ($term) {
                     $q->where('order_number', 'like', "%{$term}%")
                         ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$term}%")->orWhere('email', 'like', "%{$term}%"));
@@ -156,7 +156,7 @@ class OrderController extends Controller
                         'id' => $v->id,
                         'sku' => $v->sku,
                         'price' => $v->price,
-                        'price_idr' => $this->currency->rmbToIdr($product->price + $v->price),
+                        'price_idr' => $this->currency->rmbToIdr($v->price),
                         'delivery_rate_batam' => $v->delivery_rate_batam,
                         'delivery_rate_jakarta' => $v->delivery_rate_jakarta,
                     ]),
@@ -205,7 +205,9 @@ class OrderController extends Controller
                     ? $product->variants()->find($itemData['variant_id'])
                     : null;
 
-                $priceRmb = ($product->price ?? 0) + ($variant?->price ?? 0);
+                // Variant prices are absolute, not add-ons — same rule as the storefront
+                // (CartService/CheckoutController/ProductTransformer).
+                $priceRmb = $variant ? (float) $variant->price : (float) ($product->price ?? 0);
                 $unitPriceIdr = $this->currency->rmbToIdr($priceRmb);
                 $qty = (int) $itemData['quantity'];
                 $subtotalRmb += $priceRmb * $qty;
