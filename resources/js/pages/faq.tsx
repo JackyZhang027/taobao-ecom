@@ -33,7 +33,7 @@ export default function Faq({ faqs }: FaqProps) {
                             <div key={faq.id}>
                                 <button
                                     type="button"
-                                    className="flex w-full items-center justify-between gap-4 px-4 py-4 text-left font-medium"
+                                    className="flex w-full items-center justify-between gap-4 px-4 py-4 text-left font-medium hover:bg-muted/50 transition-colors"
                                     onClick={() => setOpenId(isOpen ? null : faq.id)}
                                 >
                                     {faq.question}

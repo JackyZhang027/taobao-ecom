@@ -23,7 +23,27 @@
         "confirm_password": "Konfirmasi Kata Sandi",
         "save": "Simpan",
         "save_password": "Perbarui Kata Sandi",
-        "saved": "Tersimpan"
+        "saved": "Tersimpan",
+        "addresses_title": "Alamat Pengiriman",
+        "addresses_desc": "Kelola alamat pengiriman pesanan Anda",
+        "manage_addresses": "Kelola alamat",
+        "no_addresses": "Belum ada alamat tersimpan"
+    },
+    "addresses": {
+        "title": "Alamat Saya",
+        "add_new": "Tambah Alamat Baru",
+        "edit": "Edit Alamat",
+        "empty": "Anda belum memiliki alamat tersimpan.",
+        "default_badge": "Utama",
+        "set_default": "Jadikan Utama",
+        "label": "Label (opsional)",
+        "label_placeholder": "cth. Rumah, Kantor",
+        "delete_confirm": "Hapus alamat ini?",
+        "back_to_profile": "Kembali ke Profil",
+        "street_address": "Alamat",
+        "city_label": "Kota / Lokasi Pengiriman",
+        "province": "Provinsi",
+        "postal_code": "Kode Pos"
     },
     "product": {
         "add_to_cart": "Tambah ke Keranjang",
@@ -74,7 +94,10 @@
         "place_order": "Buat Pesanan",
         "order_summary": "Ringkasan Pesanan",
         "success": "Pesanan berhasil dibuat!",
-        "error": "Gagal membuat pesanan. Silakan periksa kembali data Anda."
+        "error": "Gagal membuat pesanan. Silakan periksa kembali data Anda.",
+        "change_address": "Ganti",
+        "select_address": "Pilih Alamat Pengiriman",
+        "no_address_selected": "Belum ada alamat pengiriman dipilih"
     },
     "orders": {
         "title": "Pesanan Saya",

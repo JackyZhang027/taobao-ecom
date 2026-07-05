@@ -23,7 +23,27 @@
         "confirm_password": "Confirm Password",
         "save": "Save",
         "save_password": "Update Password",
-        "saved": "Saved"
+        "saved": "Saved",
+        "addresses_title": "Delivery Addresses",
+        "addresses_desc": "Manage the addresses you ship orders to",
+        "manage_addresses": "Manage addresses",
+        "no_addresses": "No saved addresses yet"
+    },
+    "addresses": {
+        "title": "My Addresses",
+        "add_new": "Add New Address",
+        "edit": "Edit Address",
+        "empty": "You have no saved addresses yet.",
+        "default_badge": "Default",
+        "set_default": "Set as Default",
+        "label": "Label (optional)",
+        "label_placeholder": "e.g. Home, Office",
+        "delete_confirm": "Delete this address?",
+        "back_to_profile": "Back to Profile",
+        "street_address": "Address",
+        "city_label": "City / Delivery Location",
+        "province": "Province",
+        "postal_code": "Postal Code"
     },
     "product": {
         "add_to_cart": "Add to Cart",
@@ -74,7 +94,10 @@
         "place_order": "Place Order",
         "order_summary": "Order Summary",
         "success": "Order placed successfully!",
-        "error": "Failed to place order. Please check your details."
+        "error": "Failed to place order. Please check your details.",
+        "change_address": "Change",
+        "select_address": "Select Delivery Address",
+        "no_address_selected": "No delivery address selected"
     },
     "orders": {
         "title": "My Orders",

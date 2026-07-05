@@ -9,6 +9,7 @@ use Modules\Catalog\Http\Controllers\HomeController;
 use Modules\Catalog\Http\Controllers\PageController;
 use Modules\Catalog\Http\Controllers\ProductController;
 use Modules\Catalog\Http\Controllers\WishlistController;
+use Modules\Ordering\Http\Controllers\AddressController;
 use Modules\Ordering\Http\Controllers\CartController;
 use Modules\Ordering\Http\Controllers\CheckoutController;
 use Modules\Ordering\Http\Controllers\OrderController;
@@ -55,6 +56,12 @@ Route::middleware(['auth', 'verified', 'role:customer|admin'])->group(function (
     Route::put('/profile/password', [CustomerProfileController::class, 'updatePassword'])
         ->middleware('throttle:6,1')
         ->name('customer.profile.password');
+
+    Route::get('/addresses', [AddressController::class, 'index'])->name('addresses.index');
+    Route::post('/addresses', [AddressController::class, 'store'])->name('addresses.store');
+    Route::patch('/addresses/{address}', [AddressController::class, 'update'])->name('addresses.update');
+    Route::delete('/addresses/{address}', [AddressController::class, 'destroy'])->name('addresses.destroy');
+    Route::patch('/addresses/{address}/default', [AddressController::class, 'setDefault'])->name('addresses.set-default');
 });
 
 Route::post('/webhooks/midtrans', [WebhookController::class, 'handle'])->name('webhooks.midtrans');

@@ -1,5 +1,5 @@
 import { Transition } from '@headlessui/react';
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import InputError from '@/components/input-error';
@@ -7,8 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import CustomerLayout from '@/layouts/customer-layout';
+import type { Address } from '@/types/address';
 
-export default function ProfilePage() {
+interface ProfilePageProps {
+    defaultAddress: Address | null;
+    addressesCount: number;
+}
+
+export default function ProfilePage({ defaultAddress, addressesCount }: ProfilePageProps) {
     const { t } = useTranslation();
     const { auth } = usePage().props as any;
     const user = auth.user;
@@ -93,6 +99,29 @@ export default function ProfilePage() {
                             </Transition>
                         </div>
                     </form>
+                </div>
+
+                {/* Delivery Addresses */}
+                <div className="rounded-xl border bg-white p-6 shadow-sm">
+                    <div className="mb-6">
+                        <h2 className="text-lg font-semibold text-slate-900">{t('profile.addresses_title')}</h2>
+                        <p className="mt-1 text-sm text-slate-500">{t('profile.addresses_desc')}</p>
+                    </div>
+
+                    {defaultAddress ? (
+                        <p className="text-sm text-slate-600">
+                            {defaultAddress.recipient_name} &middot; {defaultAddress.street_address}, {defaultAddress.city}
+                            {addressesCount > 1 && (
+                                <span className="text-slate-400"> (+{addressesCount - 1} more)</span>
+                            )}
+                        </p>
+                    ) : (
+                        <p className="text-sm text-slate-500">{t('profile.no_addresses')}</p>
+                    )}
+
+                    <Link href="/addresses" className="mt-4 inline-block text-sm font-medium text-blue-600 hover:underline">
+                        {t('profile.manage_addresses')}
+                    </Link>
                 </div>
 
                 {/* Change Password */}

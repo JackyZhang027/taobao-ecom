@@ -39,10 +39,8 @@ Please complete your payment here:
 If you've already paid, please ignore this message.`;
 
 function csrfToken(): string {
-    return (
-        (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)
-            ?.content ?? ''
-    );
+    const match = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]*)/);
+    return match ? decodeURIComponent(match[1]) : '';
 }
 
 async function postJson(url: string, body: Record<string, unknown> = {}) {
@@ -51,7 +49,7 @@ async function postJson(url: string, body: Record<string, unknown> = {}) {
         headers: {
             'Content-Type': 'application/json',
             Accept: 'application/json',
-            'X-CSRF-TOKEN': csrfToken(),
+            'X-XSRF-TOKEN': csrfToken(),
         },
         body: JSON.stringify(body),
     });

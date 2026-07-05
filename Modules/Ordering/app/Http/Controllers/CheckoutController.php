@@ -5,9 +5,11 @@ namespace Modules\Ordering\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Modules\Admin\Models\ShopSetting;
 use Modules\Currency\Services\CurrencyService;
+use Modules\Ordering\Models\Address;
 use Modules\Ordering\Models\CartItem;
 use Modules\Ordering\Models\Order;
 use Modules\Ordering\Models\OrderLine;
@@ -35,7 +37,8 @@ class CheckoutController extends Controller
             'items.product.translations',
             'items.product.media',
         );
-        $city = $request->get('city', 'Batam');
+        $defaultAddress = $request->user()->defaultAddress;
+        $city = $request->get('city', $defaultAddress?->city ?? 'Batam');
         $totals = $this->cartService->computeTotals($cart, $this->currency, $this->shipping, $city);
 
         $locale = app()->getLocale();
@@ -87,25 +90,24 @@ class CheckoutController extends Controller
             'cart' => $cartData,
             'totals' => $totals,
             'whatsapp_number' => ShopSetting::get('whatsapp_number', ''),
+            'addresses' => $request->user()->addresses,
         ]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'recipient_name' => 'required|string|max:255',
-            'recipient_phone' => 'required|string|max:30',
-            'street_address' => 'required|string',
-            'city' => 'required|string|in:Batam,Jakarta',
-            'province' => 'nullable|string|max:100',
-            'postal_code' => 'nullable|string|max:10',
+            'address_id' => ['required', Rule::exists('addresses', 'id')->where('user_id', $request->user()->id)],
             'notes' => 'nullable|string|max:1000',
         ]);
+
+        $address = Address::where('id', $request->address_id)->where('user_id', $request->user()->id)->firstOrFail();
+        $addressFields = $address->only(['recipient_name', 'recipient_phone', 'street_address', 'city', 'province', 'postal_code']);
 
         $cart = $this->cartService->resolveCart($request);
         $cart->load('items.variant.options', 'items.variant.product.translations', 'items.product.translations');
 
-        $city = $request->city;
+        $city = $addressFields['city'];
 
         // Pre-transaction checks give friendly, field-level errors; they are all
         // re-run against the locked cart inside the transaction, which is
@@ -117,7 +119,7 @@ class CheckoutController extends Controller
         $exchangeRate = $this->currency->getActiveRate();
 
         try {
-            $order = DB::transaction(function () use ($request, $cart, $exchangeRate, $city) {
+            $order = DB::transaction(function () use ($request, $cart, $exchangeRate, $city, $addressFields) {
                 // Pessimistic lock — serialises concurrent checkout attempts for the same cart
                 $lockedCart = \Modules\Ordering\Models\Cart::lockForUpdate()->find($cart->id);
 
@@ -142,12 +144,7 @@ class CheckoutController extends Controller
                     'shipping_idr' => $totals['shipping_idr'],
                     'grand_total_idr' => $totals['grand_total_idr'],
                     'exchange_rate_snapshot' => $exchangeRate,
-                    'recipient_name' => $request->recipient_name,
-                    'recipient_phone' => $request->recipient_phone,
-                    'street_address' => $request->street_address,
-                    'city' => $city,
-                    'province' => $request->province,
-                    'postal_code' => $request->postal_code,
+                    ...$addressFields,
                     'notes' => $request->notes,
                 ]);
 

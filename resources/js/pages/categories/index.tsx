@@ -90,7 +90,7 @@ export default function Categories({ categories, search }: CategoriesProps) {
                         <button
                             type="button"
                             onClick={clearSearch}
-                            className="text-blue-600 underline text-sm"
+                            className="text-blue-600 hover:text-blue-800 underline text-sm transition-colors"
                         >
                             {t('categories.clear_search')}
                         </button>

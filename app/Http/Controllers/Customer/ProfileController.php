@@ -15,6 +15,8 @@ class ProfileController extends Controller
     {
         return Inertia::render('profile/index', [
             'status' => $request->session()->get('status'),
+            'defaultAddress' => $request->user()->defaultAddress,
+            'addressesCount' => $request->user()->addresses()->count(),
         ]);
     }
 

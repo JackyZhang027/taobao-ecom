@@ -10,6 +10,8 @@ use Modules\Ordering\Models\Cart;
 
 class ShippingService
 {
+    public const CITIES = ['Batam', 'Jakarta'];
+
     public function __construct(private DeliveryService $delivery) {}
 
     public function calculateShippingIdr(Cart $cart, string $city = 'Batam'): float

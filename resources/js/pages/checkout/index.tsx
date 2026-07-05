@@ -1,42 +1,50 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { ChevronRight, MapPin, Phone, User, FileText, Building2 } from 'lucide-react';
+import { ChevronRight, FileText } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import AddressCard from '@/components/address-card';
+import AddressPickerSheet from '@/components/address-picker-sheet';
+import { Button } from '@/components/ui/button';
 import { useCurrency } from '@/hooks/use-currency';
 import CustomerLayout from '@/layouts/customer-layout';
+import type { Address } from '@/types/address';
 import type { Cart, CartTotals } from '@/types/cart';
 
 interface CheckoutProps {
     cart: Cart;
     totals: CartTotals;
     whatsapp_number: string;
+    addresses: Address[];
 }
 
 const inputClass = 'w-full border border-slate-200 rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-colors bg-[#FAFAFA]';
 
-export default function CheckoutIndex({ cart, totals }: CheckoutProps) {
+export default function CheckoutIndex({ cart, totals, addresses }: CheckoutProps) {
     const { t } = useTranslation();
     const { formatIdr } = useCurrency();
 
+    const defaultAddress = addresses.find((a) => a.is_default) ?? addresses[0] ?? null;
+    const [pickerOpen, setPickerOpen] = useState(false);
+
     const { data, setData, post, processing, errors } = useForm({
-        recipient_name: '',
-        recipient_phone: '',
-        street_address: '',
-        city: 'Batam' as 'Batam' | 'Jakarta',
-        province: 'Kepulauan Riau',
-        postal_code: '',
+        address_id: defaultAddress ? String(defaultAddress.id) : '',
         notes: '',
     });
 
-    const cityProvinceMap: Record<'Batam' | 'Jakarta', string> = {
-        Batam: 'Kepulauan Riau',
-        Jakarta: 'DKI Jakarta',
-    };
+    // Keep the selection valid if the address it points to was edited/deleted
+    // while the picker sheet was open (addresses prop refreshes underneath us).
+    useEffect(() => {
+        if (data.address_id && !addresses.some((a) => String(a.id) === data.address_id)) {
+            const fallback = addresses.find((a) => a.is_default) ?? addresses[0] ?? null;
+            setData('address_id', fallback ? String(fallback.id) : '');
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [addresses]);
 
-    const handleCityChange = (city: 'Batam' | 'Jakarta') => {
-        setData((prev) => ({ ...prev, city, province: cityProvinceMap[city] }));
-        // Reload totals from server for the new city
-        router.reload({ data: { city }, only: ['totals'] });
+    const handleSelectAddress = (address: Address) => {
+        setData('address_id', String(address.id));
+        router.reload({ data: { city: address.city }, only: ['totals'] });
     };
 
     const submit = (e: React.FormEvent) => {
@@ -47,7 +55,9 @@ export default function CheckoutIndex({ cart, totals }: CheckoutProps) {
         });
     };
 
-    const canDeliver = data.city === 'Jakarta' ? totals.can_deliver_jakarta : totals.can_deliver_batam;
+    const selectedAddress = addresses.find((a) => String(a.id) === data.address_id) ?? null;
+    const currentCity = selectedAddress?.city ?? 'Batam';
+    const canDeliver = currentCity === 'Jakarta' ? totals.can_deliver_jakarta : totals.can_deliver_batam;
 
     const itemPrice = (item: Cart['items'][0]) => item.variant?.price_idr ?? 0;
 
@@ -69,126 +79,39 @@ export default function CheckoutIndex({ cart, totals }: CheckoutProps) {
 
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
                 <div className="grid gap-10 lg:grid-cols-5">
-                    {/* Billing / Shipping Form */}
+                    {/* Delivery Address */}
                     <form onSubmit={submit} className="lg:col-span-3 space-y-6">
                         <div className="bg-white border rounded-sm p-8">
-                            <h2 className="text-xl font-bold text-slate-900 mb-7">Billing Details</h2>
+                            <div className="mb-7 flex items-center justify-between">
+                                <h2 className="text-xl font-bold text-slate-900">{t('checkout.shipping_address')}</h2>
+                                {selectedAddress && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setPickerOpen(true)}
+                                        className="text-sm font-medium text-blue-600 hover:underline"
+                                    >
+                                        {t('checkout.change_address')}
+                                    </button>
+                                )}
+                            </div>
 
                             <div className="space-y-5">
-                                {/* Name */}
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-900 mb-1.5">
-                                        <span className="flex items-center gap-1.5">
-                                            <User className="h-3.5 w-3.5 text-slate-500" />
-                                            {t('checkout.recipient_name')}
-                                            <span className="text-red-500">*</span>
-                                        </span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={data.recipient_name}
-                                        onChange={(e) => setData('recipient_name', e.target.value)}
-                                        placeholder="John Doe"
-                                        className={inputClass}
-                                        required
-                                    />
-                                    {errors.recipient_name && <p className="text-xs text-red-500 mt-1">{errors.recipient_name}</p>}
-                                </div>
-
-                                {/* Phone */}
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-900 mb-1.5">
-                                        <span className="flex items-center gap-1.5">
-                                            <Phone className="h-3.5 w-3.5 text-slate-500" />
-                                            {t('checkout.recipient_phone')}
-                                            <span className="text-red-500">*</span>
-                                        </span>
-                                    </label>
-                                    <input
-                                        type="tel"
-                                        value={data.recipient_phone}
-                                        onChange={(e) => setData('recipient_phone', e.target.value)}
-                                        placeholder="+62 812 3456 7890"
-                                        className={inputClass}
-                                        required
-                                    />
-                                    {errors.recipient_phone && <p className="text-xs text-red-500 mt-1">{errors.recipient_phone}</p>}
-                                </div>
-
-                                {/* Street Address */}
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-900 mb-1.5">
-                                        <span className="flex items-center gap-1.5">
-                                            <MapPin className="h-3.5 w-3.5 text-slate-500" />
-                                            Street Address
-                                            <span className="text-red-500">*</span>
-                                        </span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={data.street_address}
-                                        onChange={(e) => setData('street_address', e.target.value)}
-                                        placeholder="Jl. Sudirman No. 12"
-                                        className={inputClass}
-                                        required
-                                    />
-                                    {errors.street_address && <p className="text-xs text-red-500 mt-1">{errors.street_address}</p>}
-                                </div>
-
-                                {/* City selector */}
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-900 mb-1.5">
-                                        <span className="flex items-center gap-1.5">
-                                            <Building2 className="h-3.5 w-3.5 text-slate-500" />
-                                            City / Delivery Location
-                                            <span className="text-red-500">*</span>
-                                        </span>
-                                    </label>
-                                    <div className="flex gap-3">
-                                        {(['Batam', 'Jakarta'] as const).map((city) => (
-                                            <button
-                                                key={city}
-                                                type="button"
-                                                onClick={() => handleCityChange(city)}
-                                                className={`flex-1 py-3 rounded-sm border text-sm font-semibold transition-colors
-                                                    ${data.city === city
-                                                        ? 'bg-slate-900 text-white border-slate-900'
-                                                        : 'bg-white text-slate-700 border-slate-200 hover:border-slate-400'}`}
-                                            >
-                                                {city}
-                                            </button>
-                                        ))}
+                                {selectedAddress ? (
+                                    <AddressCard address={selectedAddress} />
+                                ) : (
+                                    <div className="py-6 text-center">
+                                        <p className="mb-4 text-sm text-slate-500">{t('checkout.no_address_selected')}</p>
+                                        <Button type="button" onClick={() => setPickerOpen(true)}>
+                                            {t('addresses.add_new')}
+                                        </Button>
                                     </div>
-                                    {!canDeliver && (
-                                        <p className="text-xs text-red-500 mt-1">
-                                            Delivery is not available to {data.city}. Please select another city.
-                                        </p>
-                                    )}
-                                    {errors.city && <p className="text-xs text-red-500 mt-1">{errors.city}</p>}
-                                </div>
-
-                                {/* Province + Postal Code */}
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-900 mb-1.5">Province</label>
-                                        <input
-                                            type="text"
-                                            value={data.province}
-                                            readOnly
-                                            className={`${inputClass} bg-slate-100 cursor-default`}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-900 mb-1.5">Postal Code</label>
-                                        <input
-                                            type="text"
-                                            value={data.postal_code}
-                                            onChange={(e) => setData('postal_code', e.target.value)}
-                                            placeholder="29432"
-                                            className={inputClass}
-                                        />
-                                    </div>
-                                </div>
+                                )}
+                                {errors.address_id && <p className="text-xs text-red-500 mt-1">{errors.address_id}</p>}
+                                {selectedAddress && !canDeliver && (
+                                    <p className="text-xs text-red-500 mt-1">
+                                        Delivery is not available to {currentCity}. Please choose another address.
+                                    </p>
+                                )}
 
                                 {/* Notes */}
                                 <div>
@@ -212,7 +135,7 @@ export default function CheckoutIndex({ cart, totals }: CheckoutProps) {
 
                         <button
                             type="submit"
-                            disabled={processing || !canDeliver}
+                            disabled={processing || !selectedAddress || !canDeliver}
                             className="w-full bg-slate-900 hover:bg-slate-800 disabled:opacity-60 disabled:cursor-not-allowed text-white py-4 font-semibold text-sm uppercase tracking-widest transition-colors rounded-sm"
                         >
                             {processing ? 'Placing Order...' : t('checkout.place_order')}
@@ -262,7 +185,7 @@ export default function CheckoutIndex({ cart, totals }: CheckoutProps) {
                                     <span className="text-slate-900">{formatIdr(totals.subtotal_idr)}</span>
                                 </div>
                                 <div className="flex justify-between pb-4 border-b border-slate-200">
-                                    <span className="text-slate-500">{t('cart.shipping')} ({data.city})</span>
+                                    <span className="text-slate-500">{t('cart.shipping')} ({currentCity})</span>
                                     <span className="text-slate-900">{formatIdr(totals.shipping_idr)}</span>
                                 </div>
                                 <div className="flex justify-between pt-1">
@@ -274,6 +197,15 @@ export default function CheckoutIndex({ cart, totals }: CheckoutProps) {
                     </div>
                 </div>
             </div>
+
+            <AddressPickerSheet
+                open={pickerOpen}
+                onOpenChange={setPickerOpen}
+                addresses={addresses}
+                selectedId={data.address_id}
+                onSelect={handleSelectAddress}
+                startInForm={addresses.length === 0}
+            />
         </CustomerLayout>
     );
 }

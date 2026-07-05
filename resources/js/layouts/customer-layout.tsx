@@ -129,7 +129,7 @@ export default function CustomerLayout({ children, fullWidth = false }: Customer
                                 </Link>
                             )}
                             <button
-                                className="md:hidden text-[#c8c8ca]"
+                                className="md:hidden text-[#c8c8ca] hover:text-white transition-colors"
                                 onClick={() => setMobileOpen(!mobileOpen)}
                             >
                                 {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
