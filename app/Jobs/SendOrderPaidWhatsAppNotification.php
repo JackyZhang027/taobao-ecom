@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Services\WhatsAppService;
+use App\Support\MessageTemplate;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -18,6 +19,12 @@ class SendOrderPaidWhatsAppNotification implements ShouldQueue
     public int $tries = 3;
 
     public int $backoff = 30;
+
+    private const DEFAULT_TEMPLATE = "🔔 New Paid Order\n"
+        ."Order: #{order_no}\n"
+        ."Customer: {customer_name}\n"
+        ."Phone: {customer_phone}\n"
+        .'Total: Rp {total}';
 
     public function __construct(public Order $order) {}
 
@@ -45,12 +52,16 @@ class SendOrderPaidWhatsAppNotification implements ShouldQueue
 
     private function buildMessage(): string
     {
-        $total = number_format((float) $this->order->grand_total_idr, 0, ',', '.');
+        $template = ShopSetting::get('whatsapp_order_paid_template') ?: self::DEFAULT_TEMPLATE;
 
-        return "🔔 New Paid Order\n"
-            ."Order: #{$this->order->order_number}\n"
-            ."Customer: {$this->order->recipient_name}\n"
-            ."Phone: {$this->order->recipient_phone}\n"
-            ."Total: Rp {$total}";
+        return MessageTemplate::render($template, [
+            'order_no' => $this->order->order_number,
+            'date' => $this->order->created_at?->format('d M Y H:i'),
+            'customer_name' => $this->order->recipient_name,
+            'customer_phone' => $this->order->recipient_phone,
+            'total' => number_format((float) $this->order->grand_total_idr, 0, ',', '.'),
+            'link' => route('orders.show', $this->order),
+            'shop_name' => ShopSetting::get('shop_name'),
+        ]);
     }
 }

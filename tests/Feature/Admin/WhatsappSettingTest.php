@@ -58,6 +58,30 @@ test('admin can save the customer reminder settings', function () {
     expect(ShopSetting::get('whatsapp_customer_reminder_schedule'))->toBe('10m,6h,1d');
 });
 
+test('admin can save whatsapp message templates', function () {
+    $admin = createWhatsappAdminUser();
+
+    $this->actingAs($admin)->post('/admin/settings/whatsapp', [
+        'settings' => [
+            'whatsapp_order_paid_template' => 'Paid! {order_no} for {customer_name}',
+            'whatsapp_payment_reminder_template' => 'Reminder {order_no}, pay via {link}',
+        ],
+    ])->assertRedirect();
+
+    expect(ShopSetting::get('whatsapp_order_paid_template'))->toBe('Paid! {order_no} for {customer_name}');
+    expect(ShopSetting::get('whatsapp_payment_reminder_template'))->toBe('Reminder {order_no}, pay via {link}');
+});
+
+test('saving a message template over the max length is rejected', function () {
+    $admin = createWhatsappAdminUser();
+
+    $this->actingAs($admin)->post('/admin/settings/whatsapp', [
+        'settings' => [
+            'whatsapp_order_paid_template' => str_repeat('a', 2001),
+        ],
+    ])->assertSessionHasErrors('settings.whatsapp_order_paid_template');
+});
+
 test('saving a malformed reminder schedule is rejected', function () {
     $admin = createWhatsappAdminUser();
 

@@ -11,6 +11,8 @@ export type ShopSetting = {
     whatsapp_admin_numbers?: string;
     whatsapp_customer_reminder_enabled?: string;
     whatsapp_customer_reminder_schedule?: string;
+    whatsapp_order_paid_template?: string;
+    whatsapp_payment_reminder_template?: string;
 };
 
 export type SocialLink = {

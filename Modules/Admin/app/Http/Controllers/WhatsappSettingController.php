@@ -17,6 +17,8 @@ class WhatsappSettingController extends Controller
         'whatsapp_admin_numbers',
         'whatsapp_customer_reminder_enabled',
         'whatsapp_customer_reminder_schedule',
+        'whatsapp_order_paid_template',
+        'whatsapp_payment_reminder_template',
     ];
 
     public function edit()
@@ -32,7 +34,7 @@ class WhatsappSettingController extends Controller
     {
         $request->validate([
             'settings' => 'nullable|array',
-            'settings.*' => 'nullable|string|max:1000',
+            'settings.*' => 'nullable|string|max:2000',
             'settings.whatsapp_customer_reminder_schedule' => ['nullable', 'string', 'max:1000', function ($attribute, $value, $fail) {
                 if ($value === null || $value === '') {
                     return;

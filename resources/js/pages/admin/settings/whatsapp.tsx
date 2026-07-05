@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import AdminLayout from '@/layouts/admin-layout';
 import type { ShopSetting } from '@/types/settings';
 
@@ -23,6 +24,19 @@ const MAX_POLL_ATTEMPTS = 40;
 const POLL_INTERVAL_MS = 3000;
 
 const DISCONNECT_ENABLED = true;
+
+const ORDER_PAID_DEFAULT_TEMPLATE = `🔔 New Paid Order
+Order: #{order_no}
+Customer: {customer_name}
+Phone: {customer_phone}
+Total: Rp {total}`;
+
+const PAYMENT_REMINDER_DEFAULT_TEMPLATE = `⏰ Payment Reminder
+Hi {customer_name}, your order #{order_no} (Rp {total}) is still unpaid.
+Please complete your payment here:
+{link}
+
+If you've already paid, please ignore this message.`;
 
 function csrfToken(): string {
     return (
@@ -67,6 +81,10 @@ export default function AdminWhatsappSettings({
                 settings.whatsapp_customer_reminder_enabled || '0',
             whatsapp_customer_reminder_schedule:
                 settings.whatsapp_customer_reminder_schedule || '10m,6h,23h',
+            whatsapp_order_paid_template:
+                settings.whatsapp_order_paid_template || '',
+            whatsapp_payment_reminder_template:
+                settings.whatsapp_payment_reminder_template || '',
         },
     });
 
@@ -353,6 +371,80 @@ export default function AdminWhatsappSettings({
                                         <code>h</code> for hours, and{' '}
                                         <code>d</code> for days. Minimum 10
                                         minutes per step.
+                                    </p>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="mt-6">
+                            <CardHeader>
+                                <CardTitle>Message Templates</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                <div className="space-y-1">
+                                    <Label htmlFor="whatsapp_order_paid_template">
+                                        New Paid Order Alert (to admins)
+                                    </Label>
+                                    <Textarea
+                                        id="whatsapp_order_paid_template"
+                                        rows={8}
+                                        value={
+                                            data.settings
+                                                .whatsapp_order_paid_template
+                                        }
+                                        onChange={(e) =>
+                                            setData('settings', {
+                                                ...data.settings,
+                                                whatsapp_order_paid_template:
+                                                    e.target.value,
+                                            })
+                                        }
+                                        placeholder={ORDER_PAID_DEFAULT_TEMPLATE}
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        Leave blank to use the default text
+                                        above. Available placeholders:{' '}
+                                        <code>{'{order_no}'}</code>,{' '}
+                                        <code>{'{date}'}</code>,{' '}
+                                        <code>{'{customer_name}'}</code>,{' '}
+                                        <code>{'{customer_phone}'}</code>,{' '}
+                                        <code>{'{total}'}</code>,{' '}
+                                        <code>{'{shop_name}'}</code>.
+                                    </p>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <Label htmlFor="whatsapp_payment_reminder_template">
+                                        Payment Reminder (to customer)
+                                    </Label>
+                                    <Textarea
+                                        id="whatsapp_payment_reminder_template"
+                                        rows={16}
+                                        value={
+                                            data.settings
+                                                .whatsapp_payment_reminder_template
+                                        }
+                                        onChange={(e) =>
+                                            setData('settings', {
+                                                ...data.settings,
+                                                whatsapp_payment_reminder_template:
+                                                    e.target.value,
+                                            })
+                                        }
+                                        placeholder={
+                                            PAYMENT_REMINDER_DEFAULT_TEMPLATE
+                                        }
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        Leave blank to use the default text
+                                        above. Available placeholders:{' '}
+                                        <code>{'{order_no}'}</code>,{' '}
+                                        <code>{'{date}'}</code>,{' '}
+                                        <code>{'{customer_name}'}</code>,{' '}
+                                        <code>{'{customer_phone}'}</code>,{' '}
+                                        <code>{'{total}'}</code>,{' '}
+                                        <code>{'{link}'}</code>,{' '}
+                                        <code>{'{shop_name}'}</code>.
                                     </p>
                                 </div>
                             </CardContent>
