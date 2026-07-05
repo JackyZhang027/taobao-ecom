@@ -14,10 +14,10 @@ class UpdateStoreFeatureRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'icon'        => 'required|string|max:50',
-            'title'       => 'required|string|max:100',
+            'icon' => 'required|string|max:50',
+            'title' => 'required|string|max:100',
             'description' => 'required|string|max:200',
-            'is_active'   => 'boolean',
+            'is_active' => 'boolean',
         ];
     }
 }

@@ -32,7 +32,10 @@ class DeliveryRateController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate(['rate' => 'required|numeric|min:0.01']);
+        $request->validate([
+            'rate' => 'required|numeric|min:0.01',
+            'notes' => 'nullable|string|max:1000',
+        ]);
         $this->delivery->setRate((float) $request->rate, $request->user()->id, $request->notes);
 
         Cache::forever('cache_ver_products', microtime(true));

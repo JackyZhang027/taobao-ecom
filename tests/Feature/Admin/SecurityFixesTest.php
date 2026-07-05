@@ -138,6 +138,27 @@ test('checkout is blocked when a cart item has no price', function () {
     expect(\Modules\Ordering\Models\Order::count())->toBe(0);
 });
 
+test('checkout to batam is rejected when the item only has a jakarta delivery rate', function () {
+    ExchangeRate::create(['rate' => 1000, 'is_active' => true]);
+    DeliveryRate::create(['rate' => 1, 'is_active' => true]);
+
+    $user = customerUser();
+
+    $product = makeSecProduct(['delivery_rate_batam' => 0, 'delivery_rate_jakarta' => 30000]);
+    $variant = makeSecVariant($product, ['delivery_rate_batam' => 0, 'delivery_rate_jakarta' => 25000]);
+    $cart = Cart::create(['user_id' => $user->id, 'session_id' => null]);
+    CartItem::create(['cart_id' => $cart->id, 'product_variant_id' => $variant->id, 'product_id' => null, 'quantity' => 1]);
+
+    $this->actingAs($user)->post('/checkout', [
+        'recipient_name' => 'Jane',
+        'recipient_phone' => '08123456789',
+        'street_address' => '1 Test St',
+        'city' => 'Batam',
+    ])->assertSessionHasErrors('city');
+
+    expect(\Modules\Ordering\Models\Order::count())->toBe(0);
+});
+
 // ─── Fix 2: customer role privilege escalation ────────────────────────────────
 
 test('customer system role cannot be edited', function () {
@@ -169,6 +190,28 @@ test('a non-system role can still be edited', function () {
         ->assertRedirect(route('admin.roles.index'));
 
     expect($role->fresh()->name)->toBe('editor-renamed');
+});
+
+test('an actor cannot strip permissions from a role stronger than their own', function () {
+    $this->seed(\Database\Seeders\RoleSeeder::class);
+
+    $strongRole = Role::create(['name' => 'super-custom', 'guard_name' => 'web']);
+    $strongRole->syncPermissions(['admin.access', 'roles.edit', 'users.delete']);
+
+    // Actor lacks users.delete, which the target role holds.
+    $actor = limitedAdmin(['roles.view', 'roles.edit', 'roles.delete']);
+
+    $this->actingAs($actor)
+        ->put("/admin/roles/{$strongRole->id}", ['name' => 'super-custom', 'permissions' => ['roles.edit']])
+        ->assertForbidden();
+
+    expect($strongRole->fresh()->permissions->pluck('name'))->toContain('users.delete');
+
+    $this->actingAs($actor)
+        ->delete("/admin/roles/{$strongRole->id}")
+        ->assertForbidden();
+
+    expect(Role::where('name', 'super-custom')->exists())->toBeTrue();
 });
 
 // ─── Fix 3: per-action resource middleware ────────────────────────────────────

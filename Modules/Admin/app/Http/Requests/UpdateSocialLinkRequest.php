@@ -14,10 +14,10 @@ class UpdateSocialLinkRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'       => 'required|string|max:255',
-            'icon'       => 'required|string|max:50',
-            'url'        => 'required|url|max:500',
-            'is_active'  => 'boolean',
+            'name' => 'required|string|max:255',
+            'icon' => 'required|string|max:50',
+            'url' => 'required|url|max:500',
+            'is_active' => 'boolean',
             'sort_order' => 'nullable|integer',
         ];
     }

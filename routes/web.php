@@ -30,7 +30,9 @@ Route::middleware('throttle:60,1')->group(function () {
     Route::delete('/cart/{cartItem}', [CartController::class, 'destroy'])->name('cart.destroy');
 });
 
-Route::middleware(['auth', 'role:customer'])->group(function () {
+// Deliberately auth-only (no role middleware): RedirectIfMustChangePassword
+// funnels ANY flagged user here — a role restriction would 403-loop non-customers.
+Route::middleware('auth')->group(function () {
     Route::get('/change-password', [ChangePasswordController::class, 'show'])->name('change-password.show');
     Route::post('/change-password', [ChangePasswordController::class, 'update'])->name('change-password.update');
 });

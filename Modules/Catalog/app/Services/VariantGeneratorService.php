@@ -28,10 +28,10 @@ class VariantGeneratorService
     {
         DB::transaction(function () use ($product, $groups) {
             $survivingGroupIds = [];
-            $optionIdsByGroup  = [];
+            $optionIdsByGroup = [];
 
             foreach ($groups as $sortOrder => $groupData) {
-                $name         = trim($groupData['name'] ?? '');
+                $name = trim($groupData['name'] ?? '');
                 $optionValues = array_filter(array_map('trim', $groupData['options'] ?? []));
 
                 if ($name === '' || empty($optionValues)) {
@@ -44,7 +44,7 @@ class VariantGeneratorService
                 );
 
                 $survivingGroupIds[] = $group->id;
-                $survivingOptionIds  = [];
+                $survivingOptionIds = [];
 
                 foreach (array_values($optionValues) as $optionSortOrder => $value) {
                     // Include soft-deleted options so the same value gets its original ID back.
@@ -60,8 +60,8 @@ class VariantGeneratorService
                         $option->update(['sort_order' => $optionSortOrder]);
                     } else {
                         $option = ProductVariantOption::create([
-                            'group_id'   => $group->id,
-                            'value'      => $value,
+                            'group_id' => $group->id,
+                            'value' => $value,
                             'sort_order' => $optionSortOrder,
                         ]);
                     }
@@ -90,6 +90,7 @@ class VariantGeneratorService
                 // Validation has already blocked removal when any variant is referenced
                 // in an order or cart, so forceDelete is safe here.
                 $product->variants()->forceDelete();
+
                 return;
             }
 
@@ -112,6 +113,7 @@ class VariantGeneratorService
                 ->get()
                 ->keyBy(function (ProductVariant $v) {
                     $ids = $v->options->pluck('id')->sort()->values()->toArray();
+
                     return implode('|', $ids);
                 });
 
@@ -130,10 +132,10 @@ class VariantGeneratorService
 
                     $variant = ProductVariant::create([
                         'product_id' => $product->id,
-                        'sku'        => $this->generateSku($product->slug, $optionValues),
-                        'price'      => 0,
-                        'stock'      => 0,
-                        'is_active'  => true,
+                        'sku' => $this->generateSku($product->slug, $optionValues),
+                        'price' => 0,
+                        'stock' => 0,
+                        'is_active' => true,
                         'sort_order' => 0,
                     ]);
 
@@ -161,12 +163,13 @@ class VariantGeneratorService
             }
             $result = $append;
         }
+
         return $result;
     }
 
     private function generateSku(string $slug, array $optionValues): string
     {
-        $base   = Str::upper(Str::slug($slug, '-'));
+        $base = Str::upper(Str::slug($slug, '-'));
         $suffix = collect($optionValues)
             ->map(fn ($v) => Str::upper(Str::slug($v, '-')))
             ->implode('-');

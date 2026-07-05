@@ -29,7 +29,7 @@ class CurrencyService
 
     public function formatIdr(float $amount): string
     {
-        return 'Rp ' . number_format($amount, 0, ',', '.');
+        return 'Rp '.number_format($amount, 0, ',', '.');
     }
 
     public function setRate(float $rate, int $adminId, ?string $notes = null): ExchangeRate

@@ -26,8 +26,8 @@ return new class extends Migration
         }
 
         DB::table('products')->update([
-            'delivery_charge'         => DB::raw("ROUND(delivery_charge * {$rate}, 2)"),
-            'delivery_charge_batam'   => DB::raw("ROUND(delivery_charge_batam * {$rate}, 2)"),
+            'delivery_charge' => DB::raw("ROUND(delivery_charge * {$rate}, 2)"),
+            'delivery_charge_batam' => DB::raw("ROUND(delivery_charge_batam * {$rate}, 2)"),
             'delivery_charge_jakarta' => DB::raw("ROUND(delivery_charge_jakarta * {$rate}, 2)"),
         ]);
     }
@@ -41,8 +41,8 @@ return new class extends Migration
 
         if ($rate && $rate > 0) {
             DB::table('products')->update([
-                'delivery_charge'         => DB::raw("ROUND(delivery_charge / {$rate}, 4)"),
-                'delivery_charge_batam'   => DB::raw("ROUND(delivery_charge_batam / {$rate}, 4)"),
+                'delivery_charge' => DB::raw("ROUND(delivery_charge / {$rate}, 4)"),
+                'delivery_charge_batam' => DB::raw("ROUND(delivery_charge_batam / {$rate}, 4)"),
                 'delivery_charge_jakarta' => DB::raw("ROUND(delivery_charge_jakarta / {$rate}, 4)"),
             ]);
         }

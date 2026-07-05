@@ -206,16 +206,44 @@ class PaymentService
                 return;
             }
 
+            // Midtrans may deliver notifications out of order — never let a late
+            // 'pending'/'authorize' overwrite a payment that already settled.
+            $payment->refresh();
+            if (in_array($payment->status, ['settlement', 'capture'], true)
+                && in_array($transactionStatus, ['pending', 'authorize'], true)) {
+                \Log::warning('Midtrans webhook ignored: would regress settled payment', [
+                    'midtrans_order_id' => $payload['order_id'],
+                    'payment_status' => $payment->status,
+                    'transaction_status' => $transactionStatus,
+                ]);
+
+                return;
+            }
+
             $payment->update([
                 'status' => $transactionStatus,
                 'gateway_response' => $payload,
             ]);
 
-            match ($transactionStatus) {
-                'settlement', 'capture' => $this->transitionOrder($order, 'confirmed'),
-                'cancel', 'expire', 'deny' => $this->transitionOrder($order, 'cancelled'),
-                default => null,
-            };
+            // A settlement always confirms (money was received), but only the
+            // order's LATEST payment may cancel it — an old transaction expiring
+            // after "select other payment method" must not cancel an order that
+            // is being (or has been) paid on a newer token.
+            $isLatestPayment = $payment->id === (int) Payment::where('order_id', $order->id)->max('id');
+
+            if (in_array($transactionStatus, ['settlement', 'capture'], true)) {
+                $this->transitionOrder($order, 'confirmed');
+            } elseif (in_array($transactionStatus, ['cancel', 'expire', 'deny'], true)) {
+                if ($isLatestPayment) {
+                    $this->transitionOrder($order, 'cancelled');
+                } else {
+                    \Log::info('Midtrans webhook: stale payment — status recorded, order transition skipped', [
+                        'midtrans_order_id' => $payload['order_id'],
+                        'order_id' => $order->id,
+                        'transaction_status' => $transactionStatus,
+                    ]);
+                }
+            }
         });
     }
 

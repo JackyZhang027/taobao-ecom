@@ -23,7 +23,8 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->instance(LoginResponseContract::class, new class implements LoginResponseContract {
+        $this->app->instance(LoginResponseContract::class, new class implements LoginResponseContract
+        {
             public function toResponse($request)
             {
                 if ($request->wantsJson()) {
@@ -45,7 +46,8 @@ class FortifyServiceProvider extends ServiceProvider
             }
         });
 
-        $this->app->instance(RegisterResponseContract::class, new class implements RegisterResponseContract {
+        $this->app->instance(RegisterResponseContract::class, new class implements RegisterResponseContract
+        {
             public function toResponse($request)
             {
                 return $request->wantsJson()
@@ -54,7 +56,8 @@ class FortifyServiceProvider extends ServiceProvider
             }
         });
 
-        $this->app->instance(VerifyEmailResponseContract::class, new class implements VerifyEmailResponseContract {
+        $this->app->instance(VerifyEmailResponseContract::class, new class implements VerifyEmailResponseContract
+        {
             public function toResponse($request)
             {
                 if ($request->wantsJson()) {
@@ -63,7 +66,7 @@ class FortifyServiceProvider extends ServiceProvider
 
                 $home = $request->user()->hasRole('customer') ? '/shop' : '/admin';
 
-                return redirect()->intended($home . '?verified=1');
+                return redirect()->intended($home.'?verified=1');
             }
         });
     }

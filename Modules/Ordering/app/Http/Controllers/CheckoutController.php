@@ -191,7 +191,21 @@ class CheckoutController extends Controller
         }
 
         $order->load('lines');
-        $snapToken = $this->payment->createSnapToken($order);
+
+        // The order is already committed and the cart emptied — a Midtrans
+        // failure here must not surface as a 500. The order page offers
+        // "retry payment" for pending orders.
+        try {
+            $this->payment->createSnapToken($order);
+        } catch (\Throwable $e) {
+            \Log::error('Checkout: failed to create Snap token after order creation', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('orders.show', $order)
+                ->with('error', 'Your order was created, but we could not start the payment. Please retry the payment from this page.');
+        }
 
         return redirect()->route('checkout.complete', $order);
     }

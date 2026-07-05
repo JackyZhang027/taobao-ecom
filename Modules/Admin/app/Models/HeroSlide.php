@@ -31,7 +31,7 @@ class HeroSlide extends Model implements HasMedia
             ->singleFile(); // A highly recommended approach if it's just one background image per slide
     }
 
-    public function registerMediaConversions(Media $media = null): void
+    public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('thumb')
             ->width(200)
@@ -41,7 +41,7 @@ class HeroSlide extends Model implements HasMedia
         $this->addMediaConversion('desktop')
             ->width(1920)
             ->nonQueued();
-            
+
         $this->addMediaConversion('mobile')
             ->width(768)
             ->nonQueued();

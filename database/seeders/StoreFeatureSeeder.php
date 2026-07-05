@@ -11,32 +11,32 @@ class StoreFeatureSeeder extends Seeder
     {
         $features = [
             [
-                'sort_order'  => 1,
-                'icon'        => 'Truck',
-                'title'       => 'Fast Delivery',
+                'sort_order' => 1,
+                'icon' => 'Truck',
+                'title' => 'Fast Delivery',
                 'description' => 'Quick processing & nationwide shipping',
-                'is_active'   => true,
+                'is_active' => true,
             ],
             [
-                'sort_order'  => 2,
-                'icon'        => 'ShieldCheck',
-                'title'       => 'Quality Guaranteed',
+                'sort_order' => 2,
+                'icon' => 'ShieldCheck',
+                'title' => 'Quality Guaranteed',
                 'description' => 'Authentic products from trusted sellers',
-                'is_active'   => true,
+                'is_active' => true,
             ],
             [
-                'sort_order'  => 3,
-                'icon'        => 'Lock',
-                'title'       => 'Secure Payment',
+                'sort_order' => 3,
+                'icon' => 'Lock',
+                'title' => 'Secure Payment',
                 'description' => '100% safe & protected transactions',
-                'is_active'   => true,
+                'is_active' => true,
             ],
             [
-                'sort_order'  => 4,
-                'icon'        => 'Headphones',
-                'title'       => '24/7 Support',
+                'sort_order' => 4,
+                'icon' => 'Headphones',
+                'title' => '24/7 Support',
                 'description' => 'Always here to help you anytime',
-                'is_active'   => true,
+                'is_active' => true,
             ],
         ];
 

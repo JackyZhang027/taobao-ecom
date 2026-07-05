@@ -18,23 +18,22 @@ class CategoryController extends Controller
             ->orderBy('sort_order');
 
         if ($search) {
-            $query->where(fn ($q) =>
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('name_id', 'like', "%{$search}%")
+            $query->where(fn ($q) => $q->where('name', 'like', "%{$search}%")
+                ->orWhere('name_id', 'like', "%{$search}%")
             );
         }
 
         $categories = $query->get()->map(fn ($c) => [
-            'id'        => $c->id,
-            'name'      => $c->localized_name,
-            'name_id'   => $c->name_id,
-            'slug'      => $c->slug,
+            'id' => $c->id,
+            'name' => $c->localized_name,
+            'name_id' => $c->name_id,
+            'slug' => $c->slug,
             'image_url' => $c->getFirstMediaUrl('image', 'thumb') ?: $c->getFirstMediaUrl('image'),
         ])->all();
 
         return Inertia::render('categories/index', [
             'categories' => $categories,
-            'search'     => $search,
+            'search' => $search,
         ]);
     }
 }

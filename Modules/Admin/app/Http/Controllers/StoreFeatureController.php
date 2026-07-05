@@ -29,10 +29,10 @@ class StoreFeatureController extends Controller
     public function update(UpdateStoreFeatureRequest $request, StoreFeature $storeFeature)
     {
         $storeFeature->update([
-            'icon'        => $request->icon,
-            'title'       => $request->title,
+            'icon' => $request->icon,
+            'title' => $request->title,
             'description' => $request->description,
-            'is_active'   => $request->boolean('is_active'),
+            'is_active' => $request->boolean('is_active'),
         ]);
 
         Cache::forever('cache_ver_features', microtime(true));

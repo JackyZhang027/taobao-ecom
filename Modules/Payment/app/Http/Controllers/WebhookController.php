@@ -19,7 +19,7 @@ class WebhookController extends Controller
         $grossAmount = $payload['gross_amount'] ?? '';
         $serverKey = config('midtrans.server_key');
 
-        $expectedSignature = hash('sha512', $orderId . $statusCode . $grossAmount . $serverKey);
+        $expectedSignature = hash('sha512', $orderId.$statusCode.$grossAmount.$serverKey);
 
         if (! hash_equals($expectedSignature, $payload['signature_key'] ?? '')) {
             abort(403, 'Invalid signature');

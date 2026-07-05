@@ -16,27 +16,32 @@ class AccountingService
      */
     public function postEntry(JournalEntry $entry): void
     {
-        $entry->load('lines');
+        DB::transaction(function () use ($entry) {
+            // Re-fetch with an exclusive lock so a concurrent post/void can't
+            // pass the status check simultaneously.
+            $entry = JournalEntry::lockForUpdate()->findOrFail($entry->id);
+            $entry->load('lines');
 
-        if (! $entry->isDraft()) {
-            throw new \RuntimeException('Only draft entries can be posted.');
-        }
+            if (! $entry->isDraft()) {
+                throw new \RuntimeException('Only draft entries can be posted.');
+            }
 
-        if ($entry->lines->count() < 2) {
-            throw new \RuntimeException('A journal entry must have at least two lines.');
-        }
+            if ($entry->lines->count() < 2) {
+                throw new \RuntimeException('A journal entry must have at least two lines.');
+            }
 
-        if (! $entry->isBalanced()) {
-            throw new \RuntimeException(
-                sprintf(
-                    'Journal entry is not balanced. Debits: %.2f, Credits: %.2f',
-                    $entry->totalDebits(),
-                    $entry->totalCredits()
-                )
-            );
-        }
+            if (! $entry->isBalanced()) {
+                throw new \RuntimeException(
+                    sprintf(
+                        'Journal entry is not balanced. Debits: %.2f, Credits: %.2f',
+                        $entry->totalDebits(),
+                        $entry->totalCredits()
+                    )
+                );
+            }
 
-        $entry->update(['status' => 'posted']);
+            $entry->update(['status' => 'posted']);
+        });
     }
 
     /**
@@ -46,28 +51,32 @@ class AccountingService
      */
     public function voidEntry(JournalEntry $entry, int $userId): void
     {
-        if (! $entry->isPosted()) {
-            throw new \RuntimeException('Only posted entries can be voided.');
-        }
-
         DB::transaction(function () use ($entry, $userId) {
+            // Re-fetch with an exclusive lock — a double-submitted void must not
+            // create two reversing entries.
+            $entry = JournalEntry::lockForUpdate()->findOrFail($entry->id);
+
+            if (! $entry->isPosted()) {
+                throw new \RuntimeException('Only posted entries can be voided.');
+            }
+
             $entry->update(['status' => 'voided']);
 
             $reversing = JournalEntry::create([
-                'date'             => now()->toDateString(),
-                'reference_number' => 'VOID-' . $entry->reference_number,
-                'description'      => 'Reversal of: ' . $entry->description,
-                'status'           => 'posted',
-                'created_by'       => $userId,
+                'date' => now()->toDateString(),
+                'reference_number' => 'VOID-'.$entry->reference_number,
+                'description' => 'Reversal of: '.$entry->description,
+                'status' => 'posted',
+                'created_by' => $userId,
             ]);
 
             foreach ($entry->lines as $line) {
                 JournalLine::create([
                     'journal_entry_id' => $reversing->id,
-                    'account_id'       => $line->account_id,
-                    'description'      => $line->description,
-                    'debit'            => $line->credit,
-                    'credit'           => $line->debit,
+                    'account_id' => $line->account_id,
+                    'description' => $line->description,
+                    'debit' => $line->credit,
+                    'credit' => $line->debit,
                 ]);
             }
         });
@@ -78,15 +87,15 @@ class AccountingService
      */
     public function generateReferenceNumber(): string
     {
-        $prefix = 'JNL-' . now()->format('Ym') . '-';
+        $prefix = 'JNL-'.now()->format('Ym').'-';
 
-        $last = JournalEntry::where('reference_number', 'like', $prefix . '%')
+        $last = JournalEntry::where('reference_number', 'like', $prefix.'%')
             ->orderByDesc('reference_number')
             ->value('reference_number');
 
         $seq = $last ? ((int) substr($last, -4)) + 1 : 1;
 
-        return $prefix . str_pad((string) $seq, 4, '0', STR_PAD_LEFT);
+        return $prefix.str_pad((string) $seq, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -111,7 +120,7 @@ class AccountingService
                     }
                 });
 
-            $totalDebit  = (float) $query->sum('debit');
+            $totalDebit = (float) $query->sum('debit');
             $totalCredit = (float) $query->clone()->sum('credit');
 
             $balance = $account->normal_balance === 'debit'
@@ -119,14 +128,14 @@ class AccountingService
                 : $totalCredit - $totalDebit;
 
             return [
-                'id'             => $account->id,
-                'code'           => $account->code,
-                'name'           => $account->name,
-                'type'           => $account->type,
+                'id' => $account->id,
+                'code' => $account->code,
+                'name' => $account->name,
+                'type' => $account->type,
                 'normal_balance' => $account->normal_balance,
-                'total_debit'    => $totalDebit,
-                'total_credit'   => $totalCredit,
-                'balance'        => $balance,
+                'total_debit' => $totalDebit,
+                'total_credit' => $totalCredit,
+                'balance' => $balance,
             ];
         })->all();
     }
@@ -139,29 +148,29 @@ class AccountingService
         $date = $asOfDate ?? now()->toDateString();
         $rows = $this->trialBalance(null, $date);
 
-        $assets      = array_values(array_filter($rows, fn ($r) => $r['type'] === 'asset'));
+        $assets = array_values(array_filter($rows, fn ($r) => $r['type'] === 'asset'));
         $liabilities = array_values(array_filter($rows, fn ($r) => $r['type'] === 'liability'));
-        $equity      = array_values(array_filter($rows, fn ($r) => $r['type'] === 'equity'));
-        $revenues    = array_values(array_filter($rows, fn ($r) => $r['type'] === 'revenue'));
-        $expenses    = array_values(array_filter($rows, fn ($r) => $r['type'] === 'expense'));
+        $equity = array_values(array_filter($rows, fn ($r) => $r['type'] === 'equity'));
+        $revenues = array_values(array_filter($rows, fn ($r) => $r['type'] === 'revenue'));
+        $expenses = array_values(array_filter($rows, fn ($r) => $r['type'] === 'expense'));
 
-        $totalAssets      = array_sum(array_column($assets, 'balance'));
+        $totalAssets = array_sum(array_column($assets, 'balance'));
         $totalLiabilities = array_sum(array_column($liabilities, 'balance'));
-        $totalEquity      = array_sum(array_column($equity, 'balance'));
-        $totalRevenue     = array_sum(array_column($revenues, 'balance'));
-        $totalExpenses    = array_sum(array_column($expenses, 'balance'));
-        $netIncome        = $totalRevenue - $totalExpenses;
+        $totalEquity = array_sum(array_column($equity, 'balance'));
+        $totalRevenue = array_sum(array_column($revenues, 'balance'));
+        $totalExpenses = array_sum(array_column($expenses, 'balance'));
+        $netIncome = $totalRevenue - $totalExpenses;
 
         return [
-            'as_of_date'          => $date,
-            'assets'              => $assets,
-            'total_assets'        => $totalAssets,
-            'liabilities'         => $liabilities,
-            'total_liabilities'   => $totalLiabilities,
-            'equity'              => $equity,
-            'total_equity'        => $totalEquity,
-            'net_income'          => $netIncome,
-            'total_liab_equity'   => $totalLiabilities + $totalEquity + $netIncome,
+            'as_of_date' => $date,
+            'assets' => $assets,
+            'total_assets' => $totalAssets,
+            'liabilities' => $liabilities,
+            'total_liabilities' => $totalLiabilities,
+            'equity' => $equity,
+            'total_equity' => $totalEquity,
+            'net_income' => $netIncome,
+            'total_liab_equity' => $totalLiabilities + $totalEquity + $netIncome,
         ];
     }
 
@@ -175,17 +184,17 @@ class AccountingService
         $revenues = array_values(array_filter($rows, fn ($r) => $r['type'] === 'revenue'));
         $expenses = array_values(array_filter($rows, fn ($r) => $r['type'] === 'expense'));
 
-        $totalRevenue  = array_sum(array_column($revenues, 'balance'));
+        $totalRevenue = array_sum(array_column($revenues, 'balance'));
         $totalExpenses = array_sum(array_column($expenses, 'balance'));
 
         return [
-            'start_date'     => $startDate,
-            'end_date'       => $endDate,
-            'revenues'       => $revenues,
-            'total_revenue'  => $totalRevenue,
-            'expenses'       => $expenses,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'revenues' => $revenues,
+            'total_revenue' => $totalRevenue,
+            'expenses' => $expenses,
             'total_expenses' => $totalExpenses,
-            'net_income'     => $totalRevenue - $totalExpenses,
+            'net_income' => $totalRevenue - $totalExpenses,
         ];
     }
 
@@ -224,20 +233,20 @@ class AccountingService
             }
 
             $rows[] = [
-                'date'            => $line->journalEntry->date->toDateString(),
-                'reference'       => $line->journalEntry->reference_number,
-                'description'     => $line->description ?? $line->journalEntry->description,
-                'debit'           => $line->debit,
-                'credit'          => $line->credit,
+                'date' => $line->journalEntry->date->toDateString(),
+                'reference' => $line->journalEntry->reference_number,
+                'description' => $line->description ?? $line->journalEntry->description,
+                'debit' => $line->debit,
+                'credit' => $line->credit,
                 'running_balance' => $runningBalance,
             ];
         }
 
         return [
-            'account'       => $account,
-            'start_date'    => $startDate,
-            'end_date'      => $endDate,
-            'lines'         => $rows,
+            'account' => $account,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'lines' => $rows,
             'final_balance' => $runningBalance,
         ];
     }

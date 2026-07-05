@@ -29,19 +29,19 @@ class AccountController extends Controller
     {
         return Inertia::render('admin/accounting/accounts/create', [
             'accounts' => Account::where('is_active', true)->orderBy('code')->get(['id', 'code', 'name']),
-            'types'    => ['asset', 'liability', 'equity', 'revenue', 'expense'],
+            'types' => ['asset', 'liability', 'equity', 'revenue', 'expense'],
         ]);
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'code'        => 'required|string|max:20|unique:accounts,code',
-            'name'        => 'required|string|max:255',
-            'type'        => 'required|in:asset,liability,equity,revenue,expense',
-            'parent_id'   => 'nullable|exists:accounts,id',
+            'code' => 'required|string|max:20|unique:accounts,code',
+            'name' => 'required|string|max:255',
+            'type' => 'required|in:asset,liability,equity,revenue,expense',
+            'parent_id' => 'nullable|exists:accounts,id',
             'description' => 'nullable|string',
-            'is_active'   => 'boolean',
+            'is_active' => 'boolean',
         ]);
 
         $data['normal_balance'] = Account::normalBalanceForType($data['type']);
@@ -55,24 +55,24 @@ class AccountController extends Controller
     public function edit(Account $account)
     {
         return Inertia::render('admin/accounting/accounts/edit', [
-            'account'  => $account,
+            'account' => $account,
             'accounts' => Account::where('is_active', true)
                 ->where('id', '!=', $account->id)
                 ->orderBy('code')
                 ->get(['id', 'code', 'name']),
-            'types'    => ['asset', 'liability', 'equity', 'revenue', 'expense'],
+            'types' => ['asset', 'liability', 'equity', 'revenue', 'expense'],
         ]);
     }
 
     public function update(Request $request, Account $account)
     {
         $data = $request->validate([
-            'code'        => 'required|string|max:20|unique:accounts,code,' . $account->id,
-            'name'        => 'required|string|max:255',
-            'type'        => 'required|in:asset,liability,equity,revenue,expense',
-            'parent_id'   => 'nullable|exists:accounts,id',
+            'code' => 'required|string|max:20|unique:accounts,code,'.$account->id,
+            'name' => 'required|string|max:255',
+            'type' => 'required|in:asset,liability,equity,revenue,expense',
+            'parent_id' => 'nullable|exists:accounts,id',
             'description' => 'nullable|string',
-            'is_active'   => 'boolean',
+            'is_active' => 'boolean',
         ]);
 
         $data['normal_balance'] = Account::normalBalanceForType($data['type']);

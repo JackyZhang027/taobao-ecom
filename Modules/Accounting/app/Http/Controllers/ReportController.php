@@ -14,13 +14,13 @@ class ReportController extends Controller
     public function trialBalance(Request $request)
     {
         $startDate = $request->query('start_date');
-        $endDate   = $request->query('end_date');
+        $endDate = $request->query('end_date');
 
         return Inertia::render('admin/accounting/reports/trial-balance', [
-            'rows'    => $this->accounting->trialBalance($startDate, $endDate),
+            'rows' => $this->accounting->trialBalance($startDate, $endDate),
             'filters' => [
                 'start_date' => $startDate,
-                'end_date'   => $endDate,
+                'end_date' => $endDate,
             ],
         ]);
     }
@@ -30,7 +30,7 @@ class ReportController extends Controller
         $asOfDate = $request->query('as_of_date', now()->toDateString());
 
         return Inertia::render('admin/accounting/reports/balance-sheet', [
-            'report'  => $this->accounting->balanceSheet($asOfDate),
+            'report' => $this->accounting->balanceSheet($asOfDate),
             'filters' => ['as_of_date' => $asOfDate],
         ]);
     }
@@ -38,13 +38,13 @@ class ReportController extends Controller
     public function incomeStatement(Request $request)
     {
         $startDate = $request->query('start_date', now()->startOfMonth()->toDateString());
-        $endDate   = $request->query('end_date', now()->toDateString());
+        $endDate = $request->query('end_date', now()->toDateString());
 
         return Inertia::render('admin/accounting/reports/income-statement', [
-            'report'  => $this->accounting->incomeStatement($startDate, $endDate),
+            'report' => $this->accounting->incomeStatement($startDate, $endDate),
             'filters' => [
                 'start_date' => $startDate,
-                'end_date'   => $endDate,
+                'end_date' => $endDate,
             ],
         ]);
     }

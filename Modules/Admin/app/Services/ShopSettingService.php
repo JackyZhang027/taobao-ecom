@@ -8,6 +8,28 @@ use Modules\Admin\Models\ShopSetting;
 
 class ShopSettingService
 {
+    /**
+     * Keys safe to expose to any visitor (shared Inertia props). Everything
+     * else — WhatsApp sender/admin numbers, reminder templates/schedule — is
+     * internal and must never leave the admin panel.
+     */
+    public const PUBLIC_KEYS = [
+        'shop_name',
+        'shop_email',
+        'description',
+        'contact_email',
+        'contact_phone',
+        'whatsapp_number',
+        'address',
+        'tagline',
+        'footer_text',
+        'meta_title',
+        'meta_description',
+        'meta_keywords',
+        'favicon',
+        'logo',
+    ];
+
     private ?Collection $cached = null;
 
     public function all(): Collection
@@ -21,6 +43,14 @@ class ShopSettingService
         return $this->cached = Cache::remember("shop_settings_{$version}", 3600,
             fn () => ShopSetting::all()->pluck('value', 'key')
         );
+    }
+
+    /**
+     * Only the settings safe to share with any visitor — see PUBLIC_KEYS.
+     */
+    public function public(): Collection
+    {
+        return $this->all()->only(self::PUBLIC_KEYS);
     }
 
     public function get(string $key, mixed $default = null): mixed

@@ -82,6 +82,8 @@ class RoleController extends Controller
             return back()->withErrors(['error' => 'System roles cannot be edited.']);
         }
 
+        $this->authorizeManagedRole($request, $role);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:100', Rule::unique('roles', 'name')->ignore($role->id)],
             'permissions' => 'array',
@@ -97,11 +99,13 @@ class RoleController extends Controller
         return redirect()->route('admin.roles.index')->with('success', 'Role updated successfully.');
     }
 
-    public function destroy(Role $role)
+    public function destroy(Request $request, Role $role)
     {
         if (in_array($role->name, self::SYSTEM_ROLES, true)) {
             return back()->with('error', 'System roles cannot be deleted.');
         }
+
+        $this->authorizeManagedRole($request, $role);
 
         if ($role->users()->exists()) {
             return back()->with('error', 'This role is still assigned to users and cannot be deleted.');
@@ -110,6 +114,22 @@ class RoleController extends Controller
         $role->delete();
 
         return redirect()->route('admin.roles.index')->with('success', 'Role deleted successfully.');
+    }
+
+    /**
+     * A role may only be modified/deleted by an actor whose permissions are a
+     * superset of the role's current permissions — otherwise an actor with just
+     * roles.edit could strip (or delete) a stronger role they don't control.
+     * Mirrors AdminUserController::authorizeTargetUser().
+     */
+    private function authorizeManagedRole(Request $request, Role $role): void
+    {
+        $rolePermissions = $role->permissions->pluck('name');
+        $actorPermissions = $request->user()->getAllPermissions()->pluck('name');
+
+        if ($rolePermissions->diff($actorPermissions)->isNotEmpty()) {
+            abort(403, 'You cannot manage a role with permissions you do not hold yourself.');
+        }
     }
 
     /**

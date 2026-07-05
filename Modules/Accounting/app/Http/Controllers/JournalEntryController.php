@@ -24,18 +24,20 @@ class JournalEntryController extends Controller
 
     public function datatable(): JsonResponse
     {
-        $query = JournalEntry::with('creator')->select('journal_entries.*');
+        $query = JournalEntry::with('creator')
+            ->withSum('lines as total_debit_sum', 'debit')
+            ->select('journal_entries.*');
 
         return DataTables::of($query)
             ->addColumn('creator_name', fn ($e) => $e->creator?->name ?? '—')
-            ->addColumn('total_debit', fn ($e) => (float) $e->lines->sum('debit'))
+            ->addColumn('total_debit', fn ($e) => (float) $e->total_debit_sum)
             ->make(true);
     }
 
     public function create()
     {
         return Inertia::render('admin/accounting/journals/create', [
-            'accounts'  => Account::where('is_active', true)->orderBy('code')->get(['id', 'code', 'name']),
+            'accounts' => Account::where('is_active', true)->orderBy('code')->get(['id', 'code', 'name']),
             'reference' => $this->accounting->generateReferenceNumber(),
         ]);
     }
@@ -43,17 +45,17 @@ class JournalEntryController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'date'                 => 'required|date',
-            'reference_number'     => 'required|string|unique:journal_entries,reference_number',
-            'description'          => 'required|string|max:500',
-            'lines'                => 'required|array|min:2',
-            'lines.*.account_id'   => 'required|exists:accounts,id',
-            'lines.*.debit'        => 'required|numeric|min:0',
-            'lines.*.credit'       => 'required|numeric|min:0',
-            'lines.*.description'  => 'nullable|string|max:255',
+            'date' => 'required|date',
+            'reference_number' => 'required|string|unique:journal_entries,reference_number',
+            'description' => 'required|string|max:500',
+            'lines' => 'required|array|min:2',
+            'lines.*.account_id' => 'required|exists:accounts,id',
+            'lines.*.debit' => 'required|numeric|min:0',
+            'lines.*.credit' => 'required|numeric|min:0',
+            'lines.*.description' => 'nullable|string|max:255',
         ]);
 
-        $totalDebit  = collect($request->lines)->sum('debit');
+        $totalDebit = collect($request->lines)->sum('debit');
         $totalCredit = collect($request->lines)->sum('credit');
 
         if (abs($totalDebit - $totalCredit) > 0.001) {
@@ -66,25 +68,33 @@ class JournalEntryController extends Controller
             ])->withInput();
         }
 
-        DB::transaction(function () use ($request) {
-            $entry = JournalEntry::create([
-                'date'             => $request->date,
-                'reference_number' => $request->reference_number,
-                'description'      => $request->description,
-                'status'           => 'draft',
-                'created_by'       => $request->user()->id,
-            ]);
-
-            foreach ($request->lines as $line) {
-                JournalLine::create([
-                    'journal_entry_id' => $entry->id,
-                    'account_id'       => $line['account_id'],
-                    'description'      => $line['description'] ?? null,
-                    'debit'            => (float) $line['debit'],
-                    'credit'           => (float) $line['credit'],
+        try {
+            DB::transaction(function () use ($request) {
+                $entry = JournalEntry::create([
+                    'date' => $request->date,
+                    'reference_number' => $request->reference_number,
+                    'description' => $request->description,
+                    'status' => 'draft',
+                    'created_by' => $request->user()->id,
                 ]);
-            }
-        });
+
+                foreach ($request->lines as $line) {
+                    JournalLine::create([
+                        'journal_entry_id' => $entry->id,
+                        'account_id' => $line['account_id'],
+                        'description' => $line['description'] ?? null,
+                        'debit' => (float) $line['debit'],
+                        'credit' => (float) $line['credit'],
+                    ]);
+                }
+            });
+        } catch (\Illuminate\Database\QueryException $e) {
+            // The `unique` validation rule races with concurrent creates — the DB
+            // unique index on reference_number is the authoritative check.
+            return back()->withErrors([
+                'reference_number' => 'This reference number was just taken — please refresh and try again.',
+            ])->withInput();
+        }
 
         return redirect()->route('admin.accounting.journals.index')
             ->with('success', 'Journal entry created.');

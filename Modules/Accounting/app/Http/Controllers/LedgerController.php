@@ -14,24 +14,24 @@ class LedgerController extends Controller
 
     public function index(Request $request)
     {
-        $accounts  = Account::where('is_active', true)->orderBy('code')->get(['id', 'code', 'name', 'type', 'normal_balance']);
+        $accounts = Account::where('is_active', true)->orderBy('code')->get(['id', 'code', 'name', 'type', 'normal_balance']);
         $accountId = $request->query('account_id');
         $startDate = $request->query('start_date');
-        $endDate   = $request->query('end_date');
-        $ledger    = null;
+        $endDate = $request->query('end_date');
+        $ledger = null;
 
         if ($accountId) {
             $account = Account::findOrFail($accountId);
-            $ledger  = $this->accounting->ledger($account, $startDate, $endDate);
+            $ledger = $this->accounting->ledger($account, $startDate, $endDate);
         }
 
         return Inertia::render('admin/accounting/ledger/index', [
             'accounts' => $accounts,
-            'ledger'   => $ledger,
-            'filters'  => [
+            'ledger' => $ledger,
+            'filters' => [
                 'account_id' => $accountId,
                 'start_date' => $startDate,
-                'end_date'   => $endDate,
+                'end_date' => $endDate,
             ],
         ]);
     }

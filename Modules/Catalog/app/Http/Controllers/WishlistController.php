@@ -52,16 +52,16 @@ class WishlistController extends Controller
                 ?? ($product->getFirstMediaUrl('images', 'thumb') ?: $product->getFirstMediaUrl('images') ?: null);
 
             return [
-                'id'                => $product->id,
-                'slug'              => $product->slug,
-                'thumbnail'         => $thumbnail,
-                'name'              => $translation?->name ?? $product->slug,
-                'description'       => $translation?->description,
-                'price_idr'         => $this->currency->rmbToIdr($minPriceRmb),
-                'price_rmb'         => $minPriceRmb,
-                'total_batam_idr'   => $deliveryBatamIdr > 0 ? $this->currency->rmbToIdr($minPriceRmb) + $deliveryBatamIdr : null,
+                'id' => $product->id,
+                'slug' => $product->slug,
+                'thumbnail' => $thumbnail,
+                'name' => $translation?->name ?? $product->slug,
+                'description' => $translation?->description,
+                'price_idr' => $this->currency->rmbToIdr($minPriceRmb),
+                'price_rmb' => $minPriceRmb,
+                'total_batam_idr' => $deliveryBatamIdr > 0 ? $this->currency->rmbToIdr($minPriceRmb) + $deliveryBatamIdr : null,
                 'total_jakarta_idr' => $deliveryJakartaIdr > 0 ? $this->currency->rmbToIdr($minPriceRmb) + $deliveryJakartaIdr : null,
-                'is_wishlisted'     => true,
+                'is_wishlisted' => true,
             ];
         })->filter()->values();
 
@@ -84,6 +84,6 @@ class WishlistController extends Controller
             $wishlisted = true;
         }
 
-        return back()->with('wishlisted_' . $product->id, $wishlisted);
+        return back()->with('wishlisted_'.$product->id, $wishlisted);
     }
 }

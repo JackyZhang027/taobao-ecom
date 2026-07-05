@@ -21,6 +21,7 @@ class AutoDeliverOrders extends Command
 
         if ($orderIds->isEmpty()) {
             $this->info('No orders to auto-deliver.');
+
             return;
         }
 
@@ -33,8 +34,8 @@ class AutoDeliverOrders extends Command
             $order->update(['status' => 'delivered']);
 
             OrderStatusHistory::create([
-                'order_id'   => $order->id,
-                'status'     => 'delivered',
+                'order_id' => $order->id,
+                'status' => 'delivered',
                 'changed_by' => null,
             ]);
 

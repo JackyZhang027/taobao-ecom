@@ -188,6 +188,44 @@ test('canDeliver is true when variant has delivery charge but product does not',
     expect($totals['can_deliver_batam'])->toBeTrue();
 });
 
+test('canDeliver batam is false when variant and product only have a jakarta rate', function () {
+    $product = makeProduct(['delivery_rate_batam' => 0, 'delivery_rate_jakarta' => 30000]);
+    $variant = makeVariant($product, ['delivery_rate_batam' => 0, 'delivery_rate_jakarta' => 25000]);
+    $cart = cartWithVariant($variant);
+
+    $totals = app(CartService::class)->computeTotals($cart, app(CurrencyService::class), app(ShippingService::class), 'Batam');
+
+    // ShippingService resolves Batam as variant_batam ?: product_batam (never
+    // Jakarta) — deliverability must agree, or the item ships to Batam for free.
+    expect($totals['can_deliver_batam'])->toBeFalse();
+    expect($totals['can_deliver_jakarta'])->toBeTrue();
+});
+
+test('canDeliver jakarta falls back to the variant batam rate like the shipping calculation does', function () {
+    $product = makeProduct(['delivery_rate_batam' => 0, 'delivery_rate_jakarta' => 0]);
+    $variant = makeVariant($product, ['delivery_rate_batam' => 15000, 'delivery_rate_jakarta' => 0]);
+    $cart = cartWithVariant($variant);
+
+    $totals = app(CartService::class)->computeTotals($cart, app(CurrencyService::class), app(ShippingService::class), 'Jakarta');
+
+    expect($totals['can_deliver_jakarta'])->toBeTrue();
+    expect($totals['shipping_jakarta_idr'])->toBe(15000.0);
+});
+
+test('canDeliver checks every item — a second undeliverable variant of the same product fails the check', function () {
+    $product = makeProduct(['delivery_rate_batam' => 0, 'delivery_rate_jakarta' => 0]);
+    $deliverable = makeVariant($product, ['delivery_rate_batam' => 15000]);
+    $undeliverable = makeVariant($product, ['delivery_rate_batam' => 0, 'delivery_rate_jakarta' => 0]);
+
+    $cart = makeCart();
+    CartItem::create(['cart_id' => $cart->id, 'product_variant_id' => $deliverable->id, 'product_id' => null, 'quantity' => 1]);
+    CartItem::create(['cart_id' => $cart->id, 'product_variant_id' => $undeliverable->id, 'product_id' => null, 'quantity' => 1]);
+
+    $totals = app(CartService::class)->computeTotals($cart, app(CurrencyService::class), app(ShippingService::class), 'Batam');
+
+    expect($totals['can_deliver_batam'])->toBeFalse();
+});
+
 // ─── Admin validation ─────────────────────────────────────────────────────────
 
 test('store product without variants requires product price', function () {

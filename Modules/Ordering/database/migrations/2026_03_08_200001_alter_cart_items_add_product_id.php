@@ -10,16 +10,16 @@ return new class extends Migration
     public function up(): void
     {
         if (DB::getDriverName() === 'mysql') {
-            $hasSingleCartIdIndex = !empty(DB::select(
+            $hasSingleCartIdIndex = ! empty(DB::select(
                 "SELECT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS
                  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'cart_items'
                  AND INDEX_NAME = 'cart_items_cart_id_index'"
             ));
-            if (!$hasSingleCartIdIndex) {
+            if (! $hasSingleCartIdIndex) {
                 DB::statement('ALTER TABLE cart_items ADD INDEX cart_items_cart_id_index (cart_id)');
             }
 
-            $hasUniqueIndex = !empty(DB::select(
+            $hasUniqueIndex = ! empty(DB::select(
                 "SELECT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS
                  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'cart_items'
                  AND INDEX_NAME = 'cart_items_cart_id_product_variant_id_unique'"
@@ -28,7 +28,7 @@ return new class extends Migration
                 DB::statement('ALTER TABLE cart_items DROP INDEX cart_items_cart_id_product_variant_id_unique');
             }
 
-            $hasFk = !empty(DB::select(
+            $hasFk = ! empty(DB::select(
                 "SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
                  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'cart_items'
                  AND CONSTRAINT_TYPE = 'FOREIGN KEY' AND CONSTRAINT_NAME = 'cart_items_product_variant_id_foreign'"
@@ -44,19 +44,19 @@ return new class extends Migration
             $table->foreignId('product_variant_id')->nullable()->change();
         });
 
-        if (!Schema::hasColumn('cart_items', 'product_id')) {
+        if (! Schema::hasColumn('cart_items', 'product_id')) {
             Schema::table('cart_items', function (Blueprint $table) {
                 $table->foreignId('product_id')->nullable()->constrained('products')->nullOnDelete()->after('cart_id');
             });
         }
 
         if (DB::getDriverName() === 'mysql') {
-            $hasFkNow = !empty(DB::select(
+            $hasFkNow = ! empty(DB::select(
                 "SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
                  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'cart_items'
                  AND CONSTRAINT_TYPE = 'FOREIGN KEY' AND CONSTRAINT_NAME = 'cart_items_product_variant_id_foreign'"
             ));
-            if (!$hasFkNow) {
+            if (! $hasFkNow) {
                 Schema::table('cart_items', function (Blueprint $table) {
                     $table->foreign('product_variant_id')->references('id')->on('product_variants')->nullOnDelete();
                 });

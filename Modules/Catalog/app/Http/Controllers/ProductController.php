@@ -24,6 +24,8 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
+        $request->validate(['search' => 'nullable|string|max:100']);
+
         $query = Product::with(['translations', 'variants', 'categories', 'media'])
             ->where('is_active', true)
             ->orderBy('sort_order');
@@ -33,43 +35,49 @@ class ProductController extends Controller
         }
 
         if ($search = $request->input('search')) {
-            $query->whereHas('translations', fn ($q) => $q->where('name', 'like', "%{$search}%"));
+            $term = addcslashes($search, '%_\\');
+            $query->whereHas('translations', fn ($q) => $q->where('name', 'like', "%{$term}%"));
         }
 
         $user = $request->user();
 
-        $catV      = Cache::get('cache_ver_categories', 0);
+        $catV = Cache::get('cache_ver_categories', 0);
         $settingsV = Cache::get('cache_ver_settings', 0);
-        $productV  = Cache::get('cache_ver_products', 0);
-        $locale    = app()->getLocale();
+        $productV = Cache::get('cache_ver_products', 0);
+        $locale = app()->getLocale();
 
-        $categories = Cache::remember("shop_all_categories_{$catV}_{$locale}", 3600, fn () =>
-            Category::orderBy('sort_order')->get()->map(fn ($c) => [
-                'id'         => $c->id,
-                'name'       => $c->localized_name,
-                'name_id'    => $c->name_id,
-                'slug'       => $c->slug,
-                'parent_id'  => $c->parent_id,
-                'sort_order' => $c->sort_order,
-            ])->all()
+        $categories = Cache::remember("shop_all_categories_{$catV}_{$locale}", 3600, fn () => Category::orderBy('sort_order')->get()->map(fn ($c) => [
+            'id' => $c->id,
+            'name' => $c->localized_name,
+            'name_id' => $c->name_id,
+            'slug' => $c->slug,
+            'parent_id' => $c->parent_id,
+            'sort_order' => $c->sort_order,
+        ])->all()
         );
 
-        $shopSettings = Cache::remember("shop_settings_{$settingsV}", 3600, fn () =>
-            ShopSetting::all()->pluck('value', 'key')
+        $shopSettings = Cache::remember("shop_settings_{$settingsV}", 3600, fn () => ShopSetting::all()->pluck('value', 'key')
         );
 
         $transformer = $this->transformer;
-        $filterKey = md5(serialize($request->only(['category', 'search', 'attributes', 'page'])));
-        $paginatedData = Cache::remember("shop_products_{$filterKey}_{$productV}_{$locale}", 600, function () use ($query, $transformer) {
-            return $query->paginate(12)
-                ->through(fn ($p) => $transformer->transform($p))
-                ->toArray();
-        });
+        $fetchPage = fn () => $query->paginate(12)
+            ->through(fn ($p) => $transformer->transform($p))
+            ->toArray();
+
+        if ($search) {
+            // Never cache search results — arbitrary user input would mint
+            // unlimited cache entries.
+            $paginatedData = $fetchPage();
+        } else {
+            $filterKey = md5(serialize($request->only(['category', 'attributes', 'page'])));
+            $paginatedData = Cache::remember("shop_products_{$filterKey}_{$productV}_{$locale}", 600, $fetchPage);
+        }
 
         if ($user) {
             $wishlistIds = Wishlist::where('user_id', $user->id)->pluck('product_id')->flip();
             $paginatedData['data'] = array_map(function ($p) use ($wishlistIds) {
                 $p['is_wishlisted'] = $wishlistIds->has($p['id']);
+
                 return $p;
             }, $paginatedData['data']);
         }
@@ -79,10 +87,10 @@ class ProductController extends Controller
         ]);
 
         return Inertia::render('shop', [
-            'products'        => $paginatedData,
-            'categories'      => $categories,
+            'products' => $paginatedData,
+            'categories' => $categories,
             'currentCategory' => $request->category,
-            'activeFilters'   => empty($activeFilters) ? (object) [] : $activeFilters,
+            'activeFilters' => empty($activeFilters) ? (object) [] : $activeFilters,
             'whatsapp_number' => $shopSettings->get('whatsapp_number', ''),
         ]);
     }
@@ -109,28 +117,28 @@ class ProductController extends Controller
                 ?? $product->translations->firstWhere('locale', 'en');
 
             $variants = $product->variants->where('is_active', true)->values()->map(fn ($v) => [
-                'id'                          => $v->id,
-                'sku'                         => $v->sku,
-                'price_rmb'                   => $v->price,
-                'price_idr'                   => $this->currency->rmbToIdr($v->price),
-                'compare_price_idr'           => $v->compare_price ? $this->currency->rmbToIdr($v->compare_price) : null,
-                'delivery_charge_batam'   => $this->delivery->calculateCharge((float) $v->delivery_rate_batam),
+                'id' => $v->id,
+                'sku' => $v->sku,
+                'price_rmb' => $v->price,
+                'price_idr' => $this->currency->rmbToIdr($v->price),
+                'compare_price_idr' => $v->compare_price ? $this->currency->rmbToIdr($v->compare_price) : null,
+                'delivery_charge_batam' => $this->delivery->calculateCharge((float) $v->delivery_rate_batam),
                 'delivery_charge_jakarta' => $this->delivery->calculateCharge((float) $v->delivery_rate_jakarta),
-                'is_active'                   => $v->is_active,
-                'sort_order'                  => $v->sort_order,
-                'image_url'                   => $v->getFirstMediaUrl('image') ?: null,
-                'options'                     => $v->options->map(fn ($o) => [
-                    'id'         => $o->id,
-                    'value'      => $o->value,
-                    'group_id'   => $o->group_id,
+                'is_active' => $v->is_active,
+                'sort_order' => $v->sort_order,
+                'image_url' => $v->getFirstMediaUrl('image') ?: null,
+                'options' => $v->options->map(fn ($o) => [
+                    'id' => $o->id,
+                    'value' => $o->value,
+                    'group_id' => $o->group_id,
                     'group_name' => $o->group?->name,
-                    'image_url'  => $o->getFirstMediaUrl('image') ?: null,
+                    'image_url' => $o->getFirstMediaUrl('image') ?: null,
                 ]),
             ]);
 
             $media = $product->getMedia('images')->map(fn ($m) => [
-                'id'    => $m->id,
-                'url'   => $m->getUrl('optimized') ?: $m->getUrl(),
+                'id' => $m->id,
+                'url' => $m->getUrl('optimized') ?: $m->getUrl(),
                 'thumb' => $m->getUrl('thumb') ?: $m->getUrl(),
             ])->values();
 
@@ -138,36 +146,34 @@ class ProductController extends Controller
                 ?? ($media->isNotEmpty() ? ($media->first()['thumb'] ?? $media->first()['url']) : null);
 
             return [
-                'id'                          => $product->id,
-                'slug'                        => $product->slug,
-                'thumbnail'                   => $thumbnailUrl,
-                'delivery_charge_batam'   => $this->delivery->calculateCharge((float) $product->delivery_rate_batam),
+                'id' => $product->id,
+                'slug' => $product->slug,
+                'thumbnail' => $thumbnailUrl,
+                'delivery_charge_batam' => $this->delivery->calculateCharge((float) $product->delivery_rate_batam),
                 'delivery_charge_jakarta' => $this->delivery->calculateCharge((float) $product->delivery_rate_jakarta),
-                'show_delivery_charge'    => (bool) $product->show_delivery_charge,
-                'name'                        => $translation?->name ?? $product->slug,
-                'description'                 => $translation?->description,
-                'price_rmb'                   => $product->price,
-                'price_idr'                   => $product->price ? $this->currency->rmbToIdr($product->price) : null,
-                'categories'                  => $product->categories->map(fn ($c) => [
-                    'id'      => $c->id,
-                    'name'    => $c->localized_name,
+                'show_delivery_charge' => (bool) $product->show_delivery_charge,
+                'name' => $translation?->name ?? $product->slug,
+                'description' => $translation?->description,
+                'price_rmb' => $product->price,
+                'price_idr' => $product->price ? $this->currency->rmbToIdr($product->price) : null,
+                'categories' => $product->categories->map(fn ($c) => [
+                    'id' => $c->id,
+                    'name' => $c->localized_name,
                     'name_id' => $c->name_id,
-                    'slug'    => $c->slug,
+                    'slug' => $c->slug,
                 ])->all(),
-                'variants'                    => $variants,
-                'media'                       => $media,
+                'variants' => $variants,
+                'media' => $media,
             ];
         });
 
         $settingsV = Cache::get('cache_ver_settings', 0);
-        $shopSettings = Cache::remember("shop_settings_{$settingsV}", 3600, fn () =>
-            ShopSetting::all()->pluck('value', 'key')
+        $shopSettings = Cache::remember("shop_settings_{$settingsV}", 3600, fn () => ShopSetting::all()->pluck('value', 'key')
         );
 
         return Inertia::render('products/show', [
-            'product'         => $productData,
+            'product' => $productData,
             'whatsapp_number' => $shopSettings->get('whatsapp_number', ''),
         ]);
     }
-
 }

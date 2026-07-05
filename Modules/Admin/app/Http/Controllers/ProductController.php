@@ -51,6 +51,7 @@ class ProductController extends Controller
                 if ($minVariantPrice !== null) {
                     return '¥'.number_format($minVariantPrice, 2).' <span class="text-xs text-muted-foreground">(variant)</span>';
                 }
+
                 return '¥'.number_format($p->price, 2);
             })
             ->addColumn('delivery_charge_idr', function ($p) {
@@ -58,9 +59,11 @@ class ProductController extends Controller
                 if ($minVariantPrice !== null) {
                     $minBatamRate = $p->variants->where('is_active', true)->min('delivery_rate_batam');
                     $batamIdr = $this->delivery->calculateCharge((float) ($minBatamRate ?? 0));
+
                     return 'Rp '.number_format($batamIdr, 0, '.', ',').' <span class="text-xs text-muted-foreground">(variant)</span>';
                 }
                 $batamIdr = $this->delivery->calculateCharge((float) $p->delivery_rate_batam);
+
                 return 'Rp '.number_format($batamIdr, 0, '.', ',');
             })
             ->addColumn('final_price_idr', function ($p) {
@@ -68,9 +71,11 @@ class ProductController extends Controller
                 if ($minVariantPrice !== null) {
                     $minBatamRate = $p->variants->where('is_active', true)->min('delivery_rate_batam') ?? 0;
                     $batamIdr = $this->delivery->calculateCharge((float) $minBatamRate);
+
                     return 'Rp '.number_format($this->currency->rmbToIdr($minVariantPrice) + $batamIdr, 0, '.', ',').' <span class="text-xs text-muted-foreground">(variant)</span>';
                 }
                 $batamIdr = $this->delivery->calculateCharge((float) $p->delivery_rate_batam);
+
                 return 'Rp '.number_format($this->currency->rmbToIdr($p->price) + $batamIdr, 0, '.', ',');
             })
             ->addColumn('status', fn ($p) => $p->is_active ? 'Active' : 'Inactive')
@@ -83,7 +88,7 @@ class ProductController extends Controller
     public function create()
     {
         return Inertia::render('admin/products/create', [
-            'categories'   => Category::all(),
+            'categories' => Category::all(),
             'variantGroups' => [],
             'exchangeRate' => $this->currency->getActiveRate(),
             'deliveryRate' => $this->delivery->getActiveRate(),
@@ -99,7 +104,7 @@ class ProductController extends Controller
             $product = Product::create(array_merge(
                 $request->only(['slug', 'thumbnail', 'price', 'show_delivery_charge', 'is_active', 'sort_order']),
                 [
-                    'delivery_rate_batam'   => $request->input('delivery_rate_batam') ?? 0,
+                    'delivery_rate_batam' => $request->input('delivery_rate_batam') ?? 0,
                     'delivery_rate_jakarta' => $request->input('delivery_rate_jakarta') ?? 0,
                 ]
             ));
@@ -159,8 +164,8 @@ class ProductController extends Controller
         ]);
 
         $media = $product->getMedia('images')->map(fn ($m) => [
-            'id'    => $m->id,
-            'url'   => parse_url($m->getUrl(), PHP_URL_PATH),
+            'id' => $m->id,
+            'url' => parse_url($m->getUrl(), PHP_URL_PATH),
             'thumb' => parse_url($m->getUrl('thumb'), PHP_URL_PATH),
         ]);
 
@@ -168,9 +173,9 @@ class ProductController extends Controller
             $variant->image_url = $variant->getFirstMediaUrl('image') ?: null;
             $variant->option_key = $variant->option_key;
             $variant->options_data = $variant->options->map(fn ($o) => [
-                'id'         => $o->id,
-                'value'      => $o->value,
-                'group_id'   => $o->group_id,
+                'id' => $o->id,
+                'value' => $o->value,
+                'group_id' => $o->group_id,
                 'group_name' => $o->group?->name,
             ]);
 
@@ -179,14 +184,14 @@ class ProductController extends Controller
 
         $variantGroups = $product->variantGroups->map(function ($group) {
             return [
-                'id'         => $group->id,
-                'name'       => $group->name,
+                'id' => $group->id,
+                'name' => $group->name,
                 'sort_order' => $group->sort_order,
                 'has_images' => (bool) $group->has_images,
-                'options'    => $group->options->map(fn ($o) => [
-                    'id'        => $o->id,
-                    'group_id'  => $o->group_id,
-                    'value'     => $o->value,
+                'options' => $group->options->map(fn ($o) => [
+                    'id' => $o->id,
+                    'group_id' => $o->group_id,
+                    'value' => $o->value,
                     'sort_order' => $o->sort_order,
                     'image_url' => $o->getFirstMediaUrl('image') ?: null,
                 ]),
@@ -194,12 +199,12 @@ class ProductController extends Controller
         });
 
         return Inertia::render('admin/products/edit', [
-            'product'       => $product,
-            'categories'    => Category::all(),
+            'product' => $product,
+            'categories' => Category::all(),
             'variantGroups' => $variantGroups,
-            'productMedia'  => $media,
-            'exchangeRate'  => $this->currency->getActiveRate(),
-            'deliveryRate'  => $this->delivery->getActiveRate(),
+            'productMedia' => $media,
+            'exchangeRate' => $this->currency->getActiveRate(),
+            'deliveryRate' => $this->delivery->getActiveRate(),
         ]);
     }
 
@@ -212,7 +217,7 @@ class ProductController extends Controller
             $product->update(array_merge(
                 $request->only(['slug', 'thumbnail', 'price', 'show_delivery_charge', 'is_active', 'sort_order']),
                 [
-                    'delivery_rate_batam'   => $request->input('delivery_rate_batam') ?? 0,
+                    'delivery_rate_batam' => $request->input('delivery_rate_batam') ?? 0,
                     'delivery_rate_jakarta' => $request->input('delivery_rate_jakarta') ?? 0,
                 ]
             ));

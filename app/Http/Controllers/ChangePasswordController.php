@@ -26,6 +26,8 @@ class ChangePasswordController extends Controller
             'must_change_password' => false,
         ]);
 
-        return redirect()->route('shop.index')->with('status', 'Your password has been updated successfully.');
+        $home = $request->user()->hasRole('customer') ? route('shop.index') : '/admin';
+
+        return redirect($home)->with('status', 'Your password has been updated successfully.');
     }
 }

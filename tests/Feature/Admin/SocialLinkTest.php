@@ -34,10 +34,10 @@ function createAdminUser(): User
 function socialLinkData(array $overrides = []): array
 {
     return array_merge([
-        'name'       => 'Facebook',
-        'icon'       => 'facebook',
-        'url'        => 'https://facebook.com/testpage',
-        'is_active'  => true,
+        'name' => 'Facebook',
+        'icon' => 'facebook',
+        'url' => 'https://facebook.com/testpage',
+        'is_active' => true,
         'sort_order' => 1,
     ], $overrides);
 }
@@ -59,7 +59,7 @@ test('admin can create a social link', function () {
     $this->assertDatabaseHas('social_links', [
         'name' => 'Facebook',
         'icon' => 'facebook',
-        'url'  => 'https://facebook.com/testpage',
+        'url' => 'https://facebook.com/testpage',
     ]);
 });
 
@@ -94,12 +94,12 @@ test('admin can update a social link', function () {
     $response = $this->actingAs($admin)->put("/admin/settings/social-links/{$link->id}", socialLinkData([
         'name' => 'Instagram',
         'icon' => 'instagram',
-        'url'  => 'https://instagram.com/testpage',
+        'url' => 'https://instagram.com/testpage',
     ]));
 
     $response->assertRedirect('/admin/settings/social-links');
     $this->assertDatabaseHas('social_links', [
-        'id'   => $link->id,
+        'id' => $link->id,
         'name' => 'Instagram',
         'icon' => 'instagram',
     ]);

@@ -101,6 +101,22 @@ test('name prop falls back to config app name when no shop_name setting exists',
         );
 });
 
+test('internal whatsapp settings are not shared with visitors', function () {
+    ShopSetting::set('shop_name', 'Leak Test Shop');
+    ShopSetting::set('whatsapp_admin_numbers', '628111111111,628222222222');
+    ShopSetting::set('whatsapp_sender', '628000000000');
+    ShopSetting::set('whatsapp_payment_reminder_template', 'Pay now {link}');
+    Cache::flush();
+
+    $this->get(route('home'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('shopSettings.shop_name', 'Leak Test Shop')
+            ->missing('shopSettings.whatsapp_admin_numbers')
+            ->missing('shopSettings.whatsapp_sender')
+            ->missing('shopSettings.whatsapp_payment_reminder_template')
+        );
+});
+
 // --- Password reset email ---
 
 test('password reset email subject includes shop name', function () {

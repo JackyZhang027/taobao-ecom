@@ -24,20 +24,21 @@ function makeOrderAdmin(): User
     $role = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     $user = User::factory()->create();
     $user->assignRole($role);
+
     return $user;
 }
 
 function buildWebhookPayload(string $midtransOrderId, string $status, float $amount, string $serverKey): array
 {
     $grossAmount = number_format($amount, 2, '.', '');
-    $signature   = hash('sha512', $midtransOrderId . '200' . $grossAmount . $serverKey);
+    $signature = hash('sha512', $midtransOrderId.'200'.$grossAmount.$serverKey);
 
     return [
-        'order_id'           => $midtransOrderId,
-        'status_code'        => '200',
-        'gross_amount'       => $grossAmount,
+        'order_id' => $midtransOrderId,
+        'status_code' => '200',
+        'gross_amount' => $grossAmount,
         'transaction_status' => $status,
-        'signature_key'      => $signature,
+        'signature_key' => $signature,
     ];
 }
 
@@ -47,8 +48,8 @@ test('admin cancels pending order with pending payment — order is cancelled', 
     // In a test environment there is no real Midtrans API, so Transaction::cancel()
     // will throw. PaymentService::cancelTransaction() swallows that exception, which
     // is exactly the graceful-failure behaviour we want to exercise here.
-    $admin   = makeOrderAdmin();
-    $order   = Order::factory()->pending()->create();
+    $admin = makeOrderAdmin();
+    $order = Order::factory()->pending()->create();
     Payment::factory()->pending()->for($order)->create();
 
     $this->actingAs($admin)
@@ -60,8 +61,8 @@ test('admin cancels pending order with pending payment — order is cancelled', 
 });
 
 test('admin cancels confirmed order with pending payment — order is cancelled', function () {
-    $admin   = makeOrderAdmin();
-    $order   = Order::factory()->confirmed()->create();
+    $admin = makeOrderAdmin();
+    $order = Order::factory()->confirmed()->create();
     Payment::factory()->pending()->for($order)->create();
 
     $this->actingAs($admin)
@@ -85,8 +86,8 @@ test('admin cancels order with no payment — no Midtrans call, order cancelled'
 test('admin cancels order with already-settled payment — local cancel still proceeds', function () {
     // Settlement status is not in CANCELLABLE_PAYMENT_STATUSES, so cancelTransaction()
     // returns early without calling Transaction::cancel() at all.
-    $admin   = makeOrderAdmin();
-    $order   = Order::factory()->confirmed()->create();
+    $admin = makeOrderAdmin();
+    $order = Order::factory()->confirmed()->create();
     Payment::factory()->settlement()->for($order)->create();
 
     $this->actingAs($admin)
@@ -100,8 +101,8 @@ test('Midtrans cancel failure is graceful — order is still cancelled locally',
     // Simulate an unexpected exception escaping cancelTransaction() to verify the
     // controller is not affected. The real cancelTransaction() catches \Throwable
     // internally, but this test covers the controller integration with a mock.
-    $admin   = makeOrderAdmin();
-    $order   = Order::factory()->pending()->create();
+    $admin = makeOrderAdmin();
+    $order = Order::factory()->pending()->create();
     Payment::factory()->pending()->for($order)->create();
 
     // Override cancelTransaction() to return null (simulates internal exception swallowing).
@@ -145,8 +146,8 @@ test('admin cannot transition from terminal cancelled status', function () {
 
 test('webhook settlement is ignored for a cancelled order', function () {
     $serverKey = config('midtrans.server_key');
-    $order     = Order::factory()->cancelled()->create();
-    $payment   = Payment::factory()->state(['status' => 'cancel', 'amount' => 150000])->for($order)->create();
+    $order = Order::factory()->cancelled()->create();
+    $payment = Payment::factory()->state(['status' => 'cancel', 'amount' => 150000])->for($order)->create();
 
     $payload = buildWebhookPayload($payment->midtrans_order_id, 'settlement', 150000.0, $serverKey);
 
@@ -158,8 +159,8 @@ test('webhook settlement is ignored for a cancelled order', function () {
 
 test('webhook capture is ignored for a cancelled order', function () {
     $serverKey = config('midtrans.server_key');
-    $order     = Order::factory()->cancelled()->create();
-    $payment   = Payment::factory()->state(['status' => 'cancel', 'amount' => 250000])->for($order)->create();
+    $order = Order::factory()->cancelled()->create();
+    $payment = Payment::factory()->state(['status' => 'cancel', 'amount' => 250000])->for($order)->create();
 
     $payload = buildWebhookPayload($payment->midtrans_order_id, 'capture', 250000.0, $serverKey);
 
@@ -170,8 +171,8 @@ test('webhook capture is ignored for a cancelled order', function () {
 
 test('webhook cancel for pending order transitions order to cancelled', function () {
     $serverKey = config('midtrans.server_key');
-    $order     = Order::factory()->pending()->create();
-    $payment   = Payment::factory()->pending()->state(['amount' => 200000])->for($order)->create();
+    $order = Order::factory()->pending()->create();
+    $payment = Payment::factory()->pending()->state(['amount' => 200000])->for($order)->create();
 
     $payload = buildWebhookPayload($payment->midtrans_order_id, 'cancel', 200000.0, $serverKey);
 
@@ -183,8 +184,8 @@ test('webhook cancel for pending order transitions order to cancelled', function
 
 test('webhook settlement for pending order transitions order to confirmed', function () {
     $serverKey = config('midtrans.server_key');
-    $order     = Order::factory()->pending()->create();
-    $payment   = Payment::factory()->pending()->state(['amount' => 300000])->for($order)->create();
+    $order = Order::factory()->pending()->create();
+    $payment = Payment::factory()->pending()->state(['amount' => 300000])->for($order)->create();
 
     $payload = buildWebhookPayload($payment->midtrans_order_id, 'settlement', 300000.0, $serverKey);
 
@@ -196,8 +197,8 @@ test('webhook settlement for pending order transitions order to confirmed', func
 
 test('duplicate webhook is idempotent — second call creates no extra history', function () {
     $serverKey = config('midtrans.server_key');
-    $order     = Order::factory()->pending()->create();
-    $payment   = Payment::factory()->pending()->state(['amount' => 300000])->for($order)->create();
+    $order = Order::factory()->pending()->create();
+    $payment = Payment::factory()->pending()->state(['amount' => 300000])->for($order)->create();
 
     $payload = buildWebhookPayload($payment->midtrans_order_id, 'settlement', 300000.0, $serverKey);
 
@@ -213,7 +214,7 @@ test('duplicate webhook is idempotent — second call creates no extra history',
 });
 
 test('webhook with invalid signature is rejected with 403', function () {
-    $order   = Order::factory()->pending()->create();
+    $order = Order::factory()->pending()->create();
     $payment = Payment::factory()->pending()->state(['amount' => 100000])->for($order)->create();
 
     $payload = buildWebhookPayload($payment->midtrans_order_id, 'settlement', 100000.0, 'wrong-key');
@@ -229,7 +230,7 @@ test('confirmFromTransaction does not reactivate a cancelled order', function ()
     // We test this via the HTTP endpoint that calls confirmFromTransaction().
     // The service is partially mocked so Transaction::status() returns 'settlement'
     // without a real Midtrans call, but the rest of the service logic runs normally.
-    $order   = Order::factory()->cancelled()->create();
+    $order = Order::factory()->cancelled()->create();
     $payment = Payment::factory()->state(['status' => 'cancel', 'amount' => 100000])->for($order)->create();
 
     $customer = $order->user;

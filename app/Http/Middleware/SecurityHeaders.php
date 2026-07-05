@@ -21,13 +21,13 @@ class SecurityHeaders
 
         $response->headers->set(
             'Content-Security-Policy',
-            "default-src 'self'; " .
-            "script-src 'self' 'unsafe-inline' https://app.midtrans.com https://app.sandbox.midtrans.com{$viteOrigins}; " .
-            "style-src 'self' 'unsafe-inline' https://fonts.bunny.net; " .
-            "img-src 'self' data: blob: https:; " .
-            "connect-src 'self' https://fonts.bunny.net{$viteOrigins}; " .
-            "font-src 'self' https://fonts.bunny.net; " .
-            "frame-src https://app.midtrans.com https://app.sandbox.midtrans.com;"
+            "default-src 'self'; ".
+            "script-src 'self' 'unsafe-inline' https://app.midtrans.com https://app.sandbox.midtrans.com{$viteOrigins}; ".
+            "style-src 'self' 'unsafe-inline' https://fonts.bunny.net; ".
+            "img-src 'self' data: blob: https:; ".
+            "connect-src 'self' https://fonts.bunny.net{$viteOrigins}; ".
+            "font-src 'self' https://fonts.bunny.net; ".
+            'frame-src https://app.midtrans.com https://app.sandbox.midtrans.com;'
         );
         $response->headers->remove('X-Powered-By');
         $response->headers->remove('Server');

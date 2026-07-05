@@ -13,12 +13,12 @@ class PaymentFactory extends Factory
     public function definition(): array
     {
         return [
-            'order_id'          => Order::factory(),
-            'midtrans_order_id' => 'ORDER-' . $this->faker->unique()->numberBetween(10000, 99999) . '-' . time(),
-            'snap_token'        => $this->faker->uuid(),
-            'status'            => 'pending',
-            'amount'            => $this->faker->numberBetween(100000, 1000000),
-            'gateway_response'  => null,
+            'order_id' => Order::factory(),
+            'midtrans_order_id' => 'ORDER-'.$this->faker->unique()->numberBetween(10000, 99999).'-'.time(),
+            'snap_token' => $this->faker->uuid(),
+            'status' => 'pending',
+            'amount' => $this->faker->numberBetween(100000, 1000000),
+            'gateway_response' => null,
         ];
     }
 

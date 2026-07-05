@@ -86,40 +86,31 @@ class CartService
         $shippingJakartaIdr = $shipping->calculateShippingIdr($cart, 'Jakarta');
         $shippingIdr = match (strtolower($city)) {
             'jakarta' => $shippingJakartaIdr,
-            default   => $shippingBatamIdr,
+            default => $shippingBatamIdr,
         };
         $itemCount = $cart->items->sum('quantity');
 
-        $uniqueItems = $cart->items->unique(
-            fn ($item) => $item->variant?->product_id ?? ('p_' . $item->product_id)
-        );
-        $canDeliverBatam = $uniqueItems->every(function ($item) {
+        // Deliverability must mirror ShippingService::resolveMultiplier exactly —
+        // an item whose resolved multiplier is 0 would otherwise ship for free.
+        $canDeliver = fn (string $deliveryCity) => $cart->items->every(function ($item) use ($shipping, $deliveryCity) {
             $variant = $item->variant;
             $product = $variant?->product ?? $item->product;
-            if ($variant && ($variant->delivery_rate_batam ?: $variant->delivery_rate_jakarta)) {
-                return true;
-            }
-            return $product && $product->delivery_rate_batam > 0;
+
+            return $product && $shipping->resolveMultiplier($product, $variant, $deliveryCity) > 0;
         });
-        $canDeliverJakarta = $uniqueItems->every(function ($item) {
-            $variant = $item->variant;
-            $product = $variant?->product ?? $item->product;
-            if ($variant && ($variant->delivery_rate_jakarta ?: $variant->delivery_rate_batam)) {
-                return true;
-            }
-            return $product && $product->delivery_rate_jakarta > 0;
-        });
+        $canDeliverBatam = $canDeliver('Batam');
+        $canDeliverJakarta = $canDeliver('Jakarta');
 
         return [
-            'subtotal_idr'         => $subtotalIdr,
-            'shipping_idr'         => $shippingIdr,
-            'shipping_batam_idr'   => $shippingBatamIdr,
+            'subtotal_idr' => $subtotalIdr,
+            'shipping_idr' => $shippingIdr,
+            'shipping_batam_idr' => $shippingBatamIdr,
             'shipping_jakarta_idr' => $shippingJakartaIdr,
-            'grand_total_idr'      => $subtotalIdr + $shippingIdr,
-            'item_count'           => $itemCount,
-            'city'                 => $city,
-            'can_deliver_batam'    => $canDeliverBatam,
-            'can_deliver_jakarta'  => $canDeliverJakarta,
+            'grand_total_idr' => $subtotalIdr + $shippingIdr,
+            'item_count' => $itemCount,
+            'city' => $city,
+            'can_deliver_batam' => $canDeliverBatam,
+            'can_deliver_jakarta' => $canDeliverJakarta,
         ];
     }
 }

@@ -37,7 +37,8 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
-        $settings = app(ShopSettingService::class)->all();
+        $settingService = app(ShopSettingService::class);
+        $settings = $settingService->all();
 
         return [
             ...parent::share($request),
@@ -51,7 +52,7 @@ class HandleInertiaRequests extends Middleware
             'cartCount' => $this->resolveCartCount($request),
             'wishlistCount' => $this->resolveWishlistCount($request),
             'exchangeRate' => app(\Modules\Currency\Services\CurrencyService::class)->getActiveRate(),
-            'shopSettings' => $settings,
+            'shopSettings' => $settingService->public(),
             'socialLinks' => fn () => \Illuminate\Support\Facades\Cache::remember(
                 'social_links_active_'.(\Illuminate\Support\Facades\Cache::get('cache_ver_social_links', 0)),
                 3600,
