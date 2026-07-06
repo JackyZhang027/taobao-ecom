@@ -6,6 +6,7 @@ use Modules\Catalog\Models\Product;
 use Modules\Catalog\Models\ProductVariant;
 use Modules\Currency\Models\ExchangeRate;
 use Modules\Delivery\Models\DeliveryRate;
+use Modules\Ordering\Models\Address;
 use Modules\Ordering\Models\Cart;
 use Modules\Ordering\Models\CartItem;
 use Spatie\Permission\Models\Permission;
@@ -53,6 +54,17 @@ function customerUser(): User
     $user->assignRole($role);
 
     return $user;
+}
+
+function makeSecAddress(User $user, string $city = 'Batam'): Address
+{
+    return Address::create([
+        'user_id' => $user->id,
+        'recipient_name' => 'Jane',
+        'recipient_phone' => '08123456789',
+        'street_address' => '1 Test St',
+        'city' => $city,
+    ]);
 }
 
 /** Grant an actor an admin role limited to the given permissions. */
@@ -128,11 +140,10 @@ test('checkout is blocked when a cart item has no price', function () {
     $cart = Cart::create(['user_id' => $user->id, 'session_id' => null]);
     CartItem::create(['cart_id' => $cart->id, 'product_id' => $product->id, 'product_variant_id' => null, 'quantity' => 1]);
 
+    $address = makeSecAddress($user);
+
     $this->actingAs($user)->post('/checkout', [
-        'recipient_name' => 'Jane',
-        'recipient_phone' => '08123456789',
-        'street_address' => '1 Test St',
-        'city' => 'Batam',
+        'address_id' => $address->id,
     ])->assertSessionHasErrors('cart');
 
     expect(\Modules\Ordering\Models\Order::count())->toBe(0);
@@ -149,11 +160,10 @@ test('checkout to batam is rejected when the item only has a jakarta delivery ra
     $cart = Cart::create(['user_id' => $user->id, 'session_id' => null]);
     CartItem::create(['cart_id' => $cart->id, 'product_variant_id' => $variant->id, 'product_id' => null, 'quantity' => 1]);
 
+    $address = makeSecAddress($user);
+
     $this->actingAs($user)->post('/checkout', [
-        'recipient_name' => 'Jane',
-        'recipient_phone' => '08123456789',
-        'street_address' => '1 Test St',
-        'city' => 'Batam',
+        'address_id' => $address->id,
     ])->assertSessionHasErrors('city');
 
     expect(\Modules\Ordering\Models\Order::count())->toBe(0);

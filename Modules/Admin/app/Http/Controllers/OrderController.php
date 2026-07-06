@@ -184,8 +184,8 @@ class OrderController extends Controller
             'notes' => 'nullable|string',
             'manual_shipping_rmb' => 'nullable|numeric|min:0',
             'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.variant_id' => 'nullable|exists:product_variants,id',
+            'items.*.product_id' => ['required', \Illuminate\Validation\Rule::exists('products', 'id')->whereNull('deleted_at')],
+            'items.*.variant_id' => ['nullable', \Illuminate\Validation\Rule::exists('product_variants', 'id')->whereNull('deleted_at')],
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 
@@ -195,22 +195,38 @@ class OrderController extends Controller
         $exchangeRate = $this->currency->getActiveRate();
 
         $order = DB::transaction(function () use ($request, $city, $isKnownCity, $exchangeRate) {
-            $subtotalRmb = 0;
+            $subtotalIdr = 0.0;
             $shippingIdr = 0.0;
             $lines = [];
 
-            foreach ($request->items as $itemData) {
+            foreach ($request->items as $index => $itemData) {
                 $product = Product::with('translations')->find($itemData['product_id']);
                 $variant = $itemData['variant_id']
                     ? $product->variants()->find($itemData['variant_id'])
                     : null;
+
+                // A variant id from another product, or a missing variant on a
+                // variant product, would silently fall back to the base price
+                // (0 for variant products) — reject instead.
+                if ($itemData['variant_id'] && ! $variant) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        "items.{$index}.variant_id" => 'The selected variant does not belong to the selected product.',
+                    ]);
+                }
+                if (! $variant && $product->variants()->exists()) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        "items.{$index}.variant_id" => 'This product requires selecting a variant.',
+                    ]);
+                }
 
                 // Variant prices are absolute, not add-ons — same rule as the storefront
                 // (CartService/CheckoutController/ProductTransformer).
                 $priceRmb = $variant ? (float) $variant->price : (float) ($product->price ?? 0);
                 $unitPriceIdr = $this->currency->rmbToIdr($priceRmb);
                 $qty = (int) $itemData['quantity'];
-                $subtotalRmb += $priceRmb * $qty;
+                // Sum the rounded line subtotals so grand_total_idr always equals
+                // the sum of order lines (Midtrans requires an exact match).
+                $subtotalIdr += $unitPriceIdr * $qty;
 
                 $nameEn = $product->translations->firstWhere('locale', 'en')?->name ?? $product->slug;
 
@@ -230,8 +246,6 @@ class OrderController extends Controller
                     $shippingIdr += $this->delivery->calculateCharge((float) $multiplier) * $qty;
                 }
             }
-
-            $subtotalIdr = $this->currency->rmbToIdr($subtotalRmb);
 
             if (! $isKnownCity || ! empty($request->manual_shipping_rmb)) {
                 $shippingIdr = $this->currency->rmbToIdr((float) ($request->manual_shipping_rmb ?? 0));

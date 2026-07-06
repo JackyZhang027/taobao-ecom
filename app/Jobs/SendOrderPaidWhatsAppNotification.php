@@ -45,8 +45,24 @@ class SendOrderPaidWhatsAppNotification implements ShouldQueue
 
         $message = $this->buildMessage();
 
+        // Isolate per-number failures: retrying the whole job would re-send to
+        // numbers that already succeeded. Only retry when nothing went through.
+        $failures = 0;
         foreach ($numbers as $number) {
-            $whatsapp->send($number, $message);
+            try {
+                $whatsapp->send($number, $message);
+            } catch (\Throwable $e) {
+                $failures++;
+                \Log::warning('SendOrderPaidWhatsAppNotification: send failed for one number', [
+                    'order_id' => $this->order->id,
+                    'number' => $number,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        if ($failures === $numbers->count()) {
+            throw new \RuntimeException("WhatsApp order-paid notification failed for all {$failures} admin number(s).");
         }
     }
 

@@ -70,18 +70,39 @@ class CartService
         $guestCart->delete();
     }
 
+    /**
+     * A cart item is unavailable when its variant/product has been soft-deleted
+     * or deactivated since it was added. Single source of truth for the cart UI
+     * flag and the checkout guard.
+     */
+    public function isItemUnavailable(CartItem $item): bool
+    {
+        if ($item->product_variant_id) {
+            $variant = $item->variant;
+            $product = $variant?->product;
+
+            return ! $variant || $variant->trashed() || ! $variant->is_active
+                || ! $product || ! $product->is_active;
+        }
+
+        $product = $item->product;
+
+        return ! $product || ! $product->is_active;
+    }
+
     public function computeTotals(Cart $cart, CurrencyService $currency, ShippingService $shipping, string $city = 'Batam'): array
     {
         $cart->load('items.variant.product', 'items.product');
 
-        $subtotalRmb = $cart->items->sum(function ($item) {
+        // Convert per unit, then multiply — order lines store rounded unit prices,
+        // so the subtotal must be the exact sum of those line subtotals.
+        $subtotalIdr = $cart->items->sum(function ($item) use ($currency) {
             $priceRmb = $item->variant
                 ? $item->variant->price
                 : ($item->product?->price ?? 0);
 
-            return $priceRmb * $item->quantity;
+            return $currency->rmbToIdr($priceRmb) * $item->quantity;
         });
-        $subtotalIdr = $currency->rmbToIdr($subtotalRmb);
         $shippingBatamIdr = $shipping->calculateShippingIdr($cart, 'Batam');
         $shippingJakartaIdr = $shipping->calculateShippingIdr($cart, 'Jakarta');
         $shippingIdr = match (strtolower($city)) {

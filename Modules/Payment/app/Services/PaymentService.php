@@ -68,10 +68,21 @@ class PaymentService
             ];
         }
 
+        $grossAmount = (int) $order->grand_total_idr;
+        $itemsSum = array_sum(array_map(fn ($item) => $item['price'] * $item['quantity'], $items));
+        if ($grossAmount !== $itemsSum) {
+            // Midtrans rejects the transaction outright on any mismatch.
+            \Log::warning('mintNewPayment: gross_amount does not match item_details sum', [
+                'order_id' => $order->id,
+                'gross_amount' => $grossAmount,
+                'items_sum' => $itemsSum,
+            ]);
+        }
+
         $params = [
             'transaction_details' => [
                 'order_id' => $midtransOrderId,
-                'gross_amount' => (int) $order->grand_total_idr,
+                'gross_amount' => $grossAmount,
             ],
             'callbacks' => [
                 'finish' => route('checkout.finish'),
@@ -327,7 +338,9 @@ class PaymentService
         ]);
 
         if ($newStatus === 'confirmed') {
-            SendOrderPaidWhatsAppNotification::dispatch($order);
+            // Callers run inside DB::transaction — don't let a queue worker pick
+            // this up before the status change is committed.
+            SendOrderPaidWhatsAppNotification::dispatch($order)->afterCommit();
         }
     }
 }

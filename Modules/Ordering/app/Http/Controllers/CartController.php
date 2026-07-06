@@ -39,7 +39,7 @@ class CartController extends Controller
             'user_id' => $cart->user_id,
             'items' => $cart->items->map(function ($item) use ($locale) {
                 $variant = $item->variant;
-                $isUnavailable = $variant && $variant->trashed();
+                $isUnavailable = $this->cartService->isItemUnavailable($item);
                 // For variant items: product comes from variant; for product items: direct product relation
                 $product = $variant?->product ?? $item->product;
                 $translation = $product?->translations->firstWhere('locale', $locale)

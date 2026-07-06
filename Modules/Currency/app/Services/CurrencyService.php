@@ -24,7 +24,9 @@ class CurrencyService
 
     public function rmbToIdr(float $rmb): float
     {
-        return round($rmb * $this->getActiveRate(), 2);
+        // Whole rupiah — IDR has no subunits, and Midtrans requires the order
+        // gross_amount to exactly equal the sum of integer item prices.
+        return round($rmb * $this->getActiveRate());
     }
 
     public function formatIdr(float $amount): string

@@ -47,7 +47,7 @@ class CheckoutController extends Controller
             'user_id' => $cart->user_id,
             'items' => $cart->items->map(function ($item) use ($locale) {
                 $variant = $item->variant;
-                $isUnavailable = $variant && $variant->trashed();
+                $isUnavailable = $this->cartService->isItemUnavailable($item);
                 $product = $variant?->product ?? $item->product;
                 $translation = $product?->translations->firstWhere('locale', $locale)
                     ?? $product?->translations->firstWhere('locale', 'en');
@@ -214,7 +214,7 @@ class CheckoutController extends Controller
     private function findCartError(\Modules\Ordering\Models\Cart $cart, string $city): ?array
     {
         $hasUnavailable = $cart->items->contains(
-            fn ($item) => $item->product_variant_id && $item->variant?->trashed()
+            fn ($item) => $this->cartService->isItemUnavailable($item)
         );
         if ($hasUnavailable) {
             return ['cart' => 'Some items in your cart are no longer available. Please remove them before proceeding.'];
