@@ -55,6 +55,16 @@ class JournalEntryController extends Controller
             'lines.*.description' => 'nullable|string|max:255',
         ]);
 
+        // Double-entry: each line must post to exactly one side. A 0/0 line is
+        // meaningless; a both-sides line inflates both trial-balance columns.
+        foreach ($request->lines as $index => $line) {
+            if (((float) $line['debit'] > 0) === ((float) $line['credit'] > 0)) {
+                return back()->withErrors([
+                    "lines.{$index}" => 'Each line must have either a debit or a credit amount, not both or neither.',
+                ])->withInput();
+            }
+        }
+
         $totalDebit = collect($request->lines)->sum('debit');
         $totalCredit = collect($request->lines)->sum('credit');
 
@@ -124,6 +134,12 @@ class JournalEntryController extends Controller
             $this->accounting->voidEntry($journalEntry, $request->user()->id);
         } catch (\RuntimeException $e) {
             return back()->withErrors(['entry' => $e->getMessage()]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            // The reversing entry's VOID-{ref} reference hit the unique index —
+            // the transaction rolled back, so the entry is still posted.
+            return back()->withErrors([
+                'entry' => 'A reversing entry with this reference already exists. The entry was not voided.',
+            ]);
         }
 
         return back()->with('success', 'Entry voided and reversing entry created.');

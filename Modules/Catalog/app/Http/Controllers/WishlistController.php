@@ -80,7 +80,12 @@ class WishlistController extends Controller
             $existing->delete();
             $wishlisted = false;
         } else {
-            Wishlist::create(['user_id' => $userId, 'product_id' => $product->id]);
+            try {
+                Wishlist::create(['user_id' => $userId, 'product_id' => $product->id]);
+            } catch (\Illuminate\Database\QueryException $e) {
+                // Double-click race: a concurrent request already inserted the
+                // row (unique on user_id + product_id) — same outcome, no 500.
+            }
             $wishlisted = true;
         }
 

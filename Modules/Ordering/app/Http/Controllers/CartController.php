@@ -98,7 +98,7 @@ class CartController extends Controller
                 'nullable', 'integer',
                 Rule::exists('products', 'id')->whereNull('deleted_at')->where('is_active', true),
             ],
-            'quantity' => 'integer|min:1|max:999',
+            'quantity' => 'integer|min:1|max:'.CartService::MAX_QUANTITY,
         ]);
 
         abort_if(! $request->product_variant_id && ! $request->product_id, 422, 'product_variant_id or product_id required');
@@ -131,7 +131,9 @@ class CartController extends Controller
                 ->first();
 
             if ($existing) {
-                $existing->increment('quantity', $quantity);
+                $existing->update([
+                    'quantity' => min($existing->quantity + $quantity, CartService::MAX_QUANTITY),
+                ]);
             } else {
                 CartItem::create([
                     'cart_id' => $cart->id,
@@ -148,7 +150,7 @@ class CartController extends Controller
     public function update(Request $request, CartItem $cartItem)
     {
         $this->authorizeCartItem($cartItem, $request);
-        $request->validate(['quantity' => 'required|integer|min:1|max:999']);
+        $request->validate(['quantity' => 'required|integer|min:1|max:'.CartService::MAX_QUANTITY]);
         $cartItem->update(['quantity' => $request->quantity]);
 
         return back();

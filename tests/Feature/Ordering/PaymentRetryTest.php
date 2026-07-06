@@ -36,6 +36,38 @@ test('createSnapToken reuses the existing token while payment is pending', funct
     expect(Payment::where('order_id', $order->id)->count())->toBe(1);
 });
 
+test('createSnapToken cancels and re-mints when the pending payment is older than 24 hours', function () {
+    $order = Order::factory()->pending()->create();
+    $stalePayment = Payment::factory()->pending()->for($order)->create();
+    $stalePayment->created_at = now()->subHours(25);
+    $stalePayment->save();
+
+    $service = $this->partialMock(PaymentService::class, function ($mock) {
+        $mock->shouldAllowMockingProtectedMethods();
+        $mock->shouldReceive('cancelTransaction')->once();
+        $mock->shouldReceive('mintNewPayment')->once()->andReturnUsing(
+            fn (Order $order) => Payment::factory()->pending()->for($order)->create()->snap_token
+        );
+    });
+
+    $token = $service->createSnapToken($order);
+
+    expect($token)->not->toBe($stalePayment->snap_token);
+    expect(Payment::where('order_id', $order->id)->count())->toBe(2);
+});
+
+test('createSnapToken still reuses a pending token younger than 24 hours', function () {
+    $order = Order::factory()->pending()->create();
+    $payment = Payment::factory()->pending()->for($order)->create();
+    $payment->created_at = now()->subHours(23);
+    $payment->save();
+
+    $token = app(PaymentService::class)->createSnapToken($order);
+
+    expect($token)->toBe($payment->snap_token);
+    expect(Payment::where('order_id', $order->id)->count())->toBe(1);
+});
+
 test('createSnapToken mints a fresh payment when the latest one is dead', function () {
     $order = Order::factory()->pending()->create();
     $oldPayment = Payment::factory()->expired()->for($order)->create();

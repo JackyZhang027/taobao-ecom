@@ -10,6 +10,12 @@ use Modules\Ordering\Models\CartItem;
 
 class CartService
 {
+    /**
+     * Hard ceiling for a single cart line. Per-request validation enforces it
+     * too, but accumulation paths (repeat adds, guest-cart merge) must clamp.
+     */
+    public const MAX_QUANTITY = 999;
+
     public function resolveCart(Request $request): Cart
     {
         if ($request->user()) {
@@ -56,7 +62,9 @@ class CartService
                 ->first();
 
             if ($existing) {
-                $existing->increment('quantity', $guestItem->quantity);
+                $existing->update([
+                    'quantity' => min($existing->quantity + $guestItem->quantity, self::MAX_QUANTITY),
+                ]);
             } else {
                 CartItem::create([
                     'cart_id' => $userCart->id,

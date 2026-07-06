@@ -3,6 +3,7 @@
 namespace Modules\Currency\Services;
 
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Modules\Currency\Models\ExchangeRate;
 
 class CurrencyService
@@ -36,14 +37,18 @@ class CurrencyService
 
     public function setRate(float $rate, int $adminId, ?string $notes = null): ExchangeRate
     {
-        ExchangeRate::where('is_active', true)->update(['is_active' => false]);
+        // Transactional so a failure after deactivating can never leave the
+        // store with no active rate (which would zero out every price).
+        $exchangeRate = DB::transaction(function () use ($rate, $adminId, $notes) {
+            ExchangeRate::where('is_active', true)->update(['is_active' => false]);
 
-        $exchangeRate = ExchangeRate::create([
-            'rate' => $rate,
-            'is_active' => true,
-            'created_by' => $adminId,
-            'notes' => $notes,
-        ]);
+            return ExchangeRate::create([
+                'rate' => $rate,
+                'is_active' => true,
+                'created_by' => $adminId,
+                'notes' => $notes,
+            ]);
+        });
 
         Cache::forget('exchange_rate_active');
 

@@ -108,20 +108,27 @@ class AccountingService
     {
         $accounts = Account::where('is_active', true)->orderBy('code')->get();
 
-        return $accounts->map(function (Account $account) use ($startDate, $endDate) {
-            $query = JournalLine::where('account_id', $account->id)
-                ->whereHas('journalEntry', function ($q) use ($startDate, $endDate) {
-                    $q->where('status', 'posted');
-                    if ($startDate) {
-                        $q->where('date', '>=', $startDate);
-                    }
-                    if ($endDate) {
-                        $q->where('date', '<=', $endDate);
-                    }
-                });
+        // One grouped aggregate instead of two queries per account.
+        $totals = JournalLine::selectRaw('account_id, SUM(debit) as total_debit, SUM(credit) as total_credit')
+            ->whereHas('journalEntry', function ($q) use ($startDate, $endDate) {
+                $q->where('status', 'posted');
+                // whereDate: comparisons must be date-level on every driver —
+                // SQLite stores casted dates with a time component.
+                if ($startDate) {
+                    $q->whereDate('date', '>=', $startDate);
+                }
+                if ($endDate) {
+                    $q->whereDate('date', '<=', $endDate);
+                }
+            })
+            ->groupBy('account_id')
+            ->get()
+            ->keyBy('account_id');
 
-            $totalDebit = (float) $query->sum('debit');
-            $totalCredit = (float) $query->clone()->sum('credit');
+        return $accounts->map(function (Account $account) use ($totals) {
+            $row = $totals->get($account->id);
+            $totalDebit = (float) ($row->total_debit ?? 0);
+            $totalCredit = (float) ($row->total_credit ?? 0);
 
             $balance = $account->normal_balance === 'debit'
                 ? $totalDebit - $totalCredit
@@ -209,11 +216,13 @@ class AccountingService
             ->where('account_id', $account->id)
             ->whereHas('journalEntry', function ($q) use ($startDate, $endDate) {
                 $q->where('status', 'posted');
+                // whereDate: comparisons must be date-level on every driver —
+                // SQLite stores casted dates with a time component.
                 if ($startDate) {
-                    $q->where('date', '>=', $startDate);
+                    $q->whereDate('date', '>=', $startDate);
                 }
                 if ($endDate) {
-                    $q->where('date', '<=', $endDate);
+                    $q->whereDate('date', '<=', $endDate);
                 }
             })
             ->join('journal_entries', 'journal_entries.id', '=', 'journal_lines.journal_entry_id')

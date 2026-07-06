@@ -25,6 +25,14 @@ class PaymentService
     {
         $existing = $order->payment;
         if ($existing && in_array($existing->status, self::CANCELLABLE_PAYMENT_STATUSES, true)) {
+            // Snap tokens die with the underlying transaction (~24h) — a stale
+            // one would just error inside the Snap popup. Cancel and re-mint.
+            if ($existing->created_at->lte(now()->subHours(24))) {
+                $this->cancelTransaction($order);
+
+                return $this->mintNewPayment($order);
+            }
+
             return $existing->snap_token;
         }
 
