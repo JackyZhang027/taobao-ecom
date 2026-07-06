@@ -54,7 +54,7 @@ export default function AddressForm({ address, onCancel, onSuccess }: AddressFor
     };
 
     return (
-        <form onSubmit={submit} className="space-y-5 rounded-xl border bg-white p-6 shadow-sm">
+        <form onSubmit={submit} className="space-y-5 rounded-xl border bg-card p-6 shadow-sm">
             <div className="grid gap-1.5">
                 <Label htmlFor="label">{t('addresses.label')}</Label>
                 <Input
@@ -109,7 +109,7 @@ export default function AddressForm({ address, onCancel, onSuccess }: AddressFor
                             type="button"
                             onClick={() => setData((prev) => ({ ...prev, city, province: cityProvinceMap[city] }))}
                             className={`flex-1 rounded-sm border py-2.5 text-sm font-semibold transition-colors
-                                ${data.city === city ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-400'}`}
+                                ${data.city === city ? 'border-foreground bg-foreground text-background' : 'border-input bg-background text-foreground hover:border-foreground/50'}`}
                         >
                             {city}
                         </button>
@@ -121,7 +121,7 @@ export default function AddressForm({ address, onCancel, onSuccess }: AddressFor
             <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
                     <Label>{t('addresses.province')}</Label>
-                    <Input value={data.province} readOnly className="cursor-default bg-slate-100" />
+                    <Input value={data.province} readOnly className="cursor-default bg-muted" />
                 </div>
                 <div className="grid gap-1.5">
                     <Label htmlFor="postal_code">{t('addresses.postal_code')}</Label>

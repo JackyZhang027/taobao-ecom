@@ -33,7 +33,11 @@ export default function OrdersIndex({ orders }: OrdersProps) {
             <h1 className="mb-6 text-2xl font-bold">{t('orders.title')}</h1>
             <div className="space-y-4">
                 {orders.data.map((order) => (
-                    <div key={order.id} className="rounded-lg border p-4 flex items-center justify-between">
+                    <Link
+                        key={order.id}
+                        href={`/orders/${order.id}`}
+                        className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50"
+                    >
                         <div>
                             <p className="font-medium">{order.order_number ?? `#${order.id}`}</p>
                             <p className="text-sm text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</p>
@@ -43,11 +47,8 @@ export default function OrdersIndex({ orders }: OrdersProps) {
                         </div>
                         <div className="text-right">
                             <p className="font-semibold">{formatIdr(order.grand_total_idr)}</p>
-                            <Link href={`/orders/${order.id}`} className="text-sm text-primary hover:underline">
-                                {t('orders.view')}
-                            </Link>
                         </div>
-                    </div>
+                    </Link>
                 ))}
             </div>
         </CustomerLayout>
