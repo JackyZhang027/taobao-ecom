@@ -26,15 +26,15 @@ export default function CartIndex({ cart, totals }: CartIndexProps) {
                 <div className="bg-[#F8FAFC] py-14 text-center">
                     <h1 className="text-4xl font-bold text-slate-900">{t('cart.title')}</h1>
                     <p className="text-sm text-slate-400 mt-3 flex items-center justify-center gap-1">
-                        <Link href="/" className="font-medium text-slate-900 hover:text-blue-600">Home</Link>
+                        <Link href="/" className="font-medium text-slate-900 hover:text-blue-600">{t('nav.home')}</Link>
                         <ChevronRight className="h-3.5 w-3.5" />
-                        <span className="text-blue-600">Cart</span>
+                        <span className="text-blue-600">{t('nav.cart')}</span>
                     </p>
                 </div>
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24 text-center">
                     <ShoppingBag className="h-20 w-20 text-slate-200 mx-auto mb-6" />
                     <p className="text-2xl font-semibold text-slate-300 mb-2">{t('cart.empty')}</p>
-                    <p className="text-slate-400 text-sm mb-8">Add items to your cart and they'll appear here.</p>
+                    <p className="text-slate-400 text-sm mb-8">{t('cart.empty_desc')}</p>
                     <Link
                         href="/shop"
                         className="inline-block bg-slate-900 hover:bg-slate-800 text-white px-10 py-3 text-sm font-semibold uppercase tracking-wider transition-colors"
@@ -54,9 +54,9 @@ export default function CartIndex({ cart, totals }: CartIndexProps) {
             <div className="bg-[#F8FAFC] py-14 text-center">
                 <h1 className="text-4xl font-bold text-slate-900">{t('cart.title')}</h1>
                 <p className="text-sm text-slate-400 mt-3 flex items-center justify-center gap-1">
-                    <Link href="/" className="font-medium text-slate-900 hover:text-blue-600">Home</Link>
+                    <Link href="/" className="font-medium text-slate-900 hover:text-blue-600">{t('nav.home')}</Link>
                     <ChevronRight className="h-3.5 w-3.5" />
-                    <span className="text-blue-600">Cart</span>
+                    <span className="text-blue-600">{t('nav.cart')}</span>
                 </p>
             </div>
 
@@ -66,10 +66,10 @@ export default function CartIndex({ cart, totals }: CartIndexProps) {
                     <div className="lg:col-span-2">
                         {/* Table Header */}
                         <div className="bg-[#F1F5F9] hidden md:grid grid-cols-[2fr_1fr_1fr_auto] gap-4 px-6 py-4 font-semibold text-sm text-slate-900 rounded-sm mb-3">
-                            <span>Product</span>
-                            <span>Price</span>
-                            <span>Quantity</span>
-                            <span>Subtotal</span>
+                            <span>{t('orders.product')}</span>
+                            <span>{t('orders.price')}</span>
+                            <span>{t('cart.quantity_header')}</span>
+                            <span>{t('cart.subtotal')}</span>
                         </div>
 
                         {/* Unavailable items warning */}
@@ -109,7 +109,7 @@ export default function CartIndex({ cart, totals }: CartIndexProps) {
                                                     {productName}
                                                 </p>
                                                 {item.variant?.sku && (
-                                                    <p className="text-xs text-slate-400 mt-0.5">SKU: {item.variant.sku}</p>
+                                                    <p className="text-xs text-slate-400 mt-0.5">{t('cart.sku')}: {item.variant.sku}</p>
                                                 )}
                                                 {item.is_unavailable && (
                                                     <span className="inline-block mt-1 rounded-sm bg-red-100 px-2 py-0.5 text-xs font-medium text-red-600">
@@ -121,7 +121,7 @@ export default function CartIndex({ cart, totals }: CartIndexProps) {
 
                                         {/* Price */}
                                         <div>
-                                            <span className="text-sm text-slate-500 md:hidden font-semibold">Price: </span>
+                                            <span className="text-sm text-slate-500 md:hidden font-semibold">{t('orders.price')}: </span>
                                             <span className="text-sm text-slate-700">
                                                 {price > 0 ? formatIdr(price) : '-'}
                                             </span>
@@ -175,7 +175,7 @@ export default function CartIndex({ cart, totals }: CartIndexProps) {
 
                     {/* Cart Totals */}
                     <div className="bg-[#F1F5F9] rounded-sm p-7 h-fit">
-                        <h2 className="text-2xl font-bold text-slate-900 mb-7">Cart Totals</h2>
+                        <h2 className="text-2xl font-bold text-slate-900 mb-7">{t('cart.totals_heading')}</h2>
 
                         <div className="space-y-4 text-sm">
                             <div className="flex justify-between items-center py-3 border-b border-slate-200">

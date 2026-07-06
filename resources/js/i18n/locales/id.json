@@ -27,7 +27,8 @@
         "addresses_title": "Alamat Pengiriman",
         "addresses_desc": "Kelola alamat pengiriman pesanan Anda",
         "manage_addresses": "Kelola alamat",
-        "no_addresses": "Belum ada alamat tersimpan"
+        "no_addresses": "Belum ada alamat tersimpan",
+        "more_addresses": "(+{{count}} lainnya)"
     },
     "addresses": {
         "title": "Alamat Saya",
@@ -61,6 +62,8 @@
         "add_wishlist": "Tambah ke wishlist",
         "remove_wishlist": "Hapus dari wishlist",
         "view_product": "Lihat produk",
+        "zoom": "Perbesar",
+        "thumbnail_alt": "Lihat {{n}}",
         "location": "Lokasi",
         "delivery": "Ongkir",
         "total": "Total",
@@ -83,7 +86,11 @@
         "remove": "Hapus",
         "added": "Ditambahkan ke keranjang",
         "item_unavailable": "Tidak Tersedia",
-        "has_unavailable_items": "Beberapa item di keranjang Anda sudah tidak tersedia. Hapus item tersebut untuk melanjutkan ke checkout."
+        "has_unavailable_items": "Beberapa item di keranjang Anda sudah tidak tersedia. Hapus item tersebut untuk melanjutkan ke checkout.",
+        "empty_desc": "Tambahkan barang ke keranjang Anda dan akan muncul di sini.",
+        "totals_heading": "Total Keranjang",
+        "sku": "SKU",
+        "quantity_header": "Jumlah"
     },
     "checkout": {
         "title": "Pembayaran",
@@ -97,7 +104,18 @@
         "error": "Gagal membuat pesanan. Silakan periksa kembali data Anda.",
         "change_address": "Ganti",
         "select_address": "Pilih Alamat Pengiriman",
-        "no_address_selected": "Belum ada alamat pengiriman dipilih"
+        "no_address_selected": "Belum ada alamat pengiriman dipilih",
+        "payment_window_opened": "Jendela pembayaran telah dibuka — selesaikan pembayaran Anda di atas.",
+        "preparing_payment": "Menyiapkan pembayaran…",
+        "order_created": "Pesanan {{order}} telah dibuat.",
+        "shipping_details": "Detail Pengiriman",
+        "recipient_label": "Penerima:",
+        "phone_label": "Telepon:",
+        "address_label": "Alamat:",
+        "notes_colon": "Catatan:",
+        "delivery_unavailable": "Pengiriman tidak tersedia ke {{city}}. Silakan pilih alamat lain.",
+        "notes_placeholder": "Catatan tentang pesanan Anda, misalnya instruksi pengiriman khusus.",
+        "placing_order": "Membuat Pesanan..."
     },
     "orders": {
         "title": "Pesanan Saya",
@@ -130,6 +148,28 @@
         "product": "Produk",
         "price": "Harga",
         "backToOrders": "Kembali ke Pesanan"
+    },
+    "shop": {
+        "all_products": "Semua Produk",
+        "filter": "Filter",
+        "filters": "Filter",
+        "category": "Kategori",
+        "search_products_placeholder": "Cari produk...",
+        "clear_all": "Hapus Semua",
+        "apply": "Terapkan",
+        "showing": "Menampilkan",
+        "results": "hasil",
+        "in": "di",
+        "category_label": "Kategori:",
+        "search_label": "Cari:",
+        "no_products_found": "Produk tidak ditemukan",
+        "no_products_desc": "Coba sesuaikan filter Anda atau kembali lagi nanti.",
+        "view_all_products": "Lihat semua produk",
+        "prev": "Sebelumnya",
+        "next": "Berikutnya"
+    },
+    "faq": {
+        "empty": "Belum ada FAQ."
     },
     "admin": {
         "dashboard": "Dashboard",
@@ -199,6 +239,7 @@
         "loading": "Memuat...",
         "confirm_delete": "Apakah Anda yakin ingin menghapus ini?",
         "yes": "Ya",
-        "no": "Tidak"
+        "no": "Tidak",
+        "optional": "(opsional)"
     }
 }

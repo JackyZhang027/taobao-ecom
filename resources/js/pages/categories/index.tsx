@@ -49,7 +49,7 @@ export default function Categories({ categories, search }: CategoriesProps) {
                 <h1 className="text-4xl font-bold text-slate-900">{t('categories.title')}</h1>
                 <p className="text-sm text-slate-400 mt-3 flex items-center justify-center gap-1">
                     <Link href="/" className="font-medium text-slate-900 hover:text-blue-600">
-                        Home
+                        {t('nav.home')}
                     </Link>
                     <ChevronRight className="h-3.5 w-3.5" />
                     <span className="text-blue-600">{t('categories.title')}</span>
@@ -72,7 +72,7 @@ export default function Categories({ categories, search }: CategoriesProps) {
                                 type="button"
                                 onClick={clearSearch}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
-                                aria-label="Clear search"
+                                aria-label={t('categories.clear_search')}
                             >
                                 <X className="h-4 w-4" />
                             </button>

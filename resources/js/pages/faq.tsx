@@ -24,7 +24,7 @@ export default function Faq({ faqs }: FaqProps) {
             <h1 className="mb-6 text-2xl font-bold">{t('footer.faq')}</h1>
 
             {faqs.length === 0 ? (
-                <p className="text-muted-foreground">No FAQs yet.</p>
+                <p className="text-muted-foreground">{t('faq.empty')}</p>
             ) : (
                 <div className="divide-y rounded-lg border">
                     {faqs.map((faq) => {

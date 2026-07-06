@@ -112,7 +112,7 @@ export default function ProfilePage({ defaultAddress, addressesCount }: ProfileP
                         <p className="text-sm text-slate-600">
                             {defaultAddress.recipient_name} &middot; {defaultAddress.street_address}, {defaultAddress.city}
                             {addressesCount > 1 && (
-                                <span className="text-slate-400"> (+{addressesCount - 1} more)</span>
+                                <span className="text-slate-400"> {t('profile.more_addresses', { count: addressesCount - 1 })}</span>
                             )}
                         </p>
                     ) : (

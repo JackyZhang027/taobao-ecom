@@ -1,5 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCurrency } from '@/hooks/use-currency';
 import CustomerLayout from '@/layouts/customer-layout';
 import type { Order } from '@/types/order';
@@ -12,6 +13,7 @@ interface CompleteProps {
 }
 
 export default function CheckoutComplete({ order, snapToken, clientKey, isProduction }: CompleteProps) {
+    const { t } = useTranslation();
     const { formatIdr } = useCurrency();
     const [snapOpened, setSnapOpened] = useState(false);
 
@@ -61,18 +63,18 @@ export default function CheckoutComplete({ order, snapToken, clientKey, isProduc
                 {/* Status banner */}
                 <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
                     <p className="font-semibold text-blue-800">
-                        {snapOpened ? 'Payment window opened — complete your payment above.' : 'Preparing payment…'}
+                        {snapOpened ? t('checkout.payment_window_opened') : t('checkout.preparing_payment')}
                     </p>
-                    <p className="text-sm text-blue-700">Order {order.order_number ?? `#${order.id}`} has been created.</p>
+                    <p className="text-sm text-blue-700">{t('checkout.order_created', { order: order.order_number ?? `#${order.id}` })}</p>
                 </div>
 
                 {/* Shipping info */}
                 <div className="mb-6 rounded-lg border p-4 space-y-1 text-sm">
-                    <p className="font-semibold mb-2">Shipping Details</p>
-                    <p><span className="text-muted-foreground">Recipient:</span> {order.recipient_name}</p>
-                    <p><span className="text-muted-foreground">Phone:</span> {order.recipient_phone}</p>
-                    <p><span className="text-muted-foreground">Address:</span> {address}</p>
-                    {order.notes && <p><span className="text-muted-foreground">Notes:</span> {order.notes}</p>}
+                    <p className="font-semibold mb-2">{t('checkout.shipping_details')}</p>
+                    <p><span className="text-muted-foreground">{t('checkout.recipient_label')}</span> {order.recipient_name}</p>
+                    <p><span className="text-muted-foreground">{t('checkout.phone_label')}</span> {order.recipient_phone}</p>
+                    <p><span className="text-muted-foreground">{t('checkout.address_label')}</span> {address}</p>
+                    {order.notes && <p><span className="text-muted-foreground">{t('checkout.notes_colon')}</span> {order.notes}</p>}
                 </div>
 
                 {/* Order lines */}
@@ -80,10 +82,10 @@ export default function CheckoutComplete({ order, snapToken, clientKey, isProduc
                     <table className="w-full text-sm">
                         <thead className="border-b bg-muted/50">
                             <tr>
-                                <th className="px-4 py-3 text-left">Product</th>
-                                <th className="px-4 py-3 text-right">Price</th>
-                                <th className="px-4 py-3 text-right">Qty</th>
-                                <th className="px-4 py-3 text-right">Subtotal</th>
+                                <th className="px-4 py-3 text-left">{t('orders.product')}</th>
+                                <th className="px-4 py-3 text-right">{t('orders.price')}</th>
+                                <th className="px-4 py-3 text-right">{t('cart.quantity')}</th>
+                                <th className="px-4 py-3 text-right">{t('cart.subtotal')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -103,15 +105,15 @@ export default function CheckoutComplete({ order, snapToken, clientKey, isProduc
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colSpan={3} className="px-4 py-3 text-right text-muted-foreground">Subtotal</td>
+                                <td colSpan={3} className="px-4 py-3 text-right text-muted-foreground">{t('cart.subtotal')}</td>
                                 <td className="px-4 py-3 text-right">{formatIdr(order.subtotal_idr)}</td>
                             </tr>
                             <tr>
-                                <td colSpan={3} className="px-4 py-3 text-right text-muted-foreground">Shipping</td>
+                                <td colSpan={3} className="px-4 py-3 text-right text-muted-foreground">{t('cart.shipping')}</td>
                                 <td className="px-4 py-3 text-right">{formatIdr(order.shipping_idr)}</td>
                             </tr>
                             <tr className="border-t">
-                                <td colSpan={3} className="px-4 py-3 text-right font-bold">Total</td>
+                                <td colSpan={3} className="px-4 py-3 text-right font-bold">{t('cart.total')}</td>
                                 <td className="px-4 py-3 text-right font-bold">{formatIdr(order.grand_total_idr)}</td>
                             </tr>
                         </tfoot>

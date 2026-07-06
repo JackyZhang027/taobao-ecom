@@ -159,7 +159,7 @@ export default function ProductShow({ product, whatsapp_number }: ShowProps) {
                             {images.length > 0 && (
                                 <div className="absolute bottom-3 right-3 bg-black/40 text-white text-xs px-2.5 py-1.5 rounded flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <ZoomIn className="h-3.5 w-3.5" />
-                                    Zoom
+                                    {t('product.zoom')}
                                 </div>
                             )}
                         </div>
@@ -179,7 +179,7 @@ export default function ProductShow({ product, whatsapp_number }: ShowProps) {
                                     >
                                         <img
                                             src={img.thumb || img.url}
-                                            alt={`View ${i + 1}`}
+                                            alt={t('product.thumbnail_alt', { n: i + 1 })}
                                             className="w-full h-full object-cover"
                                         />
                                     </button>
@@ -344,11 +344,11 @@ export default function ProductShow({ product, whatsapp_number }: ShowProps) {
                                             if (product.variants && product.variants.length > 0) {
                                                 if (selectedVariantId) {
                                                     addItem(selectedVariantId, qty);
-                                                    toast.success(t('cart.added') || 'Added to cart');
+                                                    toast.success(t('cart.added'));
                                                 }
                                             } else {
                                                 addProduct(product.id, qty);
-                                                toast.success(t('cart.added') || 'Added to cart');
+                                                toast.success(t('cart.added'));
                                             }
                                         }}
                                         className="flex-1 bg-slate-900 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 text-white py-3 font-semibold text-sm uppercase tracking-widest transition-colors rounded-sm"

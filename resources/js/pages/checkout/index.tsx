@@ -50,8 +50,8 @@ export default function CheckoutIndex({ cart, totals, addresses }: CheckoutProps
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
         post('/checkout', {
-            onSuccess: () => toast.success(t('checkout.success') || 'Order placed successfully!'),
-            onError: () => toast.error(t('checkout.error') || 'Failed to place order. Please check your details.'),
+            onSuccess: () => toast.success(t('checkout.success')),
+            onError: () => toast.error(t('checkout.error')),
         });
     };
 
@@ -69,11 +69,11 @@ export default function CheckoutIndex({ cart, totals, addresses }: CheckoutProps
             <div className="bg-[#F8FAFC] py-14 text-center">
                 <h1 className="text-4xl font-bold text-slate-900">{t('checkout.title')}</h1>
                 <p className="text-sm text-slate-400 mt-3 flex items-center justify-center gap-1">
-                    <Link href="/" className="font-medium text-slate-900 hover:text-blue-600">Home</Link>
+                    <Link href="/" className="font-medium text-slate-900 hover:text-blue-600">{t('nav.home')}</Link>
                     <ChevronRight className="h-3.5 w-3.5" />
-                    <Link href="/cart" className="font-medium text-slate-900 hover:text-blue-600">Cart</Link>
+                    <Link href="/cart" className="font-medium text-slate-900 hover:text-blue-600">{t('nav.cart')}</Link>
                     <ChevronRight className="h-3.5 w-3.5" />
-                    <span className="text-blue-600">Checkout</span>
+                    <span className="text-blue-600">{t('checkout.title')}</span>
                 </p>
             </div>
 
@@ -109,7 +109,7 @@ export default function CheckoutIndex({ cart, totals, addresses }: CheckoutProps
                                 {errors.address_id && <p className="text-xs text-red-500 mt-1">{errors.address_id}</p>}
                                 {selectedAddress && !canDeliver && (
                                     <p className="text-xs text-red-500 mt-1">
-                                        Delivery is not available to {currentCity}. Please choose another address.
+                                        {t('checkout.delivery_unavailable', { city: currentCity })}
                                     </p>
                                 )}
 
@@ -119,14 +119,14 @@ export default function CheckoutIndex({ cart, totals, addresses }: CheckoutProps
                                         <span className="flex items-center gap-1.5">
                                             <FileText className="h-3.5 w-3.5 text-slate-500" />
                                             {t('checkout.notes')}
-                                            <span className="text-slate-400 text-xs font-normal ml-1">(optional)</span>
+                                            <span className="text-slate-400 text-xs font-normal ml-1">{t('common.optional')}</span>
                                         </span>
                                     </label>
                                     <textarea
                                         value={data.notes}
                                         onChange={(e) => setData('notes', e.target.value)}
                                         rows={3}
-                                        placeholder="Notes about your order, e.g. special delivery instructions."
+                                        placeholder={t('checkout.notes_placeholder')}
                                         className={`${inputClass} resize-none`}
                                     />
                                 </div>
@@ -138,7 +138,7 @@ export default function CheckoutIndex({ cart, totals, addresses }: CheckoutProps
                             disabled={processing || !selectedAddress || !canDeliver}
                             className="w-full bg-slate-900 hover:bg-slate-800 disabled:opacity-60 disabled:cursor-not-allowed text-white py-4 font-semibold text-sm uppercase tracking-widest transition-colors rounded-sm"
                         >
-                            {processing ? 'Placing Order...' : t('checkout.place_order')}
+                            {processing ? t('checkout.placing_order') : t('checkout.place_order')}
                         </button>
                     </form>
 
@@ -149,8 +149,8 @@ export default function CheckoutIndex({ cart, totals, addresses }: CheckoutProps
 
                             {/* Header */}
                             <div className="flex justify-between text-xs font-semibold text-slate-500 uppercase tracking-wide pb-3 border-b border-slate-200">
-                                <span>Product</span>
-                                <span>Subtotal</span>
+                                <span>{t('orders.product')}</span>
+                                <span>{t('cart.subtotal')}</span>
                             </div>
 
                             {/* Items */}

@@ -27,7 +27,8 @@
         "addresses_title": "Delivery Addresses",
         "addresses_desc": "Manage the addresses you ship orders to",
         "manage_addresses": "Manage addresses",
-        "no_addresses": "No saved addresses yet"
+        "no_addresses": "No saved addresses yet",
+        "more_addresses": "(+{{count}} more)"
     },
     "addresses": {
         "title": "My Addresses",
@@ -61,6 +62,8 @@
         "add_wishlist": "Add to wishlist",
         "remove_wishlist": "Remove from wishlist",
         "view_product": "View product",
+        "zoom": "Zoom",
+        "thumbnail_alt": "View {{n}}",
         "location": "Location",
         "delivery": "Delivery",
         "total": "Total",
@@ -83,7 +86,11 @@
         "remove": "Remove",
         "added": "Added to cart",
         "item_unavailable": "Unavailable",
-        "has_unavailable_items": "Some items in your cart are no longer available. Please remove them to proceed to checkout."
+        "has_unavailable_items": "Some items in your cart are no longer available. Please remove them to proceed to checkout.",
+        "empty_desc": "Add items to your cart and they'll appear here.",
+        "totals_heading": "Cart Totals",
+        "sku": "SKU",
+        "quantity_header": "Quantity"
     },
     "checkout": {
         "title": "Checkout",
@@ -97,7 +104,18 @@
         "error": "Failed to place order. Please check your details.",
         "change_address": "Change",
         "select_address": "Select Delivery Address",
-        "no_address_selected": "No delivery address selected"
+        "no_address_selected": "No delivery address selected",
+        "payment_window_opened": "Payment window opened — complete your payment above.",
+        "preparing_payment": "Preparing payment…",
+        "order_created": "Order {{order}} has been created.",
+        "shipping_details": "Shipping Details",
+        "recipient_label": "Recipient:",
+        "phone_label": "Phone:",
+        "address_label": "Address:",
+        "notes_colon": "Notes:",
+        "delivery_unavailable": "Delivery is not available to {{city}}. Please choose another address.",
+        "notes_placeholder": "Notes about your order, e.g. special delivery instructions.",
+        "placing_order": "Placing Order..."
     },
     "orders": {
         "title": "My Orders",
@@ -130,6 +148,28 @@
         "product": "Product",
         "price": "Price",
         "backToOrders": "Back to Orders"
+    },
+    "shop": {
+        "all_products": "All Products",
+        "filter": "Filter",
+        "filters": "Filters",
+        "category": "Category",
+        "search_products_placeholder": "Search products...",
+        "clear_all": "Clear All",
+        "apply": "Apply",
+        "showing": "Showing",
+        "results": "results",
+        "in": "in",
+        "category_label": "Category:",
+        "search_label": "Search:",
+        "no_products_found": "No products found",
+        "no_products_desc": "Try adjusting your filters or check back later.",
+        "view_all_products": "View all products",
+        "prev": "Prev",
+        "next": "Next"
+    },
+    "faq": {
+        "empty": "No FAQs yet."
     },
     "admin": {
         "dashboard": "Dashboard",
@@ -199,6 +239,7 @@
         "loading": "Loading...",
         "confirm_delete": "Are you sure you want to delete this?",
         "yes": "Yes",
-        "no": "No"
+        "no": "No",
+        "optional": "(optional)"
     }
 }

@@ -99,7 +99,7 @@ export default function CustomerLayout({ children, fullWidth = false }: Customer
                                                 onClick={() => setProfileOpen(false)}
                                             >
                                                 <User className="h-4 w-4 text-slate-400" />
-                                                My Profile
+                                                {t('profile.title')}
                                             </Link>
                                             <Link
                                                 href="/orders"
@@ -107,7 +107,7 @@ export default function CustomerLayout({ children, fullWidth = false }: Customer
                                                 onClick={() => setProfileOpen(false)}
                                             >
                                                 <Package className="h-4 w-4 text-slate-400" />
-                                                My Orders
+                                                {t('orders.title')}
                                             </Link>
                                             <Link
                                                 href="/logout"
