@@ -27,4 +27,14 @@ export default defineConfig({
     esbuild: {
         jsx: 'automatic',
     },
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    vendor: ['react', 'react-dom', '@inertiajs/react'],
+                    i18n: ['i18next', 'react-i18next'],
+                },
+            },
+        },
+    },
 });

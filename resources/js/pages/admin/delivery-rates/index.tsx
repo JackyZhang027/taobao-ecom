@@ -53,7 +53,7 @@ export default function AdminDeliveryRates() {
             <Head title="Delivery Rates" />
             <AdminPageHeader title="Delivery Rates" />
             <div className="grid gap-6 lg:grid-cols-3">
-                <Card className="lg:col-span-1 h-fit">
+                <Card className="lg:col-span-1 h-fit min-w-0">
                     <CardHeader>
                         <CardTitle>Set New Rate</CardTitle>
                     </CardHeader>
@@ -89,7 +89,7 @@ export default function AdminDeliveryRates() {
                     </CardContent>
                 </Card>
 
-                <Card className="lg:col-span-2">
+                <Card className="lg:col-span-2 min-w-0">
                     <CardHeader>
                         <CardTitle>Rate History</CardTitle>
                     </CardHeader>

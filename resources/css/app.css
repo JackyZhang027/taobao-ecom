@@ -176,6 +176,12 @@
 
 /* DataTables overrides to match shadcn/ui style */
 .dt-wrapper {
+    min-width: 0;
+    overflow-x: auto; /* fallback safety net */
+    -webkit-overflow-scrolling: touch;
+}
+/* Only the table row scrolls horizontally; search/length/pagination stay in view */
+.dt-wrapper .dt-layout-table {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
 }
