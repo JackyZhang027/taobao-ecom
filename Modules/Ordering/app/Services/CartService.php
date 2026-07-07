@@ -100,7 +100,10 @@ class CartService
 
     public function computeTotals(Cart $cart, CurrencyService $currency, ShippingService $shipping, string $city = 'Batam'): array
     {
-        $cart->load('items.variant.product', 'items.product');
+        // loadMissing, not load: callers eager-load these relations with extras
+        // (translations, media) that a forced reload would silently drop,
+        // reintroducing per-item lazy queries downstream.
+        $cart->loadMissing('items.variant.product', 'items.product');
 
         // Convert per unit, then multiply — order lines store rounded unit prices,
         // so the subtotal must be the exact sum of those line subtotals.

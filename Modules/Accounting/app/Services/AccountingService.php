@@ -212,6 +212,23 @@ class AccountingService
      */
     public function ledger(Account $account, ?string $startDate, ?string $endDate): array
     {
+        // Activity before the start date must seed the running balance —
+        // otherwise a filtered ledger starts at 0 and every balance is wrong.
+        $openingBalance = 0.0;
+        if ($startDate) {
+            $prior = JournalLine::selectRaw('COALESCE(SUM(debit), 0) as total_debit, COALESCE(SUM(credit), 0) as total_credit')
+                ->where('account_id', $account->id)
+                ->whereHas('journalEntry', function ($q) use ($startDate) {
+                    $q->where('status', 'posted')
+                        ->whereDate('date', '<', $startDate);
+                })
+                ->first();
+
+            $openingBalance = $account->normal_balance === 'debit'
+                ? (float) $prior->total_debit - (float) $prior->total_credit
+                : (float) $prior->total_credit - (float) $prior->total_debit;
+        }
+
         $lines = JournalLine::with('journalEntry')
             ->where('account_id', $account->id)
             ->whereHas('journalEntry', function ($q) use ($startDate, $endDate) {
@@ -231,7 +248,7 @@ class AccountingService
             ->select('journal_lines.*')
             ->get();
 
-        $runningBalance = 0.0;
+        $runningBalance = $openingBalance;
         $rows = [];
 
         foreach ($lines as $line) {
@@ -255,6 +272,7 @@ class AccountingService
             'account' => $account,
             'start_date' => $startDate,
             'end_date' => $endDate,
+            'opening_balance' => $openingBalance,
             'lines' => $rows,
             'final_balance' => $runningBalance,
         ];

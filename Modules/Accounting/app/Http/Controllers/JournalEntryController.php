@@ -100,7 +100,12 @@ class JournalEntryController extends Controller
             });
         } catch (\Illuminate\Database\QueryException $e) {
             // The `unique` validation rule races with concurrent creates — the DB
-            // unique index on reference_number is the authoritative check.
+            // unique index on reference_number is the authoritative check. Any
+            // other DB failure must not masquerade as a reference collision.
+            if (! JournalEntry::where('reference_number', $request->reference_number)->exists()) {
+                throw $e;
+            }
+
             return back()->withErrors([
                 'reference_number' => 'This reference number was just taken — please refresh and try again.',
             ])->withInput();
@@ -136,7 +141,12 @@ class JournalEntryController extends Controller
             return back()->withErrors(['entry' => $e->getMessage()]);
         } catch (\Illuminate\Database\QueryException $e) {
             // The reversing entry's VOID-{ref} reference hit the unique index —
-            // the transaction rolled back, so the entry is still posted.
+            // the transaction rolled back, so the entry is still posted. Any
+            // other DB failure must not masquerade as a reference collision.
+            if (! JournalEntry::where('reference_number', 'VOID-'.$journalEntry->reference_number)->exists()) {
+                throw $e;
+            }
+
             return back()->withErrors([
                 'entry' => 'A reversing entry with this reference already exists. The entry was not voided.',
             ]);

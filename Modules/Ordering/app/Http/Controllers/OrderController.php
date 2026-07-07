@@ -4,6 +4,7 @@ namespace Modules\Ordering\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Modules\Ordering\Models\Order;
 use Modules\Ordering\Models\OrderStatusHistory;
@@ -38,13 +39,23 @@ class OrderController extends Controller
         abort_if($order->user_id !== $request->user()->id, 403);
         abort_if($order->status !== 'shipped', 422);
 
-        $order->update(['status' => 'delivered']);
+        DB::transaction(function () use ($request, $order) {
+            // Re-check under lock — an admin transition or the auto-deliver
+            // command may have moved the order concurrently.
+            $freshOrder = Order::lockForUpdate()->find($order->id);
 
-        OrderStatusHistory::create([
-            'order_id' => $order->id,
-            'status' => 'delivered',
-            'changed_by' => $request->user()->id,
-        ]);
+            if ($freshOrder->status !== 'shipped') {
+                return;
+            }
+
+            $freshOrder->update(['status' => 'delivered']);
+
+            OrderStatusHistory::create([
+                'order_id' => $freshOrder->id,
+                'status' => 'delivered',
+                'changed_by' => $request->user()->id,
+            ]);
+        });
 
         return back()->with('success', 'Receipt confirmed. Thank you!');
     }

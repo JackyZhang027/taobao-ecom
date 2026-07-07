@@ -201,15 +201,27 @@ test('canDeliver batam is false when variant and product only have a jakarta rat
     expect($totals['can_deliver_jakarta'])->toBeTrue();
 });
 
-test('canDeliver jakarta falls back to the variant batam rate like the shipping calculation does', function () {
+test('canDeliver jakarta is false when neither variant nor product has a jakarta rate', function () {
+    // No cross-city fallback: a Batam-only variant on a product without a
+    // Jakarta rate cannot ship to Jakarta at the Batam price.
     $product = makeProduct(['delivery_rate_batam' => 0, 'delivery_rate_jakarta' => 0]);
     $variant = makeVariant($product, ['delivery_rate_batam' => 15000, 'delivery_rate_jakarta' => 0]);
     $cart = cartWithVariant($variant);
 
     $totals = app(CartService::class)->computeTotals($cart, app(CurrencyService::class), app(ShippingService::class), 'Jakarta');
 
-    expect($totals['can_deliver_jakarta'])->toBeTrue();
-    expect($totals['shipping_jakarta_idr'])->toBe(15000.0);
+    expect($totals['can_deliver_jakarta'])->toBeFalse();
+    expect($totals['can_deliver_batam'])->toBeTrue();
+});
+
+test('ShippingService uses the product jakarta rate when the variant only has a batam rate', function () {
+    $product = makeProduct(['delivery_rate_batam' => 0, 'delivery_rate_jakarta' => 30000]);
+    $variant = makeVariant($product, ['delivery_rate_batam' => 15000, 'delivery_rate_jakarta' => 0]);
+    $cart = cartWithVariant($variant);
+
+    $shipping = app(ShippingService::class);
+    expect($shipping->calculateShippingIdr($cart, 'Jakarta'))->toBe(30000.0);
+    expect($shipping->calculateShippingIdr($cart, 'Batam'))->toBe(15000.0);
 });
 
 test('canDeliver checks every item — a second undeliverable variant of the same product fails the check', function () {

@@ -24,6 +24,13 @@ class AddressService
     public function update(Address $address, array $data): Address
     {
         return DB::transaction(function () use ($address, $data) {
+            // The default address stays default until another address is made
+            // default — unchecking it would leave the user with no default,
+            // and checkout relies on one existing (initial shipping city).
+            if ($address->is_default) {
+                $data['is_default'] = true;
+            }
+
             if ($data['is_default'] ?? false) {
                 $address->user->addresses()
                     ->where('id', '!=', $address->id)

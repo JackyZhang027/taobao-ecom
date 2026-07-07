@@ -59,6 +59,7 @@ export type LedgerData = {
     account: Account;
     start_date: string | null;
     end_date: string | null;
+    opening_balance: number;
     lines: LedgerLine[];
     final_balance: number;
 };

@@ -64,13 +64,19 @@ class ProductController extends Controller
             ->through(fn ($p) => $transformer->transform($p))
             ->toArray();
 
-        if ($search) {
-            // Never cache search results — arbitrary user input would mint
-            // unlimited cache entries.
-            $paginatedData = $fetchPage();
-        } else {
-            $filterKey = md5(serialize($request->only(['category', 'attributes', 'page'])));
+        // Cache only requests whose key space is bounded: no search term, a
+        // known category slug (or none), and a sane page number — otherwise
+        // arbitrary query strings would mint unlimited cache entries.
+        $page = (int) $request->input('page', 1);
+        $categoryIsKnown = ! $request->category
+            || collect($categories)->contains(fn ($c) => $c['slug'] === $request->category);
+        $cacheable = ! $search && $categoryIsKnown && $page >= 1 && $page <= 100;
+
+        if ($cacheable) {
+            $filterKey = md5(serialize(['category' => $request->category, 'page' => $page]));
             $paginatedData = Cache::remember("shop_products_{$filterKey}_{$productV}_{$locale}", 600, $fetchPage);
+        } else {
+            $paginatedData = $fetchPage();
         }
 
         if ($user) {

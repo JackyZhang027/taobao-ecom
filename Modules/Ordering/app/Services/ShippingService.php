@@ -36,9 +36,11 @@ class ShippingService
     public function resolveMultiplier(Product $product, ?ProductVariant $variant, string $city): float
     {
         if ($variant) {
+            // No cross-city fallback: each city resolves variant rate, then
+            // product rate, for that city only. A variant with neither rate is
+            // undeliverable there (checkout blocks 0-multiplier items).
             return match (strtolower($city)) {
                 'jakarta' => $variant->delivery_rate_jakarta
-                             ?: $variant->delivery_rate_batam
                              ?: $product->delivery_rate_jakarta,
                 default => $variant->delivery_rate_batam
                              ?: $product->delivery_rate_batam,

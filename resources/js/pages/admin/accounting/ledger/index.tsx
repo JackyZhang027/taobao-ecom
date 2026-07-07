@@ -94,6 +94,20 @@ export default function LedgerIndex({ accounts, ledger, filters }: Props) {
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        {ledger.start_date && (
+                                            <tr className="border-b bg-muted/10">
+                                                <td className="px-4 py-2 whitespace-nowrap text-muted-foreground">
+                                                    {new Date(ledger.start_date).toLocaleDateString()}
+                                                </td>
+                                                <td className="px-4 py-2">—</td>
+                                                <td className="px-4 py-2 italic text-muted-foreground">Opening balance</td>
+                                                <td className="px-4 py-2 text-right">—</td>
+                                                <td className="px-4 py-2 text-right">—</td>
+                                                <td className="px-4 py-2 text-right font-medium">
+                                                    {fmt(ledger.opening_balance)}
+                                                </td>
+                                            </tr>
+                                        )}
                                         {ledger.lines.length === 0 ? (
                                             <tr>
                                                 <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">

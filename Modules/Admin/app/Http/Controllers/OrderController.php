@@ -222,6 +222,15 @@ class OrderController extends Controller
                 // Variant prices are absolute, not add-ons — same rule as the storefront
                 // (CartService/CheckoutController/ProductTransformer).
                 $priceRmb = $variant ? (float) $variant->price : (float) ($product->price ?? 0);
+
+                // Same guard as the storefront: a zero-price line would create an
+                // order Midtrans rejects when the customer tries to pay.
+                if ($priceRmb <= 0) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        "items.{$index}.product_id" => 'This product has no valid price and cannot be ordered.',
+                    ]);
+                }
+
                 $unitPriceIdr = $this->currency->rmbToIdr($priceRmb);
                 $qty = (int) $itemData['quantity'];
                 // Sum the rounded line subtotals so grand_total_idr always equals

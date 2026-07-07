@@ -25,7 +25,7 @@ class SecurityHeaders
             "script-src 'self' 'unsafe-inline' https://app.midtrans.com https://app.sandbox.midtrans.com{$viteOrigins}; ".
             "style-src 'self' 'unsafe-inline' https://fonts.bunny.net; ".
             "img-src 'self' data: blob: https:; ".
-            "connect-src 'self' https://fonts.bunny.net{$viteOrigins}; ".
+            "connect-src 'self' https://fonts.bunny.net https://app.midtrans.com https://app.sandbox.midtrans.com{$viteOrigins}; ".
             "font-src 'self' https://fonts.bunny.net; ".
             'frame-src https://app.midtrans.com https://app.sandbox.midtrans.com;'
         );

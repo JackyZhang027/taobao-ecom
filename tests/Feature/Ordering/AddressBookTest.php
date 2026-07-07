@@ -106,6 +106,37 @@ test('creating a second default address unsets the previous default', function (
     expect($user->addresses()->where('is_default', true)->count())->toBe(1);
 });
 
+test('updating the default address with is_default false keeps it default', function () {
+    $user = addressTestCustomer();
+    $service = app(AddressService::class);
+
+    $default = $service->create($user, [
+        'recipient_name' => 'Jane Doe',
+        'recipient_phone' => '08123456789',
+        'street_address' => 'Jl. Test No. 1',
+        'city' => 'Batam',
+    ]);
+    $service->create($user, [
+        'recipient_name' => 'John Doe',
+        'recipient_phone' => '08199999999',
+        'street_address' => 'Jl. Test No. 2',
+        'city' => 'Jakarta',
+    ]);
+
+    $service->update($default, [
+        'recipient_name' => 'Jane Doe',
+        'recipient_phone' => '08123456789',
+        'street_address' => 'Jl. Test No. 1 (edited)',
+        'city' => 'Batam',
+        'is_default' => false,
+    ]);
+
+    // A default must always exist once the user has addresses — the uncheck
+    // is ignored until another address is explicitly made default.
+    expect($default->fresh()->is_default)->toBeTrue();
+    expect($user->addresses()->where('is_default', true)->count())->toBe(1);
+});
+
 test('deleting the default address promotes the next remaining address to default', function () {
     $user = addressTestCustomer();
     $service = app(AddressService::class);
@@ -179,6 +210,26 @@ test('a non-owner cannot update, delete, or set-default another user\'s address'
 });
 
 // ─── Checkout integration ────────────────────────────────────────────────────
+
+test('checkout.index derives the initial city from the preselected address even when no default exists', function () {
+    $user = addressTestCustomer();
+    addressTestCartFor($user);
+
+    $address = app(AddressService::class)->create($user, [
+        'recipient_name' => 'Jane Doe',
+        'recipient_phone' => '08123456789',
+        'street_address' => 'Jl. Test No. 1',
+        'city' => 'Jakarta',
+    ]);
+    // Simulate legacy data where no address is flagged default — the frontend
+    // preselects the first address, so totals must be computed for its city.
+    $address->updateQuietly(['is_default' => false]);
+
+    $this->actingAs($user)
+        ->get(route('checkout.index'))
+        ->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page
+            ->where('totals.city', 'Jakarta'));
+});
 
 test('checkout.store with a saved address_id creates an order snapshot independent of later address edits', function () {
     $user = addressTestCustomer();

@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Modules\Ordering\Models\Order;
 use Modules\Ordering\Models\OrderStatusHistory;
 
@@ -31,15 +32,29 @@ class AutoDeliverOrders extends Command
 
         $count = 0;
         foreach ($orders as $order) {
-            $order->update(['status' => 'delivered']);
+            $delivered = DB::transaction(function () use ($order) {
+                // Re-check under lock — the customer may confirm receipt (or an
+                // admin may transition the order) while this command runs.
+                $freshOrder = Order::lockForUpdate()->find($order->id);
 
-            OrderStatusHistory::create([
-                'order_id' => $order->id,
-                'status' => 'delivered',
-                'changed_by' => null,
-            ]);
+                if (! $freshOrder || $freshOrder->status !== 'shipped') {
+                    return false;
+                }
 
-            $count++;
+                $freshOrder->update(['status' => 'delivered']);
+
+                OrderStatusHistory::create([
+                    'order_id' => $freshOrder->id,
+                    'status' => 'delivered',
+                    'changed_by' => null,
+                ]);
+
+                return true;
+            });
+
+            if ($delivered) {
+                $count++;
+            }
         }
 
         $this->info("Auto-delivered {$count} order(s).");

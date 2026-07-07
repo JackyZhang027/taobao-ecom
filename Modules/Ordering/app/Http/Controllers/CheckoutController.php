@@ -37,8 +37,10 @@ class CheckoutController extends Controller
             'items.product.translations',
             'items.product.media',
         );
-        $defaultAddress = $request->user()->defaultAddress;
-        $city = $request->get('city', $defaultAddress?->city ?? 'Batam');
+        // Must match the address the frontend preselects (default ?? first) —
+        // the addresses relation is ordered is_default desc, created_at desc.
+        $preselectedAddress = $request->user()->addresses->first();
+        $city = $request->get('city', $preselectedAddress?->city ?? 'Batam');
         $totals = $this->cartService->computeTotals($cart, $this->currency, $this->shipping, $city);
 
         $locale = app()->getLocale();
