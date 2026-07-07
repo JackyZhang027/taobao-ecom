@@ -3,6 +3,7 @@
 namespace Modules\Admin\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -29,12 +30,30 @@ class ProductController extends Controller
 
     public function index()
     {
-        return Inertia::render('admin/products/index');
+        return Inertia::render('admin/products/index', [
+            'categories' => Category::orderBy('name')->get()->map(fn ($c) => ['id' => $c->id, 'name' => $c->name])->values(),
+        ]);
     }
 
-    public function datatable(): JsonResponse
+    private function applyFilters(Request $request, $query)
     {
-        $query = Product::with(['translations', 'media', 'variants'])->select('products.*');
+        return $query
+            ->when($request->status === 'active', fn ($q) => $q->where('is_active', true))
+            ->when($request->status === 'inactive', fn ($q) => $q->where('is_active', false))
+            ->when($request->filled('category_id') && $request->category_id !== 'all',
+                fn ($q) => $q->whereHas('categories', fn ($c) => $c->where('categories.id', $request->category_id)))
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $term = addcslashes($request->search, '%_\\');
+                $q->where(function ($q) use ($term) {
+                    $q->where('slug', 'like', "%{$term}%")
+                        ->orWhereHas('translations', fn ($t) => $t->where('name', 'like', "%{$term}%"));
+                });
+            });
+    }
+
+    public function datatable(Request $request): JsonResponse
+    {
+        $query = $this->applyFilters($request, Product::with(['translations', 'media', 'variants'])->select('products.*'));
 
         return DataTables::of($query)
             ->addColumn('image', function ($p) {
@@ -48,41 +67,63 @@ class ProductController extends Controller
             ->addColumn('name', fn ($p) => $p->translations->firstWhere('locale', 'en')?->name ?? $p->slug)
             ->addColumn('price_display', function ($p) {
                 $minVariantPrice = $p->variants->where('is_active', true)->min('price');
-                if ($minVariantPrice !== null) {
-                    return '¥'.number_format($minVariantPrice, 2).' <span class="text-xs text-muted-foreground">(variant)</span>';
-                }
 
-                return '¥'.number_format($p->price, 2);
+                return '¥'.number_format($minVariantPrice ?? $p->price, 2);
             })
             ->addColumn('delivery_charge_idr', function ($p) {
-                $minVariantPrice = $p->variants->where('is_active', true)->min('price');
-                if ($minVariantPrice !== null) {
-                    $minBatamRate = $p->variants->where('is_active', true)->min('delivery_rate_batam');
-                    $batamIdr = $this->delivery->calculateCharge((float) ($minBatamRate ?? 0));
+                $hasVariantPrice = $p->variants->where('is_active', true)->min('price') !== null;
+                $rate = $hasVariantPrice
+                    ? ($p->variants->where('is_active', true)->min('delivery_rate_batam') ?? 0)
+                    : $p->delivery_rate_batam;
 
-                    return 'Rp '.number_format($batamIdr, 0, '.', ',').' <span class="text-xs text-muted-foreground">(variant)</span>';
-                }
-                $batamIdr = $this->delivery->calculateCharge((float) $p->delivery_rate_batam);
-
-                return 'Rp '.number_format($batamIdr, 0, '.', ',');
+                return 'Rp '.number_format($this->delivery->calculateCharge((float) $rate), 0, '.', ',');
             })
             ->addColumn('final_price_idr', function ($p) {
                 $minVariantPrice = $p->variants->where('is_active', true)->min('price');
-                if ($minVariantPrice !== null) {
-                    $minBatamRate = $p->variants->where('is_active', true)->min('delivery_rate_batam') ?? 0;
-                    $batamIdr = $this->delivery->calculateCharge((float) $minBatamRate);
+                $price = $minVariantPrice ?? $p->price;
+                $rate = $minVariantPrice !== null
+                    ? ($p->variants->where('is_active', true)->min('delivery_rate_batam') ?? 0)
+                    : $p->delivery_rate_batam;
+                $batamIdr = $this->delivery->calculateCharge((float) $rate);
 
-                    return 'Rp '.number_format($this->currency->rmbToIdr($minVariantPrice) + $batamIdr, 0, '.', ',').' <span class="text-xs text-muted-foreground">(variant)</span>';
-                }
-                $batamIdr = $this->delivery->calculateCharge((float) $p->delivery_rate_batam);
-
-                return 'Rp '.number_format($this->currency->rmbToIdr($p->price) + $batamIdr, 0, '.', ',');
+                return 'Rp '.number_format($this->currency->rmbToIdr($price) + $batamIdr, 0, '.', ',');
             })
             ->addColumn('status', fn ($p) => $p->is_active ? 'Active' : 'Inactive')
             ->addColumn('variants_count', fn ($p) => $p->variants->count())
             ->addColumn('actions', fn ($p) => ['id' => $p->id, 'slug' => $p->slug])
-            ->rawColumns(['image', 'status', 'price_display', 'delivery_charge_idr', 'final_price_idr'])
+            ->rawColumns(['image', 'status'])
             ->make(true);
+    }
+
+    public function grid(Request $request): JsonResponse
+    {
+        $query = $this->applyFilters($request, Product::with(['translations', 'media', 'variants'])->select('products.*'));
+
+        $paginator = $query->orderBy('sort_order')->orderByDesc('id')
+            ->paginate(24)
+            ->through(function ($p) {
+                $minVariantPrice = $p->variants->where('is_active', true)->min('price');
+                $isVariantPrice = $minVariantPrice !== null;
+                $price = $isVariantPrice ? $minVariantPrice : $p->price;
+                $batamRate = $isVariantPrice
+                    ? ($p->variants->where('is_active', true)->min('delivery_rate_batam') ?? 0)
+                    : $p->delivery_rate_batam;
+                $batamIdr = $this->delivery->calculateCharge((float) $batamRate);
+
+                return [
+                    'id' => $p->id,
+                    'slug' => $p->slug,
+                    'name' => $p->translations->firstWhere('locale', 'en')?->name ?? $p->slug,
+                    'image' => $p->thumbnail
+                        ?? ($p->getFirstMediaUrl('images', 'thumb') ?: $p->getFirstMediaUrl('images') ?: null),
+                    'price_display' => '¥'.number_format($price, 2),
+                    'final_price_idr' => 'Rp '.number_format($this->currency->rmbToIdr($price) + $batamIdr, 0, '.', ','),
+                    'is_active' => (bool) $p->is_active,
+                    'variants_count' => $p->variants->count(),
+                ];
+            });
+
+        return response()->json($paginator);
     }
 
     public function create()

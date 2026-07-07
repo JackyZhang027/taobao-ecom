@@ -31,6 +31,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'permiss
 
     // --- Products ---
     Route::get('products/datatable', [ProductController::class, 'datatable'])->name('products.datatable')->middleware('permission:products.view');
+    Route::get('products/grid', [ProductController::class, 'grid'])->name('products.grid')->middleware('permission:products.view');
     Route::resource('products', ProductController::class)
         ->middlewareFor(['index', 'show'], 'permission:products.view')
         ->middlewareFor(['create', 'store'], 'permission:products.create')
