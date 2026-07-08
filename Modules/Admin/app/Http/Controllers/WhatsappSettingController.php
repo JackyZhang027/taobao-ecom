@@ -67,4 +67,9 @@ class WhatsappSettingController extends Controller
     {
         return response()->json($whatsapp->logoutDevice());
     }
+
+    public function checkTimelock(WhatsAppService $whatsapp)
+    {
+        return response()->json($whatsapp->checkTimelock());
+    }
 }

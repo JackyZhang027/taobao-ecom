@@ -64,6 +64,22 @@ type QrResponse = {
     msg?: string;
 };
 
+type TimelockResponse = {
+    is_active: boolean;
+    unlock_at?: string | null;
+    enforcement_type?: string | null;
+};
+
+function formatUnlockAt(raw: string): string {
+    return new Date(raw).toLocaleString('id-ID', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+}
+
 export default function AdminWhatsappSettings({
     settings,
 }: {
@@ -92,6 +108,7 @@ export default function AdminWhatsappSettings({
         !!settings.whatsapp_sender,
     );
     const [qrCode, setQrCode] = useState<string | null>(null);
+    const [timelock, setTimelock] = useState<TimelockResponse | null>(null);
     const [statusMessage, setStatusMessage] = useState<string | null>(null);
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [disconnecting, setDisconnecting] = useState(false);
@@ -106,6 +123,10 @@ export default function AdminWhatsappSettings({
                 })
                 .catch(() => {})
                 .finally(() => setCheckingStatus(false));
+
+            postJson('/admin/settings/whatsapp/check-timelock')
+                .then((response: TimelockResponse) => setTimelock(response))
+                .catch(() => {});
         }
 
         return () => {
@@ -237,6 +258,27 @@ export default function AdminWhatsappSettings({
             ]}
         >
             <Head title="WhatsApp Settings" />
+
+            {timelock?.is_active && (
+                <div className="mb-6 rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-3">
+                    <p className="font-medium text-yellow-800">
+                        WhatsApp account suspended
+                    </p>
+                    <p className="mt-1 text-sm text-yellow-700">
+                        This WhatsApp number has been temporarily suspended by
+                        WhatsApp
+                        {timelock.enforcement_type
+                            ? ` (${timelock.enforcement_type})`
+                            : ''}
+                        . Notifications will not be delivered until it
+                        unlocks
+                        {timelock.unlock_at
+                            ? ` on ${formatUnlockAt(timelock.unlock_at)}`
+                            : ''}
+                        .
+                    </p>
+                </div>
+            )}
 
             <form onSubmit={submit}>
                 <AdminPageHeader

@@ -54,6 +54,36 @@ class WhatsAppService
         }
     }
 
+    public function checkTimelock(): array
+    {
+        try {
+            $response = Http::asForm()->post(config('whatsapp.base_url').'/check-timelock', [
+                'api_key' => config('whatsapp.api_key'),
+                'sender' => ShopSetting::get('whatsapp_sender'),
+            ]);
+
+            if ($response->failed()) {
+                \Log::warning('WhatsApp checkTimelock: gateway request failed', [
+                    'status' => $response->status(),
+                ]);
+
+                return ['is_active' => false];
+            }
+
+            return [
+                'is_active' => (bool) $response->json('data.is_active'),
+                'unlock_at' => $response->json('data.unlock_at'),
+                'enforcement_type' => $response->json('data.enforcement_type'),
+            ];
+        } catch (\Throwable $e) {
+            \Log::warning('WhatsApp checkTimelock: exception', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['is_active' => false];
+        }
+    }
+
     public function generateQr(bool $force = false): array
     {
         return Http::asForm()->post(config('whatsapp.base_url').'/generate-qr', [

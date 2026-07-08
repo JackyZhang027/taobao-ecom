@@ -44,11 +44,13 @@ class SendOrderPaidWhatsAppNotification implements ShouldQueue
         }
 
         $message = $this->buildMessage();
+        $delaySeconds = (int) config('whatsapp.send_delay_seconds', 5);
+        $lastIndex = $numbers->count() - 1;
 
         // Isolate per-number failures: retrying the whole job would re-send to
         // numbers that already succeeded. Only retry when nothing went through.
         $failures = 0;
-        foreach ($numbers as $number) {
+        foreach ($numbers as $index => $number) {
             try {
                 $whatsapp->send($number, $message);
             } catch (\Throwable $e) {
@@ -58,6 +60,12 @@ class SendOrderPaidWhatsAppNotification implements ShouldQueue
                     'number' => $number,
                     'error' => $e->getMessage(),
                 ]);
+            }
+
+            // Space out consecutive sends to the WhatsApp gateway to avoid
+            // triggering spam/ban detection on the sending device.
+            if ($delaySeconds > 0 && $index < $lastIndex && ! app()->environment('testing')) {
+                sleep($delaySeconds);
             }
         }
 

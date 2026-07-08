@@ -33,10 +33,11 @@ class SendPendingOrderPaymentReminders extends Command
         }
 
         $dispatched = 0;
+        $delaySeconds = (int) config('whatsapp.send_delay_seconds', 5);
 
         Order::where('status', 'pending')
             ->where('payment_reminder_count', '<', count($thresholds))
-            ->chunkById(100, function ($orders) use ($thresholds, &$dispatched) {
+            ->chunkById(100, function ($orders) use ($thresholds, $delaySeconds, &$dispatched) {
                 foreach ($orders as $order) {
                     $thresholdMinutes = $thresholds[$order->payment_reminder_count] ?? null;
 
@@ -53,7 +54,10 @@ class SendPendingOrderPaymentReminders extends Command
                         'last_payment_reminder_at' => now(),
                     ]);
 
-                    SendOrderPaymentReminderWhatsAppNotification::dispatch($order, $thresholdMinutes);
+                    // Stagger dispatches so the queue worker doesn't fire them at
+                    // the gateway back-to-back, which can trigger spam/ban detection.
+                    SendOrderPaymentReminderWhatsAppNotification::dispatch($order, $thresholdMinutes)
+                        ->delay(now()->addSeconds($dispatched * $delaySeconds));
                     $dispatched++;
                 }
             });
