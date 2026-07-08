@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Modules\Admin\Models\ShopSetting;
 
@@ -95,9 +96,57 @@ class WhatsAppService
 
     public function logoutDevice(): array
     {
-        return Http::asForm()->post(config('whatsapp.base_url').'/logout-device', [
-            'sender' => ShopSetting::get('whatsapp_sender'),
+        $sender = ShopSetting::get('whatsapp_sender');
+
+        $response = Http::asForm()->post(config('whatsapp.base_url').'/logout-device', [
+            'sender' => $sender,
             'api_key' => config('whatsapp.api_key'),
         ])->json() ?? [];
+
+        $version = Cache::get('cache_ver_settings', 0);
+        Cache::forget("whatsapp_device_info_{$sender}_{$version}");
+
+        return $response;
+    }
+
+    public function deviceInfo(): array
+    {
+        $sender = ShopSetting::get('whatsapp_sender');
+
+        if (! $sender) {
+            return ['status' => false];
+        }
+
+        $version = Cache::get('cache_ver_settings', 0);
+
+        return Cache::remember("whatsapp_device_info_{$sender}_{$version}", 300, function () use ($sender) {
+            try {
+                $response = Http::asForm()->post(config('whatsapp.base_url').'/device-info', [
+                    'api_key' => config('whatsapp.api_key'),
+                    'sender' => $sender,
+                ]);
+
+                if ($response->failed()) {
+                    \Log::warning('WhatsApp deviceInfo: gateway request failed', [
+                        'status' => $response->status(),
+                    ]);
+
+                    return ['status' => false];
+                }
+
+                return [
+                    'status' => (bool) $response->json('status'),
+                    'name' => $response->json('data.name'),
+                    'number' => $response->json('data.number'),
+                    'pp_url' => $response->json('data.pp_url'),
+                ];
+            } catch (\Throwable $e) {
+                \Log::warning('WhatsApp deviceInfo: exception', [
+                    'error' => $e->getMessage(),
+                ]);
+
+                return ['status' => false];
+            }
+        });
     }
 }

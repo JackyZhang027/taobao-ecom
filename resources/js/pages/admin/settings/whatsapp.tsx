@@ -70,6 +70,13 @@ type TimelockResponse = {
     enforcement_type?: string | null;
 };
 
+type DeviceInfoResponse = {
+    status?: boolean;
+    name?: string | null;
+    number?: string | null;
+    pp_url?: string | null;
+};
+
 function formatUnlockAt(raw: string): string {
     return new Date(raw).toLocaleString('id-ID', {
         day: '2-digit',
@@ -109,6 +116,10 @@ export default function AdminWhatsappSettings({
     );
     const [qrCode, setQrCode] = useState<string | null>(null);
     const [timelock, setTimelock] = useState<TimelockResponse | null>(null);
+    const [deviceInfo, setDeviceInfo] = useState<DeviceInfoResponse | null>(
+        null,
+    );
+    const [deviceInfoLoading, setDeviceInfoLoading] = useState(false);
     const [statusMessage, setStatusMessage] = useState<string | null>(null);
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [disconnecting, setDisconnecting] = useState(false);
@@ -134,6 +145,22 @@ export default function AdminWhatsappSettings({
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    useEffect(() => {
+        if (!connected) {
+            setDeviceInfo(null);
+            setDeviceInfoLoading(false);
+            return;
+        }
+
+        setDeviceInfoLoading(true);
+        postJson('/admin/settings/whatsapp/device-info')
+            .then((response: DeviceInfoResponse) => {
+                if (response.status) setDeviceInfo(response);
+            })
+            .catch(() => {})
+            .finally(() => setDeviceInfoLoading(false));
+    }, [connected]);
 
     const stopPolling = () => {
         if (pollRef.current) {
@@ -266,11 +293,7 @@ export default function AdminWhatsappSettings({
                     </p>
                     <p className="mt-1 text-sm text-yellow-700">
                         This WhatsApp number has been temporarily suspended by
-                        WhatsApp
-                        {timelock.enforcement_type
-                            ? ` (${timelock.enforcement_type})`
-                            : ''}
-                        . Notifications will not be delivered until it
+                        WhatsApp. Notifications will not be delivered until it
                         unlocks
                         {timelock.unlock_at
                             ? ` on ${formatUnlockAt(timelock.unlock_at)}`
@@ -496,10 +519,83 @@ export default function AdminWhatsappSettings({
                             <CardHeader>
                                 <CardTitle className="flex items-center justify-between">
                                     Device Connection
-                                    {connected && <Badge>Connected</Badge>}
+                                    {connected && (
+                                        <Badge className="border-transparent bg-green-600 text-white [a&]:hover:bg-green-600/90 dark:bg-green-600/80">
+                                            Connected
+                                        </Badge>
+                                    )}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
+                                {checkingStatus ||
+                                (connected && deviceInfoLoading) ? (
+                                    <div className="flex gap-2">
+                                        <p className="text-sm text-muted-foreground">
+                                            Checking connection status...
+                                        </p>
+                                    </div>
+                                ) : connected && deviceInfo?.status ? (
+                                    <div className="flex flex-col items-center gap-3 rounded-lg border p-4 text-center">
+                                        {deviceInfo.pp_url && (
+                                            <img
+                                                src={deviceInfo.pp_url}
+                                                alt={
+                                                    deviceInfo.name ||
+                                                    'Profile photo'
+                                                }
+                                                className="h-48 w-48 rounded-none object-cover"
+                                            />
+                                        )}
+                                        <div>
+                                            <p className="text-sm font-medium">
+                                                {deviceInfo.name || 'Unknown'}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {deviceInfo.number}
+                                            </p>
+                                        </div>
+                                        {DISCONNECT_ENABLED && (
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                className="text-destructive hover:text-destructive"
+                                                onClick={() =>
+                                                    setConfirmOpen(true)
+                                                }
+                                            >
+                                                Disconnect Device
+                                            </Button>
+                                        )}
+                                    </div>
+                                ) : connected ? (
+                                    DISCONNECT_ENABLED && (
+                                        <div className="flex gap-2">
+                                            <Button
+                                                type="button"
+                                                variant="destructive"
+                                                onClick={() =>
+                                                    setConfirmOpen(true)
+                                                }
+                                            >
+                                                Disconnect Device
+                                            </Button>
+                                        </div>
+                                    )
+                                ) : (
+                                    <div className="flex gap-2">
+                                        <Button
+                                            type="button"
+                                            onClick={startConnecting}
+                                            disabled={connecting}
+                                        >
+                                            {connecting
+                                                ? 'Connecting...'
+                                                : 'Connect Device'}
+                                        </Button>
+                                    </div>
+                                )}
+
                                 {qrCode && (
                                     <div className="flex justify-center">
                                         <img
@@ -515,36 +611,6 @@ export default function AdminWhatsappSettings({
                                         {statusMessage}
                                     </p>
                                 )}
-
-                                <div className="flex gap-2">
-                                    {checkingStatus ? (
-                                        <p className="text-sm text-muted-foreground">
-                                            Checking connection status...
-                                        </p>
-                                    ) : connected ? (
-                                        DISCONNECT_ENABLED && (
-                                            <Button
-                                                type="button"
-                                                variant="destructive"
-                                                onClick={() =>
-                                                    setConfirmOpen(true)
-                                                }
-                                            >
-                                                Disconnect Device
-                                            </Button>
-                                        )
-                                    ) : (
-                                        <Button
-                                            type="button"
-                                            onClick={startConnecting}
-                                            disabled={connecting}
-                                        >
-                                            {connecting
-                                                ? 'Connecting...'
-                                                : 'Connect Device'}
-                                        </Button>
-                                    )}
-                                </div>
                             </CardContent>
                         </Card>
                     </div>

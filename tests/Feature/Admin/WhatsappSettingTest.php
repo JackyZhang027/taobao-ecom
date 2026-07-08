@@ -141,3 +141,16 @@ test('logoutDevice proxies the gateway response', function () {
         ->assertOk()
         ->assertJson(['status' => true, 'message' => 'device disconnected']);
 });
+
+test('deviceInfo proxies the gateway response', function () {
+    $admin = createWhatsappAdminUser();
+    ShopSetting::set('whatsapp_sender', '62800000000');
+    Http::fake(['*/device-info' => Http::response([
+        'status' => true,
+        'data' => ['name' => 'John Doe', 'number' => '62888xxxxxxx', 'pp_url' => 'https://pps.whatsapp.net/v/xxxxx.jpg'],
+    ])]);
+
+    $this->actingAs($admin)->post('/admin/settings/whatsapp/device-info')
+        ->assertOk()
+        ->assertJson(['status' => true, 'name' => 'John Doe', 'number' => '62888xxxxxxx', 'pp_url' => 'https://pps.whatsapp.net/v/xxxxx.jpg']);
+});

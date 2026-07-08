@@ -98,6 +98,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'permiss
     Route::post('settings/whatsapp/qr', [WhatsappSettingController::class, 'generateQr'])->name('settings.whatsapp.qr')->middleware('permission:settings.edit');
     Route::post('settings/whatsapp/logout-device', [WhatsappSettingController::class, 'logoutDevice'])->name('settings.whatsapp.logout-device')->middleware('permission:settings.edit');
     Route::post('settings/whatsapp/check-timelock', [WhatsappSettingController::class, 'checkTimelock'])->name('settings.whatsapp.check-timelock')->middleware('permission:settings.edit');
+    Route::post('settings/whatsapp/device-info', [WhatsappSettingController::class, 'deviceInfo'])->name('settings.whatsapp.device-info')->middleware('permission:settings.edit');
 
     Route::get('settings/hero/datatable', [HeroSlideController::class, 'datatable'])->name('settings.hero.datatable')->middleware('permission:hero_slides.view');
     Route::resource('settings/hero', HeroSlideController::class)->names('settings.hero')
