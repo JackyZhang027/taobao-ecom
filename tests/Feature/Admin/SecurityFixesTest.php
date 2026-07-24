@@ -301,6 +301,23 @@ test('full admin can still update a lesser admin', function () {
     expect($target->fresh()->name)->toBe('Renamed Admin');
 });
 
+test('admin user creation automatically marks email as verified', function () {
+    $this->seed(\Database\Seeders\RoleSeeder::class);
+    $actor = fullAdmin();
+
+    $this->actingAs($actor)->post('/admin/users', [
+        'name' => 'New Admin',
+        'email' => 'newadmin@example.com',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+        'role' => 'admin',
+    ])->assertRedirect(route('admin.users.index'));
+
+    $newUser = User::where('email', 'newadmin@example.com')->first();
+    expect($newUser)->not->toBeNull();
+    expect($newUser->hasVerifiedEmail())->toBeTrue();
+});
+
 // ─── Fix 5: inactive variants / inactive parent products in the cart ─────────
 
 test('cannot add an inactive variant to the cart', function () {

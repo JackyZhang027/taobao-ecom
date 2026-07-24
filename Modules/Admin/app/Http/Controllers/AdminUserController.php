@@ -56,6 +56,8 @@ class AdminUserController extends Controller
             'password' => $validated['password'],
         ]);
 
+        $user->markEmailAsVerified();
+
         $user->assignRole($validated['role']);
 
         return redirect()->route('admin.users.index')->with('success', 'Admin user created.');
